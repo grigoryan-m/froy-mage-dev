@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Персонажи — Фройские Маги</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#7b5ea7">
 <style>
 :root{--bg:#080812;--panel:#0e0e1f;--panel2:#131328;--panel3:#1a1a35;--accent:#7b5ea7;--accent2:#a67fd1;--gold:#c9a84c;--gold-l:#e8c96e;--gold-d:#8a6a20;--text:#e8e0f0;--text-dim:#7a6f90;--text-mid:#b0a0c8;--life:#e05c5c;--barrier:#5b8dee;--line:#2a1f45;}
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -300,6 +302,9 @@ function escHtml(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').rep
 
 syncIndexNames();
 renderChars();
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("./sw.js");
+}
 </script>
 </body>
 </html>

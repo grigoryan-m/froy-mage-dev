@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Вики Заклинаний — Фройские Маги</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#7b5ea7">
 <style>
 :root{--bg:#080812;--panel:#0e0e1f;--panel2:#131328;--panel3:#1a1a35;--accent:#7b5ea7;--accent2:#a67fd1;--gold:#c9a84c;--gold-l:#e8c96e;--gold-d:#8a6a20;--text:#e8e0f0;--text-dim:#7a6f90;--text-mid:#b0a0c8;--life:#e05c5c;--line:#2a1f45;--trauma-death:#e05c5c;--trauma-loss:#9b7fe8;--trauma-humil:#e8934c;--trauma-ctrl:#5b8dee;--trauma-attack:#4cbb8a;}
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -224,9 +226,6 @@ async function loadSpells(){
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3500);}
 
 loadSpells();
-</script>
-</body>
-</html>
 function renderSpells(spells){
   const c=document.getElementById('spells-container');c.innerHTML='';
   if(!spells.length){c.innerHTML='<div class="empty-state">Заклинания не найдены.</div>';document.getElementById('count-shown').textContent=0;return;}
@@ -293,6 +292,9 @@ function copySpell(evt,name,trauma,mana,desc){
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3500);}
 
 loadSpells();
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("./sw.js");
+}
 </script>
 </body>
 </html>
