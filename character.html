@@ -21,6 +21,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;bac
 .header h1{font-family:'Cinzel',serif;font-size:26px;font-weight:700;letter-spacing:6px;color:var(--gold-l);text-shadow:0 0 30px rgba(201,168,76,.4);position:relative;}
 .header-sub{font-size:13px;color:var(--accent2);letter-spacing:3px;margin-top:6px;font-style:italic;position:relative;}
 .info-row{display:grid;grid-template-columns:2fr 1.5fr 1fr .8fr;gap:10px;margin-bottom:16px;}
+@media(max-width:600px){.info-row{grid-template-columns:1fr 1fr;}}
 .info-field{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:8px 12px 6px;transition:border-color .2s;}
 .info-field:focus-within{border-color:var(--accent);}
 .info-label{font-family:'Cinzel',serif;font-size:7px;letter-spacing:2px;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px;}
@@ -45,6 +46,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;bac
 .barrier .hp-box.filled{background:var(--barrier);box-shadow:0 0 6px rgba(91,141,238,.5);}
 .life .hp-box.filled{background:var(--life);box-shadow:0 0 6px rgba(224,92,92,.5);}
 .main-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+@media(max-width:700px){.main-grid{grid-template-columns:1fr;}}
 .magic-panel{background:var(--panel);border:1px solid var(--accent);border-radius:10px;padding:16px 12px;display:flex;flex-direction:column;align-items:center;}
 .panel-title{font-family:'Cinzel',serif;font-size:10px;letter-spacing:3px;color:var(--gold-l);margin-bottom:4px;}
 .panel-sub{font-size:10px;color:var(--text-dim);font-style:italic;margin-bottom:12px;}
@@ -683,8 +685,7 @@ function onAdjToggle(id,checked){
   } else {
     adjActive.delete(id);
   }
-  refreshAdjVisuals();refreshSkillsPanel();
-  scheduleSave();
+  refreshAdjVisuals();refreshSkillsPanel();renderBuildPanel();scheduleSave();
 }
 
 function checkAdj(){
@@ -833,6 +834,7 @@ const STAT_MAP={
 };
 function resolveFormula(formula){
   // Replace stat names (case-insensitive) with their current spark values
+  formula = formula.replace(/×/g, '*');
   return formula.replace(/[а-яёА-ЯЁa-zA-Z]+/g,word=>{
     const key=STAT_MAP[word.toLowerCase()];
     if(key===undefined)return word; // unknown word, keep as-is
@@ -842,22 +844,24 @@ function resolveFormula(formula){
 }
 function parseAndRoll(formula){
   const resolved=resolveFormula(formula);
+  // вычислить умножения вида N*M до парсинга кубиков
+const resolved2 = resolved.replace(/(\d+)\s*\*\s*(\d+)/g, (_,a,b)=>String(parseInt(a)*parseInt(b)));
   const rolls=[],formulaParts=[],breakParts=[];
   let bonus=0;
   // find NкM dice
   const dr=/(\d+)[кКkK](\d+)/g;let m;
-  while((m=dr.exec(resolved))!==null){
+  while((m=dr.exec(resolved2))!==null){
     const cnt=parseInt(m[1]),sides=parseInt(m[2]);
     formulaParts.push(`${cnt}к${sides}`);
     for(let i=0;i<cnt;i++){const r=Math.ceil(Math.random()*sides);rolls.push(r);breakParts.push(r);}
   }
   // remaining numbers as flat bonus (strip dice patterns first)
-  const stripped=resolved.replace(/(\d+)[кКkK](\d+)/g,'');
+  const stripped=resolved2.replace(/(\d+)[кКkK](\d+)/g,'');
   const nums=stripped.match(/[+-]?\s*\d+/g)||[];
   nums.forEach(n=>{const v=parseInt(n.replace(/\s/g,''));if(!isNaN(v)&&v!==0){bonus+=v;}});
   const total=rolls.reduce((a,b)=>a+b,0)+bonus;
   // Build display showing original formula → resolved if different
-  const displayFormula=resolved!==formula?`(${formula} → ${resolved})` :`(${formulaParts.join('+')}${bonus!==0?(bonus>0?'+'+bonus:bonus):''})`;
+  const displayFormula=resolved2!==formula?`(${formula} → ${resolved2})` :`(${formulaParts.join('+')}${bonus!==0?(bonus>0?'+'+bonus:bonus):''})`;
   if(bonus!==0)breakParts.push((bonus>0?'+':'')+bonus);
   showRollNotif(total,displayFormula,breakParts.join(' + '));
 }
