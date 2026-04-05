@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Карта Мира — Фройские Маги</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+:root{
+  --bg:#080812;--panel:#0e0e1f;--panel2:#131328;--panel3:#1a1a35;
+  --accent:#7b5ea7;--accent2:#a67fd1;--gold:#c9a84c;--gold-l:#e8c96e;--gold-d:#8a6a20;
+  --text:#e8e0f0;--text-dim:#7a6f90;--text-mid:#b0a0c8;--life:#e05c5c;--line:#2a1f45;
+  --blue-portal:#5b8dee;--red-portal:#e05c5c;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;overflow:hidden;}
+body{background:var(--bg);color:var(--text);font-family:'Crimson Pro',Georgia,serif;}
+
+/* ── LAYOUT ── */
+.app{display:flex;flex-direction:column;height:100vh;}
+.topbar{display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--panel);border-bottom:1px solid var(--line);flex-shrink:0;flex-wrap:wrap;z-index:1000;}
+.topbar-title{font-family:'Cinzel',serif;font-size:13px;letter-spacing:3px;color:var(--gold-l);font-weight:700;white-space:nowrap;}
+.topbar-sep{width:1px;height:20px;background:var(--line);}
+.map-wrap{flex:1;position:relative;overflow:hidden;}
+#map{width:100%;height:100%;}
+
+/* ── SIDEBAR ── */
+.sidebar{position:absolute;top:12px;right:12px;z-index:900;display:flex;flex-direction:column;gap:10px;width:280px;pointer-events:none;}
+.sidebar>*{pointer-events:auto;}
+
+.card{background:rgba(14,14,31,0.95);border:1px solid var(--line);border-radius:10px;padding:14px 16px;backdrop-filter:blur(8px);}
+.card-title{font-family:'Cinzel',serif;font-size:8px;letter-spacing:2.5px;color:var(--gold);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.card-title::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--gold-d),transparent);}
+
+/* ── PORTAL CONTROLS ── */
+.portal-mode-row{display:flex;gap:6px;margin-bottom:10px;}
+.mode-btn{flex:1;font-family:'Cinzel',serif;font-size:7.5px;letter-spacing:1px;padding:7px 4px;border-radius:6px;border:1px solid;cursor:pointer;transition:all .2s;background:none;text-align:center;}
+.mode-btn.blue{border-color:var(--blue-portal)44;color:var(--blue-portal);}
+.mode-btn.blue.active{background:rgba(91,141,238,.15);border-color:var(--blue-portal);}
+.mode-btn.red{border-color:var(--red-portal)44;color:var(--red-portal);}
+.mode-btn.red.active{background:rgba(224,92,92,.15);border-color:var(--red-portal);}
+.mode-btn.clear{border-color:var(--line);color:var(--text-dim);}
+.mode-btn.clear:hover{border-color:var(--life);color:var(--life);}
+
+.portal-point{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;background:var(--panel2);border:1px solid var(--line);margin-bottom:6px;font-size:12px;color:var(--text-dim);}
+.portal-point.set{border-color:var(--line);}
+.portal-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.portal-dot.blue{background:var(--blue-portal);box-shadow:0 0 6px var(--blue-portal)88;}
+.portal-dot.red{background:var(--red-portal);box-shadow:0 0 6px var(--red-portal)88;}
+.portal-dot.empty{background:var(--panel);border:1px solid var(--text-dim);}
+.portal-coords{font-family:monospace;font-size:10px;color:var(--text-dim);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+/* ── RESULT CARD ── */
+.result-card{background:rgba(14,14,31,0.97);border:1px solid var(--accent);border-radius:10px;padding:16px;backdrop-filter:blur(8px);}
+.dist-row{display:flex;align-items:baseline;gap:6px;margin-bottom:8px;}
+.dist-val{font-family:'Cinzel',serif;font-size:24px;font-weight:700;color:var(--gold-l);}
+.dist-unit{font-family:'Cinzel',serif;font-size:11px;color:var(--gold);letter-spacing:1px;}
+.portal-type{font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;color:var(--accent2);margin-bottom:10px;}
+
+.pax-row{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.pax-label{font-family:'Cinzel',serif;font-size:8px;letter-spacing:1.5px;color:var(--text-dim);}
+.pax-val{font-family:'Cinzel',serif;font-size:18px;font-weight:700;color:var(--text);min-width:24px;text-align:center;}
+.pax-btn{width:26px;height:26px;border-radius:50%;border:1px solid var(--line);background:none;color:var(--text-dim);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;line-height:1;}
+.pax-btn:hover{border-color:var(--gold);color:var(--gold);}
+
+.reagents-title{font-family:'Cinzel',serif;font-size:8px;letter-spacing:2px;color:var(--text-dim);margin-bottom:8px;}
+.reagents-list{display:flex;flex-direction:column;gap:5px;}
+.reagent-row{display:flex;align-items:center;gap:8px;font-size:13px;}
+.reagent-icon{font-size:16px;flex-shrink:0;}
+.reagent-name{color:var(--text-mid);flex:1;}
+.reagent-count{font-family:'Cinzel',serif;font-size:13px;font-weight:700;color:var(--text);}
+
+/* ── CITIES LEGEND ── */
+.cities-list{display:flex;flex-direction:column;gap:4px;max-height:160px;overflow-y:auto;}
+.city-item{display:flex;align-items:center;gap:7px;padding:4px 6px;border-radius:5px;transition:background .15s;cursor:pointer;}
+.city-item:hover{background:rgba(123,94,167,.1);}
+.city-dot{width:7px;height:7px;border-radius:50%;background:var(--gold);border:1px solid var(--gold-l);flex-shrink:0;}
+.city-link{font-size:12px;color:var(--accent2);text-decoration:none;transition:color .15s;}
+.city-link:hover{color:var(--gold-l);}
+.city-sub{font-size:10px;color:var(--text-dim);font-style:italic;}
+
+/* ── TOP BUTTONS ── */
+.topbtn{font-family:'Cinzel',serif;font-size:8px;letter-spacing:1.5px;padding:6px 14px;border-radius:6px;border:1px solid var(--line);color:var(--text-dim);background:none;cursor:pointer;transition:all .2s;white-space:nowrap;}
+.topbtn:hover{border-color:var(--accent2);color:var(--accent2);}
+.topbtn.active{border-color:var(--gold);color:var(--gold-l);background:rgba(201,168,76,.06);}
+
+/* ── LEAFLET OVERRIDES ── */
+.leaflet-container{background:#080812 !important;}
+.leaflet-control-zoom{border:1px solid var(--line)!important;border-radius:6px!important;overflow:hidden;}
+.leaflet-control-zoom a{background:var(--panel)!important;color:var(--text-mid)!important;border-color:var(--line)!important;}
+.leaflet-control-zoom a:hover{background:var(--panel3)!important;color:var(--gold)!important;}
+.leaflet-control-attribution{background:rgba(8,8,18,.7)!important;color:var(--text-dim)!important;font-size:9px!important;}
+.leaflet-control-attribution a{color:var(--text-dim)!important;}
+
+/* Custom city marker popup */
+.leaflet-popup-content-wrapper{background:var(--panel)!important;border:1px solid var(--accent)!important;border-radius:8px!important;box-shadow:0 4px 20px rgba(0,0,0,.5)!important;}
+.leaflet-popup-tip{background:var(--panel)!important;}
+.leaflet-popup-content{color:var(--text)!important;font-family:'Crimson Pro',serif!important;font-size:13px!important;margin:10px 14px!important;}
+.popup-city-name{font-family:'Cinzel',serif;font-size:12px;color:var(--gold-l);margin-bottom:5px;letter-spacing:1px;}
+.popup-city-link{font-size:11px;color:var(--accent2);text-decoration:none;}
+.popup-city-link:hover{color:var(--gold-l);}
+.popup-city-desc{font-size:11px;color:var(--text-dim);margin-top:3px;font-style:italic;}
+
+/* Portal label on map */
+.portal-label{background:none!important;border:none!important;box-shadow:none!important;}
+.portal-label-inner{font-family:'Cinzel',serif;font-size:10px;font-weight:700;letter-spacing:1px;padding:3px 8px;border-radius:12px;white-space:nowrap;}
+
+/* Distance label */
+.dist-label{background:rgba(14,14,31,0.9)!important;border:1px solid var(--accent)!important;border-radius:8px!important;padding:4px 10px!important;font-family:'Cinzel',serif!important;font-size:10px!important;color:var(--gold-l)!important;white-space:nowrap!important;}
+
+/* Casino marker */
+.marker{background:none!important;border:none!important;box-shadow:none!important;}
+.marker-inner{
+  display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;
+  transition:transform .15s;
+}
+.marker-inner:hover{transform:scale(1.12);}
+.marker-icon{
+  width:28px;height:28px;border-radius:50%;
+  background:linear-gradient(135deg,#1a0a2e,#2d1055);
+  border:2px solid #9b7fe8;
+  box-shadow:0 0 12px rgba(155,127,232,.5);
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;line-height:1;
+}
+.marker-label{
+  font-family:'Cinzel',serif;font-size:7px;letter-spacing:1px;
+  color:#c9b8f0;text-shadow:0 1px 4px rgba(0,0,0,.8);
+  white-space:nowrap;text-align:center;
+  background:rgba(10,6,24,.8);padding:1px 5px;border-radius:3px;
+}
+
+/* Loading */
+.loading-overlay{position:absolute;inset:0;background:rgba(8,8,18,.7);display:flex;align-items:center;justify-content:center;z-index:800;pointer-events:none;transition:opacity .3s;}
+.loading-overlay.hidden{opacity:0;}
+.loading-text{font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;color:var(--gold-l);}
+
+@media(max-width:600px){
+  .sidebar{width:calc(100vw - 24px);right:12px;}
+  .topbar-title{font-size:11px;}
+}
+
+/* ── STATE LABELS ON MAP ── */
+.state-label-wrap{position: relative; background:none!important;border:none!important;box-shadow:none!important;pointer-events:auto!important;}
+.state-label-inner{
+  transform: translate(-50%, -50%);
+  position: absolute;
+  left: 0;
+  top: 0;
+  white-space: nowrap;
+  pointer-events: none;
+  font-family:'Cinzel',serif;
+  font-weight:700;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  white-space:nowrap;
+  cursor:pointer;
+  user-select:none;
+  padding:3px 0;
+  text-shadow:0 1px 6px rgba(0,0,0,.9),0 0 20px rgba(0,0,0,.7);
+  transition:opacity .2s;
+  opacity:.85;
+}
+.state-label-inner:hover{opacity:1;}
+
+/* ── STATE INFO PANEL (bottom-left) ── */
+#state-info-panel{
+  position:absolute;
+  bottom:24px;
+  left:16px;
+  z-index:900;
+  width:280px;
+  background:rgba(10,8,22,0.97);
+  border:1px solid var(--accent);
+  border-radius:12px;
+  padding:18px 20px;
+  backdrop-filter:blur(12px);
+  box-shadow:0 8px 32px rgba(0,0,0,.6);
+  pointer-events:auto;
+  transform:translateY(16px);
+  opacity:0;
+  transition:transform .25s ease, opacity .25s ease;
+}
+#state-info-panel.visible{transform:translateY(0);opacity:1;}
+.si-close{position:absolute;top:10px;right:12px;background:none;border:none;color:var(--text-dim);font-size:18px;cursor:pointer;line-height:1;padding:2px;transition:color .15s;}
+.si-close:hover{color:var(--life);}
+.si-name{font-family:'Cinzel',serif;font-size:15px;font-weight:700;letter-spacing:2px;margin-bottom:4px;}
+.si-desc{font-size:12px;color:var(--text-mid);line-height:1.55;margin-bottom:12px;}
+.si-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:11px;}
+.si-label{font-family:'Cinzel',serif;font-size:7.5px;letter-spacing:2px;color:var(--text-dim);}
+.si-val{font-family:'Cinzel',serif;font-size:12px;color:var(--text);}
+/* Security bar — EVE Online style */
+.si-sec-wrap{margin-top:4px;}
+.si-sec-bar{display:flex;gap:2px;margin-top:6px;}
+.si-sec-pip{flex:1;height:7px;border-radius:2px;background:var(--panel2);}
+.si-sec-val{font-family:'Cinzel',serif;font-size:14px;font-weight:700;margin-top:4px;}
+
+/* Disable markeks */
+.topbar-label{
+  font-size: 12px;
+}
+.topbar-checkbox-div{
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <a href="index.html" style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;color:var(--text-dim);text-decoration:none;border:1px solid var(--line);padding:5px 12px;border-radius:5px;transition:all .2s;white-space:nowrap;" onmouseover="this.style.color='var(--gold)';this.style.borderColor='var(--gold-d)'" onmouseout="this.style.color='var(--text-dim)';this.style.borderColor='var(--line)'">← Меню</a>
+    <div class="topbar-title">КАРТА МИРА</div>
+    <div class="topbar-sep"></div>
+    <button class="topbtn" id="btn-reload-cities" onclick="loadCities()">⟳ Обновить города</button>
+    <button class="topbtn active" id="btn-toggle-sidebar" onclick="toggleSidebar()">Панель ▸</button>
+    <br/>
+    <div class="topbar-checkbox-div">
+      <input type="checkbox" id="chk-toggle-markers" name="toggle-markers" onclick="toggleMarkers()">
+      <label for="chk-toggle-markers" class="topbar-label">Отключить маркеры</label>
+    </div>
+    <div style="margin-left:auto;font-size:10px;color:var(--text-dim);font-style:italic;" id="status-text"></div>
+  </div>
+
+  <!-- MAP -->
+  <div class="map-wrap">
+    <div id="map"></div>
+
+    <!-- SIDEBAR -->
+    <div class="sidebar" id="sidebar">
+
+      <!-- PORTAL CONTROLS -->
+      <div class="card">
+        <div class="card-title">ПОРТАЛЫ</div>
+        <div class="portal-mode-row">
+          <button class="mode-btn blue" id="btn-blue" onclick="setMode('blue')">🔵 Точка А</button>
+          <button class="mode-btn red"  id="btn-red"  onclick="setMode('red')">🔴 Точка Б</button>
+          <button class="mode-btn clear" onclick="clearPortals()">✕ Сброс</button>
+        </div>
+        <div class="portal-point" id="pt-blue">
+          <div class="portal-dot blue"></div>
+          <span class="portal-coords" id="coords-blue">Кликни на карту</span>
+        </div>
+        <div class="portal-point" id="pt-red">
+          <div class="portal-dot empty" id="dot-red"></div>
+          <span class="portal-coords" id="coords-red">Кликни на карту</span>
+        </div>
+      </div>
+
+      <!-- RESULT (shown when both portals set) -->
+      <div class="result-card" id="result-card" style="display:none;">
+        <div class="dist-row">
+          <span class="dist-val" id="res-dist">0</span>
+          <span class="dist-unit">КМ</span>
+        </div>
+        <div class="portal-type" id="res-type">—</div>
+
+        <div class="pax-row">
+          <span class="pax-label">ПЕРСОНАЖЕЙ</span>
+          <button class="pax-btn" onclick="changePax(-1)">−</button>
+          <span class="pax-val" id="pax-count">1</span>
+          <button class="pax-btn" onclick="changePax(1)">+</button>
+        </div>
+
+        <div class="reagents-title">РЕАГЕНТЫ</div>
+        <div class="reagents-list" id="reagents-list"></div>
+      </div>
+
+      <!-- CITIES LIST -->
+      <div class="card" id="cities-card">
+        <div class="card-title">ГОРОДА</div>
+        <div class="cities-list" id="cities-list">
+          <div style="font-size:11px;color:var(--text-dim);font-style:italic;">Загрузка...</div>
+        </div>
+      </div>
+
+    </div><!-- /sidebar -->
+
+    <div class="loading-overlay hidden" id="loading">
+      <div class="loading-text">⟳ Загружаем карту...</div>
+    </div>
+
+    <!-- STATE INFO PANEL (bottom-left, slides up on click) -->
+    <div id="state-info-panel">
+      <button class="si-close" onclick="closeStatePanel()">×</button>
+      <div class="si-name" id="si-name"></div>
+      <div class="si-marks" id="si-marks"></div>
+      <div class="si-desc" id="si-desc"></div>
+      <div class="si-row">
+        <span class="si-label">НАСЕЛЕНИЕ</span>
+        <span class="si-val" id="si-pop"></span>
+      </div>
+      <div class="si-sec-wrap">
+        <div class="si-label">БЕЗОПАСНОСТЬ</div>
+        <div class="si-sec-bar" id="si-sec-bar"></div>
+        <div class="si-sec-val" id="si-sec-val"></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /app -->
+
+<script src="config.js"></script>
+<script src="sheets.js"></script>
+<script>
+// ═══════════════════════════════════════════════════════════════════════════
+// CONFIG — настрой под свой мир
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Центр карты и начальный зум
+const MAP_CENTER = [20, 20];
+const MAP_ZOOM   = 4;
+
+// Тайловый слой — используем тёмную Stadia карту (бесплатно, без ключа)
+// Можно заменить на любой другой тайловый сервис или на изображение своего мира
+const TILE_URL = 'https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png';
+const TILE_ATTR = '© Stadia Maps';
+
+// ── PORTAL TIERS ──────────────────────────────────────────────────────────
+// По расстоянию определяется тип портала и стоимость реагентов
+// cost(pax) — функция от числа персонажей
+const PORTAL_TIERS = [
+  {
+    maxKm:    50,
+    name:     'Локальный портал',
+    desc:     'До 50 км',
+    reagents: pax => [
+      { color:'red', icon:'🔴', name:'Красный реагент', count: pax },
+    ],
+  },
+  {
+    maxKm:    200,
+    name:     'Региональный портал',
+    desc:     '50–200 км',
+    reagents: pax => [
+      { color:'red',    icon:'🔴', name:'Красный реагент',  count: pax * 2 },
+      { color:'blue',   icon:'🔵', name:'Синий реагент',    count: pax },
+    ],
+  },
+  {
+    maxKm:    600,
+    name:     'Дальний портал',
+    desc:     '200–600 км',
+    reagents: pax => [
+      { color:'red',    icon:'🔴', name:'Красный реагент',  count: pax * 2 },
+      { color:'blue',   icon:'🔵', name:'Синий реагент',    count: pax * 2 },
+      { color:'yellow', icon:'🟡', name:'Жёлтый реагент',   count: pax },
+    ],
+  },
+  {
+    maxKm:    Infinity,
+    name:     'Межконтинентальный портал',
+    desc:     'Свыше 600 км',
+    reagents: pax => [
+      { color:'red',    icon:'🔴', name:'Красный реагент',  count: pax * 3 },
+      { color:'blue',   icon:'🔵', name:'Синий реагент',    count: pax * 2 },
+      { color:'green',  icon:'🟢', name:'Зелёный реагент',  count: pax * 2 },
+      { color:'yellow', icon:'🟡', name:'Жёлтый реагент',   count: pax * 2 },
+    ],
+  },
+];
+
+// ═══════════════════════════════════════════════════════════════════════════
+// STATES CONFIG — редактируй здесь
+// ═══════════════════════════════════════════════════════════════════════════
+//
+// lat/lng       — координаты центра подписи
+// name          — название государства (будет на карте)
+// description   — описание (в панели слева снизу)
+// population    — население (строка, например "~2.4 млн")
+// security      — безопасность от -3.0 до +3.0
+//   +3.0  высокая безопасность, порядок, стража везде
+//   +1..+2 относительно безопасно
+//    0     нейтральная зона
+//   -1..-2 опасные территории
+//   -3.0  полный беспредел, нет закона
+// color         — цвет названия на карте (hex)
+// fontSize      — размер шрифта (px, по умолчанию 14)
+//
+const STATES = [
+  {
+    lat: 759.381,  lng: 3039.557,
+    name: 'Фрой',
+    marks: '🛒🎰',
+    description: 'Новейшее государство материка. Слабейшая сила магии Нового Элдроса. Населяют в основном гномы.',
+    population: '~8.1 млн',
+    security: 2.5,
+    color: '#e8c96e',
+    fontSize: 8,
+  },
+  {
+    lat: 1702.551,  lng: 5479.232,
+    name: 'Магический пик',
+    marks: '✨',
+    description: 'Место сбора преступности нового Элдроса. Воры, убийцы и насильники.',
+    population: '~3 тыс',
+    security: -3,
+    color: '#ffffff',
+    fontSize: 8,
+  },
+  {
+    lat: 1007.691,  lng: 4655.574,
+    name: 'Вельмир теней',
+    marks: '✨',
+    description: 'Когда братья были заточены, часть их вельмира просочилась в этот лес. Поговаривают, что шепот братьев все еще существует в этом лесу.',
+    population: '~0',
+    security: 0,
+    color: '#fff',
+    fontSize: 8,
+  },
+  {
+    lat: 1743.156,  lng: 2271.839,
+    name: 'Сильвиа Ноктум',
+    marks: '🛒⛏',
+    description: 'Когда братья были заточены, часть их шепота просочилась в этот лес. Вельмир — не просто место, а почти разумная сущность.',
+    population: '~0',
+    security: 1.5,
+    color: '#e8c96e',
+    fontSize: 8,
+  },
+  {
+    lat: 3227.574, lng: 695.925,
+    name: '☠Первый Силиктус☠',
+    marks: '🧙‍♂️',
+    description: 'Место добычи истинной магии, борьба с хаосом и создание реагентов.',
+    population: '~10 тыс',
+    security: -5,
+    color: '#D70040',
+    fontSize: 8,
+  }
+];
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MAP INIT
+// ═══════════════════════════════════════════════════════════════════════════
+
+var bounds = [[0,0], [4000, 8000]];
+        var map = L.map('map', {
+            crs: L.CRS.Simple,
+            minZoom: -3,
+            maxZoom: 0,
+            maxBounds: bounds,
+            maxBoundsViscosity: 1.0
+        });
+// L.tileLayer(TILE_URL, { attribution: TILE_ATTR, maxZoom: 18 }).addTo(map);
+ var image = L.imageOverlay("worldmap.jpg", bounds).addTo(map);
+        map.fitBounds(bounds);
+
+// ═══════════════════════════════════════════════════════════════════════════
+// PORTAL STATE
+// ═══════════════════════════════════════════════════════════════════════════
+
+let mode = 'blue'; // 'blue' | 'red' | null
+let portals = { blue: null, red: null }; // L.LatLng or null
+let portalMarkers = { blue: null, red: null };
+let portalLine  = null;
+let distLabel   = null;
+let pax = 1;
+
+function setMode(m) {
+  mode = m;
+  document.getElementById('btn-blue').classList.toggle('active', m === 'blue');
+  document.getElementById('btn-red').classList.toggle('active',  m === 'red');
+  map.getContainer().style.cursor = 'crosshair';
+}
+setMode('blue');
+
+map.on('click', function(e) {
+  closeStatePanel();
+  if (!mode) return;
+  placePortal(mode, e.latlng);
+});
+
+function placePortal(color, latlng) {
+  // Remove old marker
+  if (portalMarkers[color]) { map.removeLayer(portalMarkers[color]); }
+
+  portals[color] = latlng;
+
+  // Create marker
+  const isBlue = color === 'blue';
+  const hex    = isBlue ? '#5b8dee' : '#e05c5c';
+  const label  = isBlue ? 'А' : 'Б';
+
+  const icon = L.divIcon({
+    className: 'portal-label',
+    html: `<div class="portal-label-inner" style="background:${hex}22;border:2px solid ${hex};color:${hex};">${label}</div>`,
+    iconAnchor: [16, 16],
+  });
+
+  portalMarkers[color] = L.marker(latlng, { icon, zIndexOffset: 1000 }).addTo(map);
+
+  // Update coords display
+  const coordStr = `${latlng.lat.toFixed(3)}, ${latlng.lng.toFixed(3)}`;
+  document.getElementById('coords-' + color).textContent = coordStr;
+  if (color === 'red') {
+    document.getElementById('dot-red').classList.remove('empty');
+    document.getElementById('dot-red').classList.add('red');
+  }
+
+  // Auto-switch mode
+  if (color === 'blue' && !portals.red)  { setMode('red');  }
+  else if (color === 'red' && !portals.blue) { setMode('blue'); }
+  else { mode = null; map.getContainer().style.cursor = ''; }
+
+  updatePortalResult();
+}
+  // Disable markers
+  
+  function toggleMarkers() {
+  const disableMarkersCheckbox = document.getElementById('chk-toggle-markers');
+  console.log("disabled");
+  if (disableMarkersCheckbox.checked) {
+    document.querySelectorAll('.marker').forEach(el => {
+      el.style.display = 'none';
+      el.style.pointerEvents = 'none';
+    });
+  } else {
+    document.querySelectorAll('.marker').forEach(el => {
+      el.style.display = 'block';
+      el.style.pointerEvents = 'auto';
+    });
+  }
+};
+function clearPortals() {
+  ['blue','red'].forEach(c => {
+    if (portalMarkers[c]) { map.removeLayer(portalMarkers[c]); portalMarkers[c] = null; }
+    portals[c] = null;
+  });
+  if (portalLine)  { map.removeLayer(portalLine);  portalLine  = null; }
+  if (distLabel)   { map.removeLayer(distLabel);   distLabel   = null; }
+
+  document.getElementById('coords-blue').textContent = 'Кликни на карту';
+  document.getElementById('coords-red').textContent  = 'Кликни на карту';
+  document.getElementById('dot-red').classList.add('empty');
+  document.getElementById('dot-red').classList.remove('red');
+  document.getElementById('result-card').style.display = 'none';
+
+  pax = 1;
+  document.getElementById('pax-count').textContent = '1';
+  setMode('blue');
+}
+
+function updatePortalResult() {
+  if (!portals.blue || !portals.red) {
+    document.getElementById('result-card').style.display = 'none';
+    if (portalLine)  { map.removeLayer(portalLine);  portalLine  = null; }
+    if (distLabel)   { map.removeLayer(distLabel);   distLabel   = null; }
+    return;
+  }
+
+  const km = Math.round(map.distance(portals.blue, portals.red) / 4);
+
+  // Draw dashed line
+  if (portalLine)  { map.removeLayer(portalLine); }
+  if (distLabel)   { map.removeLayer(distLabel);  }
+
+  portalLine = L.polyline([portals.blue, portals.red], {
+    color: '#a67fd1',
+    weight: 2,
+    dashArray: '8 6',
+    opacity: 0.85,
+  }).addTo(map);
+
+  // Distance label at midpoint
+  const mid = L.latLng(
+    (portals.blue.lat + portals.red.lat) / 2,
+    (portals.blue.lng + portals.red.lng) / 2
+  );
+  distLabel = L.marker(mid, {
+    icon: L.divIcon({
+      className: '',
+      html: `<div class="dist-label">${km} км</div>`,
+      iconAnchor: [28, 14],
+    }),
+    interactive: false,
+  }).addTo(map);
+
+  // Find tier
+  const tier = PORTAL_TIERS.find(t => km <= t.maxKm);
+
+  document.getElementById('res-dist').textContent = km;
+  document.getElementById('res-type').textContent = `${tier.name} · ${tier.desc}`;
+  document.getElementById('result-card').style.display = '';
+
+  renderReagents(tier);
+}
+
+function renderReagents(tier) {
+  const list = document.getElementById('reagents-list');
+  list.innerHTML = '';
+  const items = tier.reagents(pax);
+  items.forEach(r => {
+    const row = document.createElement('div');
+    row.className = 'reagent-row';
+    row.innerHTML = `<span class="reagent-icon">${r.icon}</span>
+      <span class="reagent-name">${r.name}</span>
+      <span class="reagent-count">×${r.count}</span>`;
+    list.appendChild(row);
+  });
+}
+
+function changePax(delta) {
+  pax = Math.max(1, pax + delta);
+  document.getElementById('pax-count').textContent = pax;
+  if (portals.blue && portals.red) {
+    const km = Math.round(map.distance(portals.blue, portals.red) / 4);
+    const tier = PORTAL_TIERS.find(t => km <= t.maxKm);
+    renderReagents(tier);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CITIES
+// ═══════════════════════════════════════════════════════════════════════════
+// Google Sheets format (sheet name: "map_cities"):
+//   name | lat | lng | page | description
+//   name: название города
+//   lat/lng: координаты (десятичные градусы)
+//   page: ссылка на страницу города (например city_ironhold.html)
+//   description: краткое описание (необязательно)
+
+let cityMarkers = [];
+let citiesData  = [];
+
+const CITY_ICON = L.divIcon({
+  className: '',
+  html: `<div style="width:10px;height:10px;border-radius:50%;background:#c9a84c;border:2px solid #e8c96e;box-shadow:0 0 8px rgba(201,168,76,.6);"></div>`,
+  iconAnchor: [5, 5],
+});
+
+async function loadCities() {
+  setStatus('Загружаем города...');
+  try {
+    const rows = await sheetsGet('map_cities');
+    citiesData = rows.map(r => ({
+      name:        r.name        || r['название'] || '',
+      lat:         parseFloat(r.lat || r['широта']  || 0),
+      lng:         parseFloat(r.lng || r['долгота'] || 0),
+      page:        r.page        || r['страница']  || '',
+      description: r.description || r['описание']  || '',
+    })).filter(r => r.name && !isNaN(r.lat) && !isNaN(r.lng));
+
+    // Remove old markers
+    cityMarkers.forEach(m => map.removeLayer(m));
+    cityMarkers = [];
+
+    citiesData.forEach(city => {
+      const marker = L.marker([city.lat, city.lng], { icon: CITY_ICON }).addTo(map);
+      marker.bindPopup(`
+        <div class="popup-city-name">${city.name}</div>
+        ${city.page ? `<a class="popup-city-link" href="${city.page}" target="_blank">↗ Открыть карту города</a>` : ''}
+        ${city.description ? `<div class="popup-city-desc">${city.description}</div>` : ''}
+      `);
+      cityMarkers.push(marker);
+    });
+
+    renderCitiesList();
+    setStatus(`${citiesData.length} городов загружено`);
+    setTimeout(() => setStatus(''), 3000);
+  } catch(e) {
+    setStatus('Ошибка: ' + e.message);
+    document.getElementById('cities-list').innerHTML =
+      `<div style="font-size:11px;color:var(--life);font-style:italic;">Не удалось загрузить города.<br><span style="opacity:.7">Проверь лист map_cities в таблице.</span></div>`;
+  }
+}
+
+function renderCitiesList() {
+  const list = document.getElementById('cities-list');
+  if (!citiesData.length) {
+    list.innerHTML = '<div style="font-size:11px;color:var(--text-dim);font-style:italic;">Города не добавлены</div>';
+    return;
+  }
+  list.innerHTML = '';
+  citiesData.forEach((city, i) => {
+    const item = document.createElement('div');
+    item.className = 'city-item';
+    item.onclick = () => {
+      map.setView([city.lat, city.lng], 7, { animate: true });
+      cityMarkers[i]?.openPopup();
+    };
+    item.innerHTML = `
+      <div class="city-dot"></div>
+      <div style="flex:1;min-width:0;">
+        ${city.page
+          ? `<a class="city-link" href="${city.page}" target="_blank" onclick="event.stopPropagation()">${city.name}</a>`
+          : `<span class="city-link" style="cursor:default;">${city.name}</span>`
+        }
+        ${city.description ? `<div class="city-sub">${city.description}</div>` : ''}
+      </div>`;
+    list.appendChild(item);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// EVENTS — casinos and other map events
+// ═══════════════════════════════════════════════════════════════════════════
+// Google Sheets format (sheet "map_events"):
+//   type | name | lat | lng | description
+//   type: "casino" (or future types)
+//   name: название (используется как casino_name в URL)
+//   lat/lng: координаты
+//   description: краткое описание для попапа
+
+let eventMarkers = [];
+
+const EVENT_ICONS = {
+  casino: (name) => L.divIcon({
+    className: 'marker',
+    html: `<div class="marker-inner">
+      <div class="marker-icon">🎰</div>
+      <div class="marker-label">${name}</div>
+    </div>`,
+    iconAnchor: [5, 4],
+  }),
+  shop: (name) => L.divIcon({
+    className: 'marker',
+    html: `<div class="marker-inner">
+      <div class="marker-icon">🛒</div>
+      <div class="marker-label">${name}</div>
+    </div>`,
+    iconAnchor: [5, 4],
+  })
+};
+
+const EVENT_POPUP_BUILDERS = {
+  casino: (ev) => `
+    <div class="popup-city-name" style="color:#c9b8f0;">🎰 ${ev.name}</div>
+    ${ev.description ? `<div class="popup-city-desc">${ev.description}</div>` : ''}
+    <a class="popup-city-link" href="casino.html?casino_name=${encodeURIComponent(ev.name)}" target="_blank"
+       style="color:#9b7fe8;margin-top:6px;display:block;">↗ Войти в казино</a>
+  `,
+  shop: (ev) => `
+    <div class="popup-city-name" style="color:#c9b8f0;">🎰 ${ev.name}</div>
+    ${ev.description ? `<div class="popup-city-desc">${ev.description}</div>` : ''}
+  `,
+};
+
+async function loadEvents() {
+  try {
+    const rows = await sheetsGet('map_events');
+    const events = rows.map(r => ({
+      type:        (r.type        || 'casino').toLowerCase().trim(),
+      name:         r.name        || r['название'] || '',
+      lat:          parseFloat(r.lat  || r['широта']  || 0),
+      lng:          parseFloat(r.lng  || r['долгота'] || 0),
+      description:  r.description || r['описание']  || '',
+    })).filter(r => r.name && !isNaN(r.lat) && !isNaN(r.lng));
+
+    eventMarkers.forEach(m => map.removeLayer(m));
+    eventMarkers = [];
+
+    events.forEach(ev => {
+      const iconFn = EVENT_ICONS[ev.type] || EVENT_ICONS.casino;
+      const popupFn = EVENT_POPUP_BUILDERS[ev.type] || EVENT_POPUP_BUILDERS.casino;
+      const marker = L.marker([ev.lat, ev.lng], { icon: iconFn(ev.name) }).addTo(map);
+      marker.bindPopup(popupFn(ev));
+      eventMarkers.push(marker);
+    });
+  } catch(e) {
+    // Events sheet optional — fail silently
+    console.warn('map_events not loaded:', e.message);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// STATES — render labels on map + info panel
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Security colour ramp: -3 (deep red) → 0 (grey) → +3 (vivid green)
+// Matches EVE Online aesthetic
+function secColor(s) {
+  // clamp
+  const v = Math.max(-3, Math.min(3, s));
+  if (v >= 0) {
+    // 0 → grey #665f88, +3 → bright green #4cbb8a
+    const t = v / 3;
+    const r = Math.round(102  + (76  - 102)  * t);
+    const g = Math.round(95   + (187 - 95)   * t);
+    const b = Math.round(136  + (138 - 136)  * t);
+    return `rgb(${r},${g},${b})`;
+  } else {
+    // 0 → grey, -3 → bright red #e05c5c
+    const t = (-v) / 3;
+    const r = Math.round(102  + (224 - 102) * t);
+    const g = Math.round(95   + (92  - 95)  * t);
+    const b = Math.round(136  + (92  - 136) * t);
+    return `rgb(${r},${g},${b})`;
+  }
+}
+
+// Build 7-pip security bar (like EVE: -3 to +3 in 7 steps)
+function renderSecBar(sec) {
+  const bar   = document.getElementById('si-sec-bar');
+  const label = document.getElementById('si-sec-val');
+  bar.innerHTML = '';
+
+  // 7 pips: index 0 = -3, index 3 = 0, index 6 = +3
+  for (let i = 0; i < 7; i++) {
+    const pipVal = i - 3; // -3..+3
+    const pip = document.createElement('div');
+    pip.className = 'si-sec-pip';
+    const filled = (sec >= 0)
+      ? pipVal >= 0 && pipVal <= sec
+      : pipVal <= 0 && pipVal >= sec;
+    pip.style.background = filled ? secColor(pipVal) : 'rgba(42,31,69,0.6)';
+    bar.appendChild(pip);
+  }
+
+  const sign = sec > 0 ? '+' : '';
+  label.textContent = sign + sec.toFixed(1);
+  label.style.color = secColor(sec);
+}
+
+function openStatePanel(state) {
+  document.getElementById('si-name').textContent  = state.name;
+  document.getElementById('si-name').style.color  = state.color || '#e8c96e';
+  document.getElementById('si-marks').textContent = state.marks || '';
+  document.getElementById('si-desc').textContent  = state.description || '';
+  document.getElementById('si-pop').textContent   = state.population  || '—';
+  renderSecBar(state.security ?? 0);
+  document.getElementById('state-info-panel').classList.add('visible');
+}
+
+function closeStatePanel() {
+  document.getElementById('state-info-panel').classList.remove('visible');
+}
+
+function initStates() {
+  STATES.forEach(state => {
+    const size = state.fontSize || 14;
+    const icon = L.divIcon({
+      className: 'state-label-wrap',
+      html: `<div class="state-label-inner" style="font-size:${size}px;color:${state.color || '#e8c96e'};text-shadow: 6px 5px 16px #000000;">${state.name}</div>`,
+      iconAnchor: [0, 0], // will be centred via CSS transform below
+    });
+
+    const marker = L.marker([state.lat, state.lng], {
+      icon,
+      interactive: true,
+      zIndexOffset: -100,
+    }).addTo(map);
+
+    marker.on('click', (e) => {
+      L.DomEvent.stopPropagation(e);
+      openStatePanel(state);
+    });
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// UI HELPERS
+// ═══════════════════════════════════════════════════════════════════════════
+
+function setStatus(msg) {
+  document.getElementById('status-text').textContent = msg;
+}
+
+let sidebarVisible = true;
+function toggleSidebar() {
+  sidebarVisible = !sidebarVisible;
+  const sb = document.getElementById('sidebar');
+  sb.style.display = sidebarVisible ? 'flex' : 'none';
+  document.getElementById('btn-toggle-sidebar').textContent = sidebarVisible ? 'Панель ▸' : 'Панель ◂';
+  document.getElementById('btn-toggle-sidebar').classList.toggle('active', sidebarVisible);
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+initStates();
+loadCities();
+loadEvents();
+</script>
+</body>
+</html>

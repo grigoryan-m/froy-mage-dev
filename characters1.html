@@ -68,10 +68,6 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;bac
 .char-btn-export:hover{border-color:var(--gold-d);color:var(--gold);}
 .char-btn-delete{border-color:var(--line);color:var(--text-dim);}
 .char-btn-delete:hover{border-color:var(--life);color:var(--life);}
-.char-mmr-badge{font-family:'Cinzel',serif;font-size:8px;letter-spacing:1.5px;padding:2px 8px;border-radius:8px;border:1px solid var(--gold-d);color:var(--gold);background:rgba(201,168,76,.07);white-space:nowrap;}
-.avg-mmr-bar{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 16px;display:flex;align-items:center;gap:12px;margin-bottom:22px;}
-.avg-mmr-label{font-family:'Cinzel',serif;font-size:8px;letter-spacing:2px;color:var(--text-dim);}
-.avg-mmr-val{font-family:'Cinzel',serif;font-size:14px;font-weight:700;color:var(--gold-l);}
 
 /* BRANCH TAGS */
 .char-branches{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px;}
@@ -97,21 +93,13 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;bac
   <div class="chars-count">Персонажей: <span id="count">0</span></div>
 </div>
 
-<div class="avg-mmr-bar" id="avg-mmr-bar" style="display:none;">
-  <div class="avg-mmr-label">СРЕДНИЙ MMR</div>
-  <div class="avg-mmr-val" id="avg-mmr-val">—</div>
-  <div style="flex:1;height:1px;background:linear-gradient(90deg,var(--gold-d),transparent);opacity:.4;"></div>
-</div>
-
 <div id="chars-container"></div>
 
 </div>
 
-<script src="config.js"></script>
 <script>
-const CHAR_INDEX_KEY = 'froyskyy_chars_index';
+const CHAR_INDEX_KEY = 'froyskyy_chars_index'; // array of {id, name, savedAt}
 const CHAR_PREFIX    = 'froyskyy_char_';
-const DEFAULT_MMR    = 1000;
 
 const ADJ_COLORS = {
   natisk:'#c9a84c', obman:'#e8934c', pokoj:'#9b7fe8',
@@ -122,35 +110,31 @@ const ADJ_NAMES = {
   istsel:'ИСЦЕЛЕНИЕ', gospod:'ГОСПОДСТВО', stoikost:'СТОЙКОСТЬ',
 };
 
-async function fbGetMMR(uuid) {
-  try {
-    if (!uuid || !FIREBASE_CONFIG?.databaseURL) return DEFAULT_MMR;
-    const r = await fetch(`${FIREBASE_CONFIG.databaseURL}/mmr/${uuid}.json`);
-    if (!r.ok) return DEFAULT_MMR;
-    const v = await r.json();
-    return (typeof v === 'number') ? v : DEFAULT_MMR;
-  } catch { return DEFAULT_MMR; }
-}
-
+// ── INDEX HELPERS ─────────────────────────────────────────────────────────────
 function getIndex() {
   try { return JSON.parse(localStorage.getItem(CHAR_INDEX_KEY)) || []; }
   catch(e) { return []; }
 }
-function saveIndex(idx) { localStorage.setItem(CHAR_INDEX_KEY, JSON.stringify(idx)); }
+function saveIndex(idx) {
+  localStorage.setItem(CHAR_INDEX_KEY, JSON.stringify(idx));
+}
 function getChar(id) {
   try { return JSON.parse(localStorage.getItem(CHAR_PREFIX + id)); }
   catch(e) { return null; }
 }
 
+// ── CREATE NEW ────────────────────────────────────────────────────────────────
 function createNew() {
   const id = 'c' + Date.now();
   const idx = getIndex();
   idx.push({ id, name: 'Новый персонаж', savedAt: Date.now() });
   saveIndex(idx);
+  // Initialize empty char state
   localStorage.setItem(CHAR_PREFIX + id, JSON.stringify({ charName:'', playerName:'' }));
   location.href = 'character.html?id=' + id;
 }
 
+// ── IMPORT JSON ───────────────────────────────────────────────────────────────
 function importChar(e) {
   const file = e.target.files[0]; if(!file) return;
   const reader = new FileReader();
@@ -170,6 +154,7 @@ function importChar(e) {
   e.target.value = '';
 }
 
+// ── DELETE ────────────────────────────────────────────────────────────────────
 function deleteChar(id, e) {
   e.stopPropagation(); e.preventDefault();
   const data = getChar(id);
@@ -181,6 +166,7 @@ function deleteChar(id, e) {
   renderChars();
 }
 
+// ── EXPORT JSON ───────────────────────────────────────────────────────────────
 function exportChar(id, e) {
   e.stopPropagation(); e.preventDefault();
   const data = getChar(id); if(!data) return;
@@ -192,9 +178,8 @@ function exportChar(id, e) {
   a.click(); URL.revokeObjectURL(a.href);
 }
 
-function escHtml(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-
-async function renderChars() {
+// ── RENDER ────────────────────────────────────────────────────────────────────
+function renderChars() {
   const idx = getIndex();
   document.getElementById('count').textContent = idx.length;
   const container = document.getElementById('chars-container');
@@ -205,7 +190,6 @@ async function renderChars() {
         <div class="empty-icon">✦</div>
         <p>Нет созданных персонажей.<br>Создай нового или загрузи JSON.</p>
       </div>`;
-    document.getElementById('avg-mmr-bar').style.display = 'none';
     return;
   }
 
@@ -213,37 +197,22 @@ async function renderChars() {
   const grid = document.createElement('div');
   grid.className = 'chars-grid';
 
-  // Fetch all MMRs in parallel
-  const entries = idx.slice().reverse();
-  const mmrValues = await Promise.all(entries.map(entry => {
+  idx.slice().reverse().forEach(entry => {
     const data = getChar(entry.id) || {};
-    return fbGetMMR(data.charUUID || '');
-  }));
-
-  // Avg MMR
-  const validMMRs = mmrValues.filter(v => typeof v === 'number');
-  if (validMMRs.length) {
-    const avg = Math.round(validMMRs.reduce((a,b) => a+b, 0) / validMMRs.length);
-    document.getElementById('avg-mmr-val').textContent = avg;
-    document.getElementById('avg-mmr-bar').style.display = '';
-  }
-
-  entries.forEach((entry, i) => {
-    const data = getChar(entry.id) || {};
-    const mmr  = mmrValues[i];
     const charName   = data.charName   || 'Безымянный';
     const playerName = data.playerName || '—';
 
-    const barrierMax  = parseInt(data.barrierMax) || 0;
-    const lifeMax     = parseInt(data.lifeMax)    || 0;
-    const barrierFill = (data.hpFill?.['barrier-boxes']) || 0;
-    const lifeFill    = (data.hpFill?.['life-boxes'])    || 0;
-    const activeAdj   = Array.isArray(data.adjActive) ? data.adjActive : [];
+    // HP values
+    const barrierMax = parseInt(data.barrierMax) || 0;
+    const lifeMax    = parseInt(data.lifeMax)    || 0;
+    const barrierFill= (data.hpFill?.['barrier-boxes']) || 0;
+    const lifeFill   = (data.hpFill?.['life-boxes'])    || 0;
 
-    const mmrBadge = (mmr !== DEFAULT_MMR)
-      ? `<span class="char-mmr-badge">MMR ${mmr}</span>`
-      : '';
+    // Branches
+    const activeAdj  = Array.isArray(data.adjActive) ? data.adjActive : [];
 
+    // Build name — try buildsData from localStorage isn't available here,
+    // just show branch names
     let buildHtml = '';
     if(activeAdj.length === 2) {
       const [b1, b2] = activeAdj;
@@ -260,6 +229,7 @@ async function renderChars() {
       buildHtml = `<div class="char-build"><span class="char-build-label">БИЛД</span><span class="char-build-none">нет билда</span></div>`;
     }
 
+    // Branch tags
     let branchTagsHtml = '';
     if(activeAdj.length) {
       branchTagsHtml = '<div class="char-branches">' +
@@ -269,6 +239,7 @@ async function renderChars() {
         }).join('') + '</div>';
     }
 
+    // Date + UUID
     const dateStr = entry.savedAt
       ? new Date(entry.savedAt).toLocaleDateString('ru-RU',{day:'numeric',month:'short'})
       : '';
@@ -280,10 +251,7 @@ async function renderChars() {
     card.href = 'character.html?id=' + entry.id;
     card.innerHTML = `
       <div class="char-card-header">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">
-          <div class="char-name" style="flex:1;">${escHtml(charName)}</div>
-          ${mmrBadge}
-        </div>
+        <div class="char-name">${escHtml(charName)}</div>
         <div class="char-player">Игрок: ${escHtml(playerName)}</div>
       </div>
       <div class="char-card-body">
@@ -317,6 +285,8 @@ async function renderChars() {
   container.appendChild(grid);
 }
 
+// Also sync index name on character save — call this from character.html isn't easy,
+// but we update the name when rendering from saved data.
 function syncIndexNames() {
   const idx = getIndex();
   let changed = false;
@@ -327,6 +297,8 @@ function syncIndexNames() {
   });
   if(changed) saveIndex(idx);
 }
+
+function escHtml(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
 syncIndexNames();
 renderChars();

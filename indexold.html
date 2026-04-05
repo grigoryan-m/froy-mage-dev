@@ -3,1351 +3,306 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Фройский Маг — Лист Персонажа</title>
+<title>Фройские Маги — Том II</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#7b5ea7">
 <style>
-:root{--bg:#080812;--panel:#0e0e1f;--panel2:#131328;--panel3:#1a1a35;--accent:#7b5ea7;--accent2:#a67fd1;--gold:#c9a84c;--gold-l:#e8c96e;--gold-d:#8a6a20;--text:#e8e0f0;--text-dim:#7a6f90;--text-mid:#b0a0c8;--barrier:#5b8dee;--life:#e05c5c;--line:#2a1f45;--spark-off:#1e1830;}
+:root{--bg:#080812;--panel:#0e0e1f;--panel2:#131328;--accent:#7b5ea7;--accent2:#a67fd1;--gold:#c9a84c;--gold-l:#e8c96e;--gold-d:#8a6a20;--text:#e8e0f0;--text-dim:#7a6f90;--text-mid:#b0a0c8;--life:#e05c5c;--line:#2a1f45;}
 *{box-sizing:border-box;margin:0;padding:0;}
-body{background:var(--bg);color:var(--text);font-family:'Crimson Pro',Georgia,serif;min-height:100vh;padding:24px 16px 40px;background-image:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(123,94,167,.08) 0%,transparent 70%),radial-gradient(ellipse 40% 40% at 20% 80%,rgba(91,141,238,.05) 0%,transparent 60%);}
-body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background-image:radial-gradient(1px 1px at 10% 15%,rgba(255,255,255,.18) 0%,transparent 100%),radial-gradient(1px 1px at 25% 40%,rgba(255,255,255,.12) 0%,transparent 100%),radial-gradient(1px 1px at 40% 8%,rgba(255,255,255,.15) 0%,transparent 100%),radial-gradient(1px 1px at 60% 25%,rgba(255,255,255,.10) 0%,transparent 100%),radial-gradient(1px 1px at 75% 55%,rgba(255,255,255,.14) 0%,transparent 100%),radial-gradient(1px 1px at 88% 12%,rgba(255,255,255,.16) 0%,transparent 100%),radial-gradient(1px 1px at 33% 85%,rgba(255,255,255,.11) 0%,transparent 100%),radial-gradient(1px 1px at 92% 45%,rgba(255,255,255,.13) 0%,transparent 100%);}
-.sheet{position:relative;max-width:960px;margin:0 auto;z-index:1;}
-[contenteditable]{outline:none;border-bottom:1px solid transparent;transition:border-color .2s,background .2s;border-radius:2px;padding:0 2px;cursor:text;}
-[contenteditable]:hover{border-bottom-color:var(--accent);}
-[contenteditable]:focus{border-bottom-color:var(--gold);background:rgba(201,168,76,.06);}
-[contenteditable]:empty::before{content:attr(data-placeholder);color:var(--text-dim);font-style:italic;pointer-events:none;}
-.header{text-align:center;padding:28px 20px 20px;border:1px solid var(--accent);border-radius:10px;background:var(--panel);margin-bottom:16px;position:relative;overflow:hidden;}
-.header::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 80% at 50% 50%,rgba(123,94,167,.12) 0%,transparent 70%);}
-.header-deco{position:absolute;top:14px;left:50%;transform:translateX(-50%);width:200px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);}
-.header h1{font-family:'Cinzel',serif;font-size:26px;font-weight:700;letter-spacing:6px;color:var(--gold-l);text-shadow:0 0 30px rgba(201,168,76,.4);position:relative;}
-.header-sub{font-size:13px;color:var(--accent2);letter-spacing:3px;margin-top:6px;font-style:italic;position:relative;}
-.info-row{display:grid;grid-template-columns:2fr 1.5fr 1fr .8fr;gap:10px;margin-bottom:16px;}
-.info-field{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:8px 12px 6px;transition:border-color .2s;}
-.info-field:focus-within{border-color:var(--accent);}
-.info-label{font-family:'Cinzel',serif;font-size:7px;letter-spacing:2px;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px;}
-.info-value{font-size:15px;color:var(--text);min-height:20px;display:block;}
-.info-value.locked{color:var(--gold-l);font-family:'Cinzel',serif;font-size:13px;cursor:default;border-bottom:none!important;background:none!important;}
-.hp-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-.hp-block{background:var(--panel);border-radius:8px;padding:12px;border:1px solid var(--line);}
-.hp-block.barrier{border-top:2px solid var(--barrier);}.hp-block.life{border-top:2px solid var(--life);}
-.hp-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;}
-.hp-title{font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;font-weight:600;}
-.barrier .hp-title{color:var(--barrier);}.life .hp-title{color:var(--life);}
-.hp-max-box{display:flex;flex-direction:column;align-items:center;gap:2px;}
-.hp-max-label{font-size:7px;color:var(--text-dim);letter-spacing:1px;font-family:'Cinzel',serif;}
-.hp-max-val{font-family:'Cinzel',serif;font-size:13px;width:40px;text-align:center;border:none;border-bottom:1px solid var(--accent);background:transparent;outline:none;padding:0 2px;}
-.hp-max-val::-webkit-inner-spin-button,.hp-max-val::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}
-.hp-max-val[type=number]{-moz-appearance:textfield;}
-.barrier .hp-max-val{color:var(--barrier);}.life .hp-max-val{color:var(--life);}
-.hp-formula{font-size:10px;color:var(--text-dim);font-style:italic;margin-bottom:8px;}
-.hp-boxes{display:flex;flex-wrap:wrap;gap:4px;}
-.hp-box{width:16px;height:16px;border-radius:3px;background:var(--spark-off);cursor:pointer;transition:background .15s,box-shadow .15s;flex-shrink:0;}
-.barrier .hp-box{border:1px solid rgba(91,141,238,.3);}.life .hp-box{border:1px solid rgba(224,92,92,.3);}
-.barrier .hp-box.filled{background:var(--barrier);box-shadow:0 0 6px rgba(91,141,238,.5);}
-.life .hp-box.filled{background:var(--life);box-shadow:0 0 6px rgba(224,92,92,.5);}
-.main-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
-.magic-panel{background:var(--panel);border:1px solid var(--accent);border-radius:10px;padding:16px 12px;display:flex;flex-direction:column;align-items:center;}
-.panel-title{font-family:'Cinzel',serif;font-size:10px;letter-spacing:3px;color:var(--gold-l);margin-bottom:4px;}
-.panel-sub{font-size:10px;color:var(--text-dim);font-style:italic;margin-bottom:12px;}
-.node-group .node-circle{transition:filter .2s;}.node-group:hover .node-circle{filter:brightness(1.3);}
-.sparks-row{display:flex;gap:5px;justify-content:center;}
-.spark-sq{width:18px;height:18px;border-radius:3px;background:var(--spark-off);cursor:pointer;border:1px solid #3a2a5a;transition:background .15s,box-shadow .15s;flex-shrink:0;}
-.spark-sq:hover{border-color:#a67fd1;}
-.spark-sq.on{background:var(--gold);box-shadow:0 0 7px rgba(201,168,76,.55);border-color:var(--gold-l);}
-.mana-input-wrap{display:flex;align-items:center;justify-content:center;gap:3px;width:100%;height:100%;}
-.mana-inp{background:transparent;border:none;border-bottom:1px solid rgba(201,168,76,.5);color:#e8c96e;font-family:'Cinzel',serif;font-size:13px;width:28px;text-align:center;outline:none;padding:0 1px;}
-.mana-inp::placeholder{color:rgba(201,168,76,.3);font-size:11px;}
-.mana-sep{color:rgba(201,168,76,.6);font-family:'Cinzel',serif;font-size:14px;line-height:1;user-select:none;}
-.obelisks-panel{background:var(--panel);border:1px solid var(--accent);border-radius:10px;padding:16px 14px;}
-.obelisk-row{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:6px;background:var(--panel2);margin-bottom:8px;border-left:3px solid transparent;}
-.obelisk-icon{width:24px;height:24px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
-.obelisk-icon svg{width:100%;height:100%;}
-.obelisk-info{flex:1;min-width:0;}
-.obelisk-name{font-family:'Cinzel',serif;font-size:9px;letter-spacing:1.5px;font-weight:600;margin-bottom:2px;}
-.obelisk-desc{font-size:10px;color:var(--text-dim);font-style:italic;}
-.obelisk-checks{display:flex;gap:4px;flex-shrink:0;}
-.ob-check{width:13px;height:13px;border-radius:2px;background:var(--spark-off);cursor:pointer;border:1px solid transparent;transition:background .15s,box-shadow .15s;flex-shrink:0;}
-.obelisk-counter{display:flex;align-items:center;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--line);}
-.obelisk-counter span{font-size:11px;color:var(--text-dim);font-style:italic;}
-.counter-val{font-family:'Cinzel',serif;font-size:14px;color:var(--gold-l);min-width:24px;}
-.section-title{font-family:'Cinzel',serif;font-size:10px;letter-spacing:3px;color:var(--gold-l);margin-bottom:10px;display:flex;align-items:center;gap:8px;}
-.section-title::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--gold-d),transparent);}
-.dice-panel{background:var(--panel);border:1px solid var(--accent);border-radius:10px;padding:14px 16px;margin-bottom:16px;}
-.dice-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px;}
-.dice-btn{background:var(--panel2);border:1px solid var(--line);color:var(--text-mid);font-family:'Cinzel',serif;font-size:10px;letter-spacing:1px;padding:6px 12px;border-radius:5px;cursor:pointer;transition:all .15s;position:relative;user-select:none;}
-.dice-btn:hover{border-color:var(--accent2);color:var(--text);}
-.dice-btn.active{border-color:var(--gold);color:var(--gold-l);background:rgba(201,168,76,.08);}
-.dice-count{position:absolute;top:-6px;right:-6px;background:var(--gold);color:#0a0818;font-size:8px;font-weight:700;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;}
-.dice-pool-display{font-family:'Crimson Pro',serif;font-size:13px;color:var(--text-dim);font-style:italic;min-height:20px;flex:1;}
-.dice-pool-display.has-dice{color:var(--gold-l);font-style:normal;}
-.dice-roll-btn{background:linear-gradient(135deg,rgba(123,94,167,.3),rgba(91,141,238,.2));border:1px solid var(--accent);color:var(--text);font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;padding:8px 20px;border-radius:5px;cursor:pointer;transition:all .2s;}
-.dice-roll-btn:hover{background:rgba(123,94,167,.4);border-color:var(--accent2);}
-.dice-clear-btn{background:none;border:1px solid #3a2040;color:var(--text-dim);font-family:'Cinzel',serif;font-size:9px;padding:6px 12px;border-radius:5px;cursor:pointer;transition:all .15s;}
-.dice-clear-btn:hover{border-color:var(--life);color:var(--life);}
-#roll-notifications{position:fixed;bottom:24px;right:24px;display:flex;flex-direction:column;gap:10px;z-index:1000;pointer-events:none;align-items:flex-end;}
-.roll-notif{pointer-events:all;background:var(--panel3);border:1px solid var(--accent);border-radius:10px;padding:14px 18px 12px;min-width:180px;max-width:260px;box-shadow:0 8px 32px rgba(0,0,0,.6),0 0 20px rgba(123,94,167,.15);animation:notif-in .3s cubic-bezier(.34,1.56,.64,1);position:relative;}
-@keyframes notif-in{from{opacity:0;transform:translateX(30px) scale(.92);}to{opacity:1;transform:translateX(0) scale(1);}}
-.roll-notif.closing{animation:notif-out .2s ease-in forwards;}
-@keyframes notif-out{to{opacity:0;transform:translateX(30px) scale(.9);}}
-.roll-notif-close{position:absolute;top:8px;right:10px;background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:16px;line-height:1;padding:0;transition:color .15s;}
-.roll-notif-close:hover{color:var(--life);}
-.roll-notif-total{font-family:'Cinzel',serif;font-size:32px;font-weight:700;color:var(--gold-l);text-shadow:0 0 20px rgba(201,168,76,.5);line-height:1;margin-bottom:4px;}
-.roll-notif-formula{font-family:'Crimson Pro',serif;font-size:12px;color:var(--accent2);margin-bottom:4px;font-style:italic;}
-.roll-notif-breakdown{font-family:'Crimson Pro',serif;font-size:13px;color:var(--text-mid);}
-.inline-roll{display:inline-block;background:rgba(76,187,138,.15);border:1px solid rgba(76,187,138,.4);border-radius:4px;padding:0 5px;color:#7ecba1;cursor:pointer;transition:background .15s,box-shadow .15s;user-select:none;white-space:nowrap;}
-.inline-roll:hover{background:rgba(76,187,138,.28);box-shadow:0 0 8px rgba(76,187,138,.3);}
-.spells-panel{background:var(--panel);border:1px solid var(--accent);border-radius:10px;padding:16px 14px;margin-bottom:16px;}
+html,body{}
+body{background:var(--bg);color:var(--text);font-family:'Crimson Pro',Georgia,serif;min-height:100vh;display:flex;flex-direction: column; align-items:center;justify-content:center;padding:24px 16px;}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:
+    radial-gradient(1px 1px at 8%  15%,rgba(255,255,255,.18) 0%,transparent 100%),
+    radial-gradient(1px 1px at 92% 8%, rgba(255,255,255,.14) 0%,transparent 100%),
+    radial-gradient(1px 1px at 35% 72%,rgba(255,255,255,.10) 0%,transparent 100%),
+    radial-gradient(1px 1px at 78% 55%,rgba(255,255,255,.12) 0%,transparent 100%),
+    radial-gradient(1px 1px at 55% 30%,rgba(255,255,255,.08) 0%,transparent 100%),
+    radial-gradient(1px 1px at 20% 88%,rgba(255,255,255,.09) 0%,transparent 100%),
+    radial-gradient(1px 1px at 68% 22%,rgba(255,255,255,.11) 0%,transparent 100%),
+    radial-gradient(ellipse 70% 50% at 50% 50%,rgba(123,94,167,.07) 0%,transparent 60%);}
 
-/* CLASS SKILLS */
-.skills-panel{background:var(--panel);border:1px solid var(--accent);border-radius:10px;padding:16px 14px;margin-bottom:16px;}
-.skills-tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;}
-.skills-tab{font-family:'Cinzel',serif;font-size:8px;letter-spacing:1.5px;padding:5px 14px;border-radius:20px;border:1px solid var(--line);background:var(--panel2);color:var(--text-dim);cursor:pointer;transition:all .2s;}
-.skills-tab.active{border-color:var(--gold);color:var(--gold-l);background:rgba(201,168,76,.08);}
-.skills-tab[data-el="fly"].active  {border-color:#6ab0f5;color:#6ab0f5;background:rgba(106,176,245,.08);}
-.skills-tab[data-el="atk"].active  {border-color:#e05c5c;color:#e05c5c;background:rgba(224,92,92,.08);}
-.skills-tab[data-el="ill"].active  {border-color:#b07fd1;color:#b07fd1;background:rgba(176,127,209,.08);}
-.skills-tab[data-el="def"].active  {border-color:#5b8dee;color:#5b8dee;background:rgba(91,141,238,.08);}
-.skills-tab[data-el="ctrl"].active {border-color:#4cbb8a;color:#4cbb8a;background:rgba(76,187,128,.08);}
-.skills-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;}
-.skill-card{border-radius:7px;padding:10px 12px;border:1px solid var(--line);background:var(--panel2);transition:opacity .25s,border-color .25s,background .25s;}
-.skill-card.locked{opacity:.25;filter:grayscale(.8);}
-.skill-card.unlocked{opacity:1;}
-.skill-card-header{display:flex;align-items:center;gap:6px;margin-bottom:5px;flex-wrap:wrap;}
-.skill-level{font-family:'Cinzel',serif;font-size:9px;letter-spacing:1px;padding:2px 7px;border-radius:10px;border:1px solid transparent;flex-shrink:0;}
-.skill-type{font-family:'Cinzel',serif;font-size:7px;letter-spacing:1px;color:var(--text-dim);}
-.skill-mana{font-family:'Cinzel',serif;font-size:9px;padding:2px 7px;border-radius:10px;border:1px solid var(--gold-d);color:var(--gold);background:rgba(201,168,76,.07);flex-shrink:0;margin-left:auto;}
-.skill-name{font-family:'Cinzel',serif;font-size:10px;font-weight:600;margin-bottom:4px;}
-.skill-desc{font-size:11px;color:var(--text-dim);line-height:1.5;}
-/* clickable dice formula inside skill desc */
-.skill-desc .inline-roll{display:inline-block;background:rgba(76,187,138,.12);border:1px solid rgba(76,187,138,.35);border-radius:3px;padding:0 4px;color:#7ecba1;cursor:pointer;white-space:nowrap;font-size:11px;transition:background .15s;}
-.skill-desc .inline-roll:hover{background:rgba(76,187,138,.25);}
-/* requirement icon + tooltip */
-.req-icon{position:relative;display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;border:1px solid currentColor;font-size:10px;cursor:help;flex-shrink:0;opacity:.7;transition:opacity .15s;margin-left:2px;vertical-align:middle;}
-.req-icon:hover{opacity:1;}
-.req-icon .req-tooltip{visibility:hidden;opacity:0;position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);white-space:nowrap;background:var(--panel3,#1a1a35);border:1px solid var(--accent);border-radius:6px;padding:7px 12px;font-family:'Crimson Pro',serif;font-size:11px;color:var(--text);line-height:1.45;z-index:99;transition:opacity .18s;pointer-events:none;max-width:240px;white-space:normal;text-align:center;}
-.req-icon:hover .req-tooltip{visibility:visible;opacity:1;}
-/* branch description strip */
-.adj-branch-desc{font-size:11px;color:var(--text-mid);line-height:1.55;margin-top:7px;font-style:italic;padding-top:7px;border-top:1px solid rgba(255,255,255,.07);}
-.skills-empty{font-size:13px;color:var(--text-dim);font-style:italic;padding:20px 0;text-align:center;}
-.skills-loading{font-size:12px;color:var(--text-dim);font-style:italic;padding:16px 0;text-align:center;}
-/* Mana badge */
-.skill-mana{font-family:'Cinzel',serif;font-size:8px;color:var(--gold);border:1px solid var(--gold-d);border-radius:8px;padding:1px 7px;flex-shrink:0;white-space:nowrap;}
-/* Requirement icon + tooltip */
-.skill-req-wrap{position:relative;display:inline-flex;align-items:center;flex-shrink:0;}
-.skill-req-icon{width:16px;height:16px;border-radius:50%;background:var(--panel3);border:1px solid var(--accent);color:var(--accent2);font-size:9px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:border-color .15s,background .15s;flex-shrink:0;user-select:none;line-height:1;}
-.skill-req-icon:hover,.skill-req-icon.open{border-color:var(--gold);background:rgba(201,168,76,.15);color:var(--gold-l);}
-.skill-req-tooltip{position:absolute;top:calc(100% + 8px);right:0;z-index:99;background:var(--panel3);border:1px solid var(--gold-d);border-radius:7px;padding:10px 14px;min-width:190px;max-width:270px;font-family:'Crimson Pro',serif;font-size:11px;color:var(--text);line-height:1.55;pointer-events:none;opacity:0;transform:translateY(-4px);transition:opacity .18s,transform .18s;box-shadow:0 6px 24px rgba(0,0,0,.55);}
-.skill-req-tooltip::before{content:'';position:absolute;top:-5px;right:5px;width:8px;height:8px;background:var(--panel3);border-top:1px solid var(--gold-d);border-left:1px solid var(--gold-d);transform:rotate(45deg);}
-.skill-req-wrap.open .skill-req-tooltip{opacity:1;transform:translateY(0);}
-.skill-req-label{font-family:'Cinzel',serif;font-size:7px;letter-spacing:1.5px;color:var(--gold);display:block;margin-bottom:5px;text-transform:uppercase;}
-/* Adj description card */
-.adj-desc-card{grid-column:1/-1;font-size:12px;color:var(--text-mid);line-height:1.65;font-style:italic;padding:8px 14px;border-radius:5px;background:rgba(255,255,255,.03);border-left:2px solid transparent;margin-bottom:2px;}
-/* Inline roll in skills */
-.skill-inline-roll{display:inline-block;background:rgba(76,187,138,.12);border:1px solid rgba(76,187,138,.35);border-radius:3px;padding:0 4px;color:#7ecba1;cursor:pointer;white-space:nowrap;font-size:inherit;transition:background .15s;}
-.skill-inline-roll:hover{background:rgba(76,187,138,.22);}
-.spells-header-row{display:grid;grid-template-columns:2fr 1fr .6fr 3fr 28px;gap:8px;padding:0 8px 6px;border-bottom:1px solid var(--line);margin-bottom:4px;}
-.spells-header-row span{font-family:'Cinzel',serif;font-size:7px;letter-spacing:2px;color:var(--accent2);text-transform:uppercase;}
-.spell-row{display:grid;grid-template-columns:2fr 1fr .6fr 3fr 28px;gap:8px;padding:5px 8px;border-radius:4px;transition:background .15s;align-items:center;}
-.spell-row:nth-child(odd){background:rgba(255,255,255,.015);}
-.spell-row:hover{background:rgba(123,94,167,.08);}
-.spell-cell{font-size:13px;color:var(--text);min-height:18px;border-bottom:1px solid var(--line);line-height:1.5;}
-.spell-cell:focus{border-bottom-color:var(--gold);}
-/* Description cell: readonly by default, edit on dblclick */
-.desc-cell[contenteditable="false"]{cursor:default;border-bottom-color:var(--line);}
-.desc-cell[contenteditable="false"]:hover{border-bottom-color:#3a2f5a;}
-.desc-cell[contenteditable="true"]{cursor:text;border-bottom-color:var(--accent);}
-.del-spell{width:20px;height:20px;border-radius:50%;background:none;border:1px solid var(--line);color:var(--text-dim);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;line-height:1;padding:0;}
-.del-spell:hover{background:rgba(224,92,92,.15);border-color:var(--life);color:var(--life);}
-.add-spell-btn{margin-top:10px;background:none;border:1px dashed var(--accent);color:var(--accent2);font-family:'Crimson Pro',serif;font-size:13px;padding:6px 16px;border-radius:5px;cursor:pointer;letter-spacing:1px;transition:all .2s;}
-.add-spell-btn:hover{background:rgba(123,94,167,.1);border-color:var(--gold);color:var(--gold-l);}
-.notes-panel{background:var(--panel);border:1px solid var(--accent);border-radius:10px;padding:16px 14px;}
-/* EQUIPMENT */
-.equip-panel{background:var(--panel);border:1px solid var(--accent);border-radius:10px;padding:16px 14px;margin-bottom:16px;}
-.equip-list{display:flex;flex-direction:column;gap:6px;margin-bottom:8px;}
-.equip-row{display:grid;grid-template-columns:1fr 2fr 24px;gap:8px;align-items:center;padding:6px 8px;border-radius:5px;background:var(--panel2);transition:background .15s;}
-.equip-row:hover{background:rgba(123,94,167,.08);}
-.equip-cell{font-size:13px;color:var(--text);min-height:18px;border-bottom:1px solid var(--line);outline:none;transition:border-color .2s;}
-.equip-cell:focus{border-bottom-color:var(--gold);}
-.equip-cell[contenteditable]:empty::before{content:attr(data-placeholder);color:var(--text-dim);font-style:italic;pointer-events:none;}
-.equip-header-row{display:grid;grid-template-columns:1fr 2fr 24px;gap:8px;padding:0 8px 6px;border-bottom:1px solid var(--line);margin-bottom:4px;}
-.equip-header-row span{font-family:'Cinzel',serif;font-size:7px;letter-spacing:2px;color:var(--accent2);text-transform:uppercase;}
-.del-equip{width:20px;height:20px;border-radius:50%;background:none;border:1px solid var(--line);color:var(--text-dim);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;line-height:1;padding:0;}
-.del-equip:hover{background:rgba(224,92,92,.15);border-color:var(--life);color:var(--life);}
-.add-equip-btn{margin-top:4px;background:none;border:1px dashed var(--accent);color:var(--accent2);font-family:'Crimson Pro',serif;font-size:13px;padding:5px 14px;border-radius:5px;cursor:pointer;letter-spacing:1px;transition:all .2s;}
-.add-equip-btn:hover{background:rgba(123,94,167,.1);border-color:var(--gold);color:var(--gold-l);}
-.notes-area{width:100%;min-height:100px;background:var(--panel2);border:1px solid var(--line);border-radius:6px;color:var(--text);font-family:'Crimson Pro',serif;font-size:14px;line-height:1.8;padding:10px 12px;resize:vertical;outline:none;margin-top:10px;transition:border-color .2s;}
-.notes-area:focus{border-color:var(--accent);}
-.notes-area::placeholder{color:var(--text-dim);font-style:italic;}
-@keyframes glow-pulse{0%,100%{opacity:.5;}50%{opacity:1;}}
-.mana-center{animation:glow-pulse 3s ease-in-out infinite;}
-@keyframes adj-unlock{0%{text-shadow:none;}50%{text-shadow:0 0 8px currentColor,0 0 16px currentColor;}100%{text-shadow:0 0 4px currentColor;}}
-.adj-row{transition:opacity .4s ease;}
-.adj-row.active-branch{animation:adj-unlock 1s ease-out forwards;}
-.adj-row.active-branch .adj-hint{border-style:solid!important;}
+.menu-wrap{position:relative;z-index:1;width:100%;max-width:480px;display:flex;flex-direction:column;align-items:center;gap:40px;}
 
-/* Toggle switch for adj branches */
-.adj-toggle{position:relative;width:36px;height:20px;flex-shrink:0;}
-.adj-toggle input{opacity:0;width:0;height:0;position:absolute;}
-.adj-toggle-track{
-  position:absolute;inset:0;border-radius:10px;background:var(--spark-off);
-  border:1px solid #3a2a5a;cursor:pointer;transition:background .2s,border-color .2s;
+/* TITLE */
+.title-block{text-align:center;}
+.title-deco{width:200px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:0 auto 18px;}
+.title-main{font-family:'Cinzel',serif;font-size:clamp(22px,6vw,34px);font-weight:700;letter-spacing:6px;color:var(--gold-l);text-shadow:0 0 40px rgba(201,168,76,.35);text-transform:uppercase;}
+.title-sub{font-family:'Cinzel',serif;font-size:11px;letter-spacing:4px;color:var(--accent2);margin-top:8px;font-style:italic;}
+.title-deco-btm{width:120px;height:1px;background:linear-gradient(90deg,transparent,var(--accent2),transparent);margin:16px auto 0;}
+
+/* NAV CARDS */
+.nav-cards{display:flex;flex-direction:column;gap:12px;width:100%;}
+.nav-card{display:flex;align-items:center;gap:18px;padding:20px 24px;border-radius:10px;border:1px solid var(--line);background:var(--panel);text-decoration:none;color:var(--text);transition:all .25s;cursor:pointer;position:relative;overflow:hidden;}
+.nav-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(123,94,167,.05),transparent);opacity:0;transition:opacity .25s;}
+.nav-card:hover{border-color:var(--accent);transform:translateX(4px);}
+.nav-card:hover::before{opacity:1;}
+.nav-card:hover .nav-icon{color:var(--gold-l);}
+.nav-card:hover .nav-arrow{opacity:1;transform:translateX(0);}
+.nav-icon{font-size:28px;flex-shrink:0;transition:color .2s;}
+.nav-text{flex:1;}
+.nav-title{font-family:'Cinzel',serif;font-size:14px;font-weight:700;letter-spacing:2px;color:var(--text);margin-bottom:4px;}
+.nav-desc{font-size:12px;color:var(--text-dim);font-style:italic;line-height:1.4;}
+.nav-arrow{font-size:18px;color:var(--accent2);opacity:0;transform:translateX(-6px);transition:all .2s;flex-shrink:0;}
+.nav-badge{position:absolute;top:10px;right:12px;font-family:'Cinzel',serif;font-size:7px;letter-spacing:1.5px;padding:2px 8px;border-radius:10px;border:1px solid var(--gold-d);color:var(--gold);background:rgba(201,168,76,.08);}
+
+/* DIVIDER */
+.nav-divider{width:100%;height:1px;background:var(--line);margin:4px 0;}
+
+/* FOOTER */
+.menu-footer{text-align:center;font-size:10px;color:var(--text-dim);font-style:italic;letter-spacing:1px;margin-top: 30px; margin-bottom: 30px;}
+
+@media(max-width:400px){.nav-card{padding:16px 18px;}.nav-icon{font-size:22px;}}
+
+/* ── COSMIC CALENDAR ─────────────────────────────────────────────────────── */
+.cal-block{width:100%;display:flex;flex-direction:column;align-items:center;gap:0;}
+.cal-wrap{position:relative;width:100%;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 14px 12px;overflow:hidden;}
+/* nebula glow behind grid */
+.cal-wrap::before{content:'';position:absolute;inset:0;pointer-events:none;border-radius:12px;
+  background:
+    radial-gradient(ellipse 60% 60% at 50% 50%,rgba(123,94,167,.07) 0%,transparent 70%),
+    radial-gradient(ellipse 90% 35% at 50% 100%,rgba(166,127,209,.04) 0%,transparent 60%);}
+/* tiny stars inside the panel */
+.cal-wrap::after{content:'';position:absolute;inset:0;pointer-events:none;border-radius:12px;
+  background-image:
+    radial-gradient(1px 1px at 8%  14%,rgba(255,255,255,.22) 0%,transparent 100%),
+    radial-gradient(1px 1px at 88% 10%,rgba(255,255,255,.18) 0%,transparent 100%),
+    radial-gradient(1px 1px at 4%  82%,rgba(255,255,255,.14) 0%,transparent 100%),
+    radial-gradient(1px 1px at 93% 78%,rgba(255,255,255,.16) 0%,transparent 100%),
+    radial-gradient(1px 1px at 42% 4%, rgba(255,255,255,.13) 0%,transparent 100%),
+    radial-gradient(1px 1px at 72% 95%,rgba(255,255,255,.11) 0%,transparent 100%),
+    radial-gradient(1px 1px at 28% 55%,rgba(255,255,255,.08) 0%,transparent 100%),
+    radial-gradient(1px 1px at 65% 62%,rgba(255,255,255,.09) 0%,transparent 100%);}
+/* top bar: circle label */
+.cal-topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;position:relative;z-index:1;}
+.cal-circle-info{display:flex;flex-direction:column;gap:1px;}
+.cal-circle-label{font-family:'Cinzel',serif;font-size:7px;letter-spacing:2.5px;color:var(--text-dim);}
+.cal-circle-val{font-family:'Cinzel',serif;font-size:13px;font-weight:700;color:var(--accent2);letter-spacing:1px;line-height:1.2;}
+.cal-section-title{font-family:'Cinzel',serif;font-size:8px;letter-spacing:3px;color:var(--text-dim);display:flex;align-items:center;gap:6px;}
+.cal-section-title::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent);}
+/* 5x5 grid */
+.cal-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;position:relative;z-index:1;}
+.cal-cell{border-radius:6px;padding:8px 3px 6px;text-align:center;
+  border:1px solid rgba(42,31,69,.9);background:rgba(13,13,28,.75);
+  transition:all .2s;position:relative;overflow:hidden;}
+.cal-cell.cal-past  {opacity:.28;}
+.cal-cell.cal-future{opacity:.38;}
+.cal-cell.cal-current{
+  background:linear-gradient(145deg,rgba(123,94,167,.28),rgba(166,127,209,.14));
+  border-color:var(--accent2);
+  box-shadow:0 0 16px rgba(123,94,167,.4),inset 0 0 10px rgba(166,127,209,.1);
 }
-.adj-toggle input:checked + .adj-toggle-track{background:var(--adj-color,var(--gold));border-color:var(--adj-color,var(--gold));}
-.adj-toggle input:disabled + .adj-toggle-track{cursor:not-allowed;opacity:.4;}
-.adj-toggle-thumb{
-  position:absolute;top:3px;left:3px;width:12px;height:12px;border-radius:50%;
-  background:#fff;transition:transform .2s;pointer-events:none;
+.cal-cell.cal-current::before{
+  content:'';position:absolute;inset:0;border-radius:5px;pointer-events:none;
+  background:linear-gradient(145deg,rgba(166,127,209,.18),transparent 55%,rgba(123,94,167,.12));
 }
-.adj-toggle input:checked ~ .adj-toggle-thumb{transform:translateX(16px);}
-/* ── BUILD PANEL ─────────────────────────────────────────────────────────── */
-.build-panel{background:var(--panel);border:1px solid var(--accent);border-radius:10px;padding:14px 16px;margin-bottom:16px;transition:border-color .3s;}
-.build-panel.build-active{border-color:var(--gold);}
-.build-inner{display:flex;align-items:flex-start;gap:14px;}
-.build-icon{width:64px;height:64px;flex-shrink:0;border-radius:8px;border:1px solid var(--line);background:var(--panel2);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:26px;color:var(--text-dim);transition:border-color .3s;}
-.build-icon img{width:100%;height:100%;object-fit:cover;}
-.build-icon.active{border-color:var(--gold);}
-.build-content{flex:1;min-width:0;}
-.build-top{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;}
-.build-title{font-family:'Cinzel',serif;font-size:15px;font-weight:700;letter-spacing:1px;color:var(--text-dim);transition:color .3s;}
-.build-title.active{color:var(--gold-l);}
-.build-branches{display:flex;gap:6px;flex-wrap:wrap;}
-.build-branch-tag{font-family:'Cinzel',serif;font-size:7px;letter-spacing:1.5px;padding:2px 8px;border-radius:10px;border:1px solid transparent;opacity:.5;transition:opacity .3s;}
-.build-branch-tag.active{opacity:1;}
-.build-placeholder{font-family:'Crimson Pro',serif;font-size:12px;color:var(--text-dim);font-style:italic;padding:8px 0;}
-/* ult card */
-.build-ult{border-radius:6px;padding:10px 12px;border:1px solid var(--line);background:var(--panel2);transition:border-color .3s,background .3s;}
-.build-ult.active{border-color:var(--gold-d);background:rgba(201,168,76,.05);}
-.build-ult-header{display:flex;align-items:center;gap:8px;margin-bottom:5px;}
-.build-ult-badge{font-family:'Cinzel',serif;font-size:8px;letter-spacing:1px;padding:2px 8px;border-radius:10px;border:1px solid var(--gold-d);color:var(--gold);background:rgba(201,168,76,.08);flex-shrink:0;}
-.build-ult-mana{font-family:'Cinzel',serif;font-size:9px;padding:2px 8px;border-radius:10px;border:1px solid var(--gold-d);color:var(--gold);flex-shrink:0;}
-.build-ult-name{font-family:'Cinzel',serif;font-size:11px;font-weight:600;color:var(--text-dim);margin-bottom:3px;transition:color .3s;}
-.build-ult-name.active{color:var(--gold-l);}
-.build-ult-desc{font-size:11px;color:var(--text-dim);line-height:1.5;}
-.build-ult-desc .inline-roll{display:inline-block;background:rgba(76,187,138,.12);border:1px solid rgba(76,187,138,.35);border-radius:3px;padding:0 4px;color:#7ecba1;cursor:pointer;white-space:nowrap;font-size:11px;transition:background .15s;}
-.build-ult-desc .inline-roll:hover{background:rgba(76,187,138,.25);}
-.build-no-data{font-family:'Crimson Pro',serif;font-size:12px;color:var(--text-dim);font-style:italic;text-align:center;padding:10px 0;}
-@media(max-width:600px){.build-icon{width:48px;height:48px;font-size:20px;}}
+.cal-code{font-family:'Cinzel',serif;font-size:9px;letter-spacing:.3px;color:var(--text-dim);line-height:1;}
+.cal-cell.cal-current .cal-code{
+  color:var(--accent2);font-size:10.5px;font-weight:700;
+  text-shadow:0 0 10px rgba(166,127,209,.7);
+}
+/* pulsing orbit dot */
+.cal-dot{display:none;width:4px;height:4px;border-radius:50%;background:var(--accent2);
+  box-shadow:0 0 7px var(--accent2);margin:4px auto 0;
+  animation:cal-pulse 2.2s ease-in-out infinite;}
+.cal-cell.cal-current .cal-dot{display:block;}
+@keyframes cal-pulse{0%,100%{opacity:.35;transform:scale(.7);}50%{opacity:1;transform:scale(1.4);}}
+/* bottom meta row */
+.cal-bottom{display:flex;justify-content:flex-end;margin-top:8px;position:relative;z-index:1;}
+.cal-error{font-family:'Cinzel',serif;font-size:8px;letter-spacing:1.5px;color:var(--text-dim);font-style:italic;text-align:center;padding:16px 0;position:relative;z-index:1;}
+@media(max-width:400px){.cal-code{font-size:7.5px;}.cal-cell{padding:6px 2px 5px;}}
 </style>
 </head>
 <body>
-<div class="sheet">
+<div class="menu-wrap">
 
-<div class="header">
-  <div class="header-deco"></div>
-  <h1>ЛИСТ ПЕРСОНАЖА</h1>
-  <div class="header-sub">Фройский Маг &nbsp;•&nbsp; Гном &nbsp;•&nbsp; Том II</div>
-</div>
-
-<div class="info-row">
-  <div class="info-field"><div class="info-label">Имя персонажа</div><span class="info-value" contenteditable="true" data-placeholder="Введите имя…"></span></div>
-  <div class="info-field"><div class="info-label">Имя игрока</div><span class="info-value" contenteditable="true" data-placeholder="Введите имя…"></span></div>
-  <div class="info-field"><div class="info-label">Класс</div><span class="info-value locked">Фройский Маг</span></div>
-  <div class="info-field"><div class="info-label">Раса</div><span class="info-value locked">Гном</span></div>
-</div>
-
-<div class="hp-row" style="margin-bottom:16px">
-  <div class="hp-block barrier">
-    <div class="hp-header">
-      <div><div class="hp-title">⬡ БАРЬЕР</div><div class="hp-formula">10 + (Защита × 2) • восст. после отдыха</div></div>
-      <div class="hp-max-box"><div class="hp-max-label">МАКС / 20</div><input class="hp-max-val" id="barrier-max" type="number" min="0" max="20" placeholder="—" title="Максимум барьера (до 20)"></div>
-    </div>
-    <div class="hp-boxes" id="barrier-boxes"></div>
+  <div class="title-block">
+    <div class="title-deco"></div>
+    <div class="title-main">Фройская Магия</div>
+    <div class="title-sub">Том II &nbsp;•&nbsp; Система магов-гномов</div>
+    <div class="title-deco-btm"></div>
   </div>
-  <div class="hp-block life">
-    <div class="hp-header">
-      <div><div class="hp-title">♥ ЖИЗНЬ</div><div class="hp-formula">6 + (Обелиски Тела × 3) • медленно</div></div>
-      <div class="hp-max-box"><div class="hp-max-label">МАКС / 30</div><input class="hp-max-val" id="life-max" type="number" min="0" max="30" placeholder="—" title="Максимум жизни (до 30)"></div>
-    </div>
-    <div class="hp-boxes" id="life-boxes"></div>
-  </div>
-</div>
 
-<!-- ── БИЛД ────────────────────────────────────────────────────────────────── -->
-<div class="build-panel" id="build-panel">
-  <div class="section-title" style="margin-bottom:10px;">БИЛД</div>
-  <div class="build-inner">
-    <div class="build-icon" id="build-icon">✦</div>
-    <div class="build-content">
-      <div class="build-top">
-        <span class="build-title" id="build-title">—</span>
-        <div class="build-branches" id="build-branches"></div>
+  <nav class="nav-cards">
+
+    <a class="nav-card" href="characters.html">
+      <span class="nav-icon">⚔</span>
+      <div class="nav-text">
+        <div class="nav-title">Персонажи</div>
+        <div class="nav-desc">Список магов, листы персонажей, импорт и экспорт</div>
       </div>
-      <div id="build-ult-wrap">
-        <div class="build-placeholder" id="build-placeholder">Активируй две смежные ветки чтобы увидеть свой билд</div>
+      <span class="nav-arrow">›</span>
+      <span class="nav-badge" id="chars-badge" style="display:none"></span>
+    </a>
+    <a class="nav-card" href="map.html">
+      <span class="nav-icon">🗺️</span>
+      <div class="nav-text">
+        <div class="nav-title">Карта мира</div>
+        <div class="nav-desc">Исследуйте огромный мир нового Элдроса</div>
+      </div>
+      <span class="nav-arrow">›</span>
+    </a>
+    <a class="nav-card" href="spells.html">
+      <span class="nav-icon">📖</span>
+      <div class="nav-text">
+        <div class="nav-title">Книга заклинаний</div>
+        <div class="nav-desc">Все заклинания с поиском, фильтрами и отправкой на лист</div>
+      </div>
+      <span class="nav-arrow">›</span>
+    </a>
+    <a class="nav-card" href="achievements.html">
+      <span class="nav-icon">🏆</span>
+      <div class="nav-text">
+        <div class="nav-title">Достижения</div>
+        <div class="nav-desc">Достижения с фильтром по категориям и красивыми иконками!</div>
+      </div>
+      <span class="nav-arrow">›</span>
+    </a>
+
+  </nav>
+
+
+  <!-- COSMIC CALENDAR -->
+  <div class="cal-block" id="cal-block">
+    <div class="cal-wrap">
+      <div class="cal-topbar">
+        <div class="cal-circle-info">
+          <div class="cal-circle-label">КРУГ</div>
+          <div class="cal-circle-val" id="cal-circle-val">—</div>
+        </div>
+        <div class="cal-section-title" style="flex:1;margin-left:16px;">ХРОНОС</div>
+      </div>
+      <div class="cal-grid" id="cal-grid">
+        <div class="cal-error" style="grid-column:1/-1;" id="cal-status">⟳ Загружаем...</div>
       </div>
     </div>
   </div>
+
 </div>
 
-<div class="main-grid">
-  <div class="magic-panel">
-    <div class="panel-title">КРУГ МАГИИ</div>
-    <div class="panel-sub">5 основных элементов • 6 смежных</div>
-    <svg id="magic-circle-svg" viewBox="-20 -20 440 440" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:420px;height:auto;overflow:visible;">
-      <defs><radialGradient id="bg-grad" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#1a0f3a" stop-opacity="0.7"/><stop offset="100%" stop-color="#080812" stop-opacity="0"/></radialGradient></defs>
-      <circle cx="200" cy="200" r="210" fill="url(#bg-grad)"/>
-      <circle cx="200" cy="200" r="178" fill="none" stroke="#7b5ea7" stroke-width="1" opacity="0.55"/>
-      <circle cx="200" cy="200" r="184" fill="none" stroke="#c9a84c" stroke-width="0.5" opacity="0.35"/>
-      <g id="pentagon-lines" stroke="#2a1f45" stroke-width="1" fill="none"></g>
-      <g id="inner-pentagon" stroke="#1e1535" stroke-width="0.7" fill="none"></g>
-      <g class="mana-center">
-        <circle cx="200" cy="200" r="46" fill="#0a0918" stroke="#7b5ea7" stroke-width="1.5"/>
-        <circle cx="200" cy="200" r="38" fill="none" stroke="#c9a84c" stroke-width="0.6" opacity="0.45"/>
-        <text x="200" y="185" text-anchor="middle" font-family="Cinzel,serif" font-size="11" fill="#e8c96e" letter-spacing="2">МАНА</text>
-        <line x1="178" y1="191" x2="222" y2="191" stroke="#c9a84c" stroke-width="0.6" opacity="0.5"/>
-        <foreignObject x="160" y="194" width="80" height="26">
-          <div class="mana-input-wrap" xmlns="http://www.w3.org/1999/xhtml">
-            <input class="mana-inp" id="mana-cur" type="text" placeholder="0" maxlength="3" title="Текущая мана"/>
-            <span class="mana-sep">/</span>
-            <input class="mana-inp" id="mana-max-inp" type="text" placeholder="20" maxlength="3" title="Максимальная мана"/>
-          </div>
-        </foreignObject>
-        <polygon id="sto-diamond" points="200,248 207,256 200,264 193,256" fill="#1a1035" stroke="#c9a84c" stroke-width="1" opacity="0.35"/>
-        <text id="sto-text" x="200" y="278" text-anchor="middle" font-family="Cinzel,serif" font-size="7.5" fill="#c9a84c" letter-spacing="1" opacity="0.35">СТОЙКОСТЬ</text>
-      </g>
-      <g id="nodes-group"></g>
-      <g id="adj-group"></g>
-    </svg>
-    <div id="sparks-container" style="width:100%;max-width:420px;display:flex;flex-direction:column;gap:6px;margin-top:4px;"></div>
-    <div style="margin-top:6px;font-size:10px;color:var(--text-dim);font-style:italic;text-align:center;">Смежные разблокируются при ≥2 Искры в обоих соседних</div>
-  </div>
-
-  <div class="obelisks-panel">
-    <div class="section-title">ОБЕЛИСКИ</div>
-    <div style="font-size:11px;color:var(--text-dim);font-style:italic;margin-bottom:12px;">Резонанс требует ритуала и цены</div>
-    <div id="obelisks-list"></div>
-    <div class="obelisk-counter">
-      <span>Всего обелисков найдено:</span>
-      <div class="counter-val" id="ob-total">0</div>
-    </div>
-  </div>
-</div>
-
-<div class="dice-panel">
-  <div class="section-title">ДАЙСЫ</div>
-  <div class="dice-row">
-    <button class="dice-btn" data-sides="4"   onclick="addDie(4)">к4</button>
-    <button class="dice-btn" data-sides="6"   onclick="addDie(6)">к6</button>
-    <button class="dice-btn" data-sides="8"   onclick="addDie(8)">к8</button>
-    <button class="dice-btn" data-sides="10"  onclick="addDie(10)">к10</button>
-    <button class="dice-btn" data-sides="12"  onclick="addDie(12)">к12</button>
-    <button class="dice-btn" data-sides="20"  onclick="addDie(20)">к20</button>
-    <button class="dice-btn" data-sides="100" onclick="addDie(100)">к100</button>
-    <div class="dice-pool-display" id="dice-pool-display">пул пуст</div>
-  </div>
-  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-    <button class="dice-roll-btn" onclick="rollDice()">⚄ Бросить</button>
-    <button class="dice-clear-btn" onclick="clearDice()">Очистить пул</button>
-  </div>
-</div>
-
-<!-- CLASS SKILLS -->
-<div class="skills-panel">
-  <div class="section-title">КЛАССОВЫЕ УМЕНИЯ</div>
-  <div class="skills-tabs" id="skills-tabs">
-    <button class="skills-tab active" data-el="fly"  onclick="switchSkillTab('fly')">✈ ПОЛЁТ</button>
-    <button class="skills-tab"        data-el="atk"  onclick="switchSkillTab('atk')">⚔ АТАКА</button>
-    <button class="skills-tab"        data-el="ill"  onclick="switchSkillTab('ill')">👁 ИЛЛЮЗИЯ</button>
-    <button class="skills-tab"        data-el="def"  onclick="switchSkillTab('def')">🛡 ЗАЩИТА</button>
-    <button class="skills-tab"        data-el="ctrl" onclick="switchSkillTab('ctrl')">🌀 КОНТРОЛЬ</button>
-    <button class="skills-tab"        data-el="adj"  onclick="switchSkillTab('adj')" style="margin-left:8px;">✦ СМЕЖНЫЕ</button>
-  </div>
-  <div class="skills-grid" id="skills-grid">
-    <div class="skills-loading">⟳ Загружаем умения...</div>
-  </div>
-</div>
-
-<div class="spells-panel">
-  <div class="section-title">ЗАКЛИНАНИЯ</div>
-  <div class="spells-header-row">
-    <span>Название</span><span>Элемент</span><span>Мана</span><span>Описание / Эффект</span><span></span>
-  </div>
-  <div id="spells-list"></div>
-  <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px;">
-    <button class="add-spell-btn" onclick="addSpell()">+ Добавить заклинание</button>
-    <button class="add-spell-btn" id="btn-paste-spell" onclick="pasteSpellFromWiki()" style="border-color:#4cbb8a44;color:#4cbb8a;">⬇ Вставить из вики</button>
-    <a href="spells.html" target="_blank" style="font-family:'Cinzel',serif;font-size:8px;letter-spacing:2px;color:var(--text-dim);text-decoration:none;border:1px solid var(--line);padding:6px 14px;border-radius:5px;transition:all .2s;" onmouseover="this.style.borderColor='var(--accent2)';this.style.color='var(--accent2)'" onmouseout="this.style.borderColor='var(--line)';this.style.color='var(--text-dim)'">↗ Открыть вики заклинаний</a>
-  </div>
-</div>
-
-<div class="equip-panel">
-  <div class="section-title">СНАРЯЖЕНИЕ</div>
-  <div class="equip-header-row">
-    <span>Предмет</span><span>Описание / Эффект</span><span></span>
-  </div>
-  <div class="equip-list" id="equip-list"></div>
-  <button class="add-equip-btn" onclick="addEquip()">+ Добавить предмет</button>
-</div>
-
-<div class="notes-panel">
-  <div class="section-title">ЗАМЕТКИ</div>
-  <textarea class="notes-area" id="notes-area" placeholder="Свободные заметки, история персонажа, связи с НПС..."></textarea>
-</div>
-
-<input type="file" id="json-file-input" accept=".json" style="display:none" onchange="importJSON(event)">
-<div style="display:flex;justify-content:center;align-items:center;gap:12px;margin-top:20px;flex-wrap:wrap;">
-  <div style="font-size:10px;color:var(--text-dim);font-style:italic;font-family:'Crimson Pro',serif;">✦ Данные автоматически сохраняются в браузере</div>
-  <button onclick="exportJSON()" style="background:none;border:1px solid var(--gold-d);color:var(--gold);font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;padding:8px 20px;border-radius:5px;cursor:pointer;transition:all .2s;" onmouseover="this.style.background='rgba(201,168,76,.1)'" onmouseout="this.style.background='none'">⬇ Скачать JSON</button>
-  <button onclick="document.getElementById('json-file-input').click()" style="background:none;border:1px solid #2a3a5a;color:#6ab0f5;font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;padding:8px 20px;border-radius:5px;cursor:pointer;transition:all .2s;" onmouseover="this.style.background='rgba(106,176,245,.08)'" onmouseout="this.style.background='none'">⬆ Загрузить JSON</button>
-  <button onclick="clearSave()" style="background:none;border:1px solid #3a2040;color:var(--text-dim);font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;padding:8px 16px;border-radius:5px;cursor:pointer;transition:all .2s;" onmouseover="this.style.borderColor='var(--life)';this.style.color='var(--life)'" onmouseout="this.style.borderColor='#3a2040';this.style.color='var(--text-dim)'">Сбросить</button>
-</div>
-
-</div><!-- .sheet -->
-<div id="roll-notifications"></div>
-
+  <div class="menu-footer">✦ &nbsp; Сохранения хранятся в этом браузере &nbsp; ✦</div>
 <script src="config.js"></script>
-<script src="sheets.js"></script>
 <script>
-// ════════════════════════════════════════════════════════════════════════════
-// ОПИСАНИЯ СМЕЖНЫХ ВЕТОК — редактируй только здесь
-// ════════════════════════════════════════════════════════════════════════════
-const ADJ_DESC = {
-  natisk:   'Превращает движение в оружие. Каждый рывок, каждое пикирование — это удар. Маг Натиска живёт скоростью: чем быстрее летит, тем сильнее бьёт. Без движения — теряет половину мощи.',
-  obman:    'Ведёт информационную войну. Никогда не бьёт напрямую — сначала заставляет врага реагировать на иллюзию, потом использует потраченную реакцию. Метрика успеха не урон, а сколько раз враг промахнулся по пустоте.',
-  pokoj:    'Превращает потери в силу. Чем больше вокруг умирает — тем прочнее стоит. Создаёт объекты только чтобы их уничтожать. Выигрывает затяжные бои, проигрывает быстрые.',
-  istsel:   'Торгует своим барьером ради выживания союзников. Принимает чужую боль, конвертирует смерть в жизнь. Никогда не атакует первым — его сила раскрывается когда все вокруг уже под ударом.',
-  gospod:   'Становится сильнее от каждого нанесённого удара. Атаки восстанавливают барьер. Слабые враги делают его ещё мощнее. Уязвим против врагов без барьера — урон в жизнь не возвращается.',
-  stoikost: 'Контролирует территорию через физические барьеры и невероятную живучесть. Не убивает быстро — делает убийство его невозможным. Слабость: мобильный враг уйдёт из зоны Форта.',
-};
-// ════════════════════════════════════════════════════════════════════════════
-const ELEMENTS=[
-  {id:'fly', name:'ПОЛЁТ',    color:'#6ab0f5',angle:90  },
-  {id:'atk', name:'АТАКА',    color:'#e05c5c',angle:18  },
-  {id:'ill', name:'ИЛЛЮЗИЯ',  color:'#b07fd1',angle:-54 },
-  {id:'def', name:'ЗАЩИТА',   color:'#5b8dee',angle:-126},
-  {id:'ctrl',name:'КОНТРОЛЬ', color:'#4cbb8a',angle:162 },
-];
-const ADJ=[
-  {id:'natisk',  name:'НАТИСК',    parents:'Полёт + Атака',    color:'#c9a84c',req:['fly','atk']},
-  {id:'obman',   name:'ОБМАН',     parents:'Атака + Иллюзия',  color:'#c9a84c',req:['atk','ill']},
-  {id:'pokoj',   name:'ПОКОЙ',     parents:'Иллюзия + Защита', color:'#c9a84c',req:['ill','def']},
-  {id:'istsel',  name:'ИСЦЕЛЕНИЕ', parents:'Защита + Контроль',color:'#7ecba1',req:['def','ctrl']},
-  {id:'gospod',  name:'ГОСПОДСТВО',parents:'Контроль + Полёт', color:'#c9a84c',req:['ctrl','fly']},
-  {id:'stoikost',name:'СТОЙКОСТЬ', parents:'Полёт + Защита',   color:'#c9a84c',req:['fly','def']},
-];
-const ADJ_SVG=[
-  {i1:0,i2:1,id:'natisk'},{i1:1,i2:2,id:'obman'},
-  {i1:2,i2:3,id:'pokoj'},{i1:3,i2:4,id:'istsel'},
-  {i1:4,i2:0,id:'gospod'},
-];
-const OBELISKS=[
-  {id:'elem',name:'ОБЕЛИСК ЭЛЕМЕНТА',desc:'+1 Искра в элемент Круга',      color:'#6ab0f5'},
-  {id:'mana',name:'ОБЕЛИСК МАНЫ',    desc:'+5 к максимуму Маны',           color:'#a67fd1'},
-  {id:'body',name:'ОБЕЛИСК ТЕЛА',    desc:'+3 к максимуму Жизни (редкий)', color:'#e05c5c'},
-  {id:'mind',name:'ОБЕЛИСК ПОЗНАНИЯ',desc:'Открывает заклинание / пассив', color:'#c9a84c'},
-];
-const CX=200,CY=200,R=158,RI=88;
-const sparks={fly:0,atk:0,ill:0,def:0,ctrl:0};
-const hpFill={'barrier-boxes':0,'life-boxes':0};
-const obFill={elem:0,mana:0,body:0,mind:0};
-let spellCount=0;
-const dicePool={};
-
-// ── UTILS ────────────────────────────────────────────────────────────────────
-const rad=d=>d*Math.PI/180;
-const np=a=>({x:CX+R*Math.cos(rad(a)),y:CY-R*Math.sin(rad(a))});
-const se=(tag,a)=>{const e=document.createElementNS('http://www.w3.org/2000/svg',tag);Object.entries(a).forEach(([k,v])=>e.setAttribute(k,v));return e;};
-const escHtml=s=>(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-
-// ── CIRCLE ───────────────────────────────────────────────────────────────────
-function buildCircle(){
-  const pos=ELEMENTS.map(e=>np(e.angle));
-  const pL=document.getElementById('pentagon-lines');
-  for(let i=0;i<5;i++){const j=(i+1)%5;pL.appendChild(se('line',{x1:pos[i].x,y1:pos[i].y,x2:pos[j].x,y2:pos[j].y}));}
-  const iP=document.getElementById('inner-pentagon');
-  for(let i=0;i<5;i++){const j=(i+1)%5,a1=rad(ELEMENTS[i].angle),a2=rad(ELEMENTS[j].angle);iP.appendChild(se('line',{x1:CX+RI*Math.cos(a1),y1:CY-RI*Math.sin(a1),x2:CX+RI*Math.cos(a2),y2:CY-RI*Math.sin(a2)}));}
-  // Edge adjacent diamonds
-  const aG=document.getElementById('adj-group');
-  ADJ_SVG.forEach(a=>{
-    const d=ADJ.find(x=>x.id===a.id);
-    const p1=pos[a.i1],p2=pos[a.i2];
-    const mx=(p1.x+p2.x)/2,my=(p1.y+p2.y)/2,ds=8;
-    const g=se('g',{id:'svg-adj-'+a.id});
-    g.appendChild(se('polygon',{points:`${mx},${my-ds} ${mx+ds},${my} ${mx},${my+ds} ${mx-ds},${my}`,fill:'#1a1035',stroke:d.color,'stroke-width':'1',opacity:'0.35',id:'svg-poly-'+a.id}));
-    const dx=mx-CX,dy=my-CY,lx=CX+dx*1.42,ly=CY+dy*1.42;
-    const t=se('text',{x:lx,y:ly+4,'text-anchor':'middle','font-family':'Cinzel,serif','font-size':'7',fill:d.color,'letter-spacing':'0.5',opacity:'0.35',id:'svg-txt-'+a.id});
-    t.textContent=d.name;g.appendChild(t);
-    aG.appendChild(g);
-  });
-  // Nodes
-  const nG=document.getElementById('nodes-group');
-  ELEMENTS.forEach((el,i)=>{
-    const {x,y}=pos[i];
-    const g=se('g',{class:'node-group'});
-    g.appendChild(se('circle',{cx:x,cy:y,r:36,fill:el.color,opacity:'0.07'}));
-    g.appendChild(se('circle',{cx:x,cy:y,r:30,fill:'#131328',stroke:el.color,'stroke-width':'2',class:'node-circle'}));
-    const fo=se('foreignObject',{x:x-26,y:y-12,width:'52',height:'24'});
-    const div=document.createElement('div');
-    div.style.cssText=`width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:7px;font-weight:700;color:${el.color};text-align:center;letter-spacing:.5px;line-height:1.2;`;
-    div.textContent=el.name;fo.appendChild(div);g.appendChild(fo);
-    nG.appendChild(g);
-  });
-}
-
-// ── SPARKS ───────────────────────────────────────────────────────────────────
-function buildSparks(){
-  const c=document.getElementById('sparks-container');
-  const lbl=(t,css)=>{const d=document.createElement('div');d.style.cssText=css;d.textContent=t;return d;};
-  c.appendChild(lbl('— Основные элементы —',"font-family:'Cinzel',serif;font-size:7px;letter-spacing:2px;color:var(--text-dim);margin-bottom:4px;padding-left:86px;"));
-  ELEMENTS.forEach(el=>{
-    const row=document.createElement('div');row.style.cssText='display:flex;align-items:center;gap:8px;';
-    const l=lbl(el.name,`font-family:'Cinzel',serif;font-size:8px;letter-spacing:1px;color:${el.color};width:82px;text-align:right;flex-shrink:0;`);
-    row.appendChild(l);
-    const wrap=document.createElement('div');wrap.className='sparks-row';wrap.style.justifyContent='flex-start';wrap.dataset.elId=el.id;
-    for(let p=0;p<5;p++){
-      const sq=document.createElement('div');sq.className='spark-sq'+(p<sparks[el.id]?' on':'');sq.style.borderColor=el.color+'66';
-      sq.addEventListener('click',()=>{
-        sparks[el.id]=sparks[el.id]===p+1?p:p+1;
-        document.querySelectorAll(`[data-el-id="${el.id}"] .spark-sq`).forEach((s,i)=>s.classList.toggle('on',i<sparks[el.id]));
-        const cnt=document.querySelector(`[data-counter="${el.id}"]`);if(cnt)cnt.textContent=sparks[el.id]+' / 5';
-        checkAdj();refreshSkillsPanel();scheduleSave();
-      });
-      wrap.appendChild(sq);
-    }
-    row.appendChild(wrap);
-    const cnt=lbl(sparks[el.id]+' / 5',"font-family:'Crimson Pro',serif;font-size:10px;color:var(--text-dim);font-style:italic;margin-left:2px;");
-    cnt.dataset.counter=el.id;row.appendChild(cnt);
-    c.appendChild(row);
-  });
-  const sep=document.createElement('div');sep.style.cssText='border-top:1px solid var(--line);margin:8px 0;';c.appendChild(sep);
-  c.appendChild(lbl('— Смежные ветки (макс. 2 активных) —',"font-family:'Cinzel',serif;font-size:7px;letter-spacing:2px;color:var(--text-dim);margin-bottom:6px;padding-left:86px;"));
-  ADJ.forEach(adj=>{
-    const row=document.createElement('div');
-    row.className='adj-row';row.id='adj-row-'+adj.id;
-    row.style.cssText='display:flex;align-items:center;gap:8px;opacity:.3;transition:opacity .4s;';
-    const l=lbl(adj.name,`font-family:'Cinzel',serif;font-size:8px;letter-spacing:1px;color:${adj.color};width:82px;text-align:right;flex-shrink:0;`);
-    row.appendChild(l);
-    const hint=document.createElement('div');hint.className='adj-hint';
-    hint.style.cssText=`font-family:'Crimson Pro',serif;font-size:10px;color:${adj.color};font-style:italic;border:1px dashed ${adj.color}44;border-radius:4px;padding:2px 8px;flex:1;transition:border-color .2s;cursor:default;`;
-    hint.title = ADJ_DESC[adj.id] || adj.parents;
-    hint.textContent=adj.parents;row.appendChild(hint);
-    // Toggle
-    const toggleWrap=document.createElement('label');
-    toggleWrap.className='adj-toggle';
-    toggleWrap.style.setProperty('--adj-color',adj.color);
-    const inp=document.createElement('input');
-    inp.type='checkbox';inp.id='adj-toggle-'+adj.id;inp.disabled=true;
-    inp.addEventListener('change',()=>onAdjToggle(adj.id,inp.checked));
-    const track=document.createElement('div');track.className='adj-toggle-track';
-    const thumb=document.createElement('div');thumb.className='adj-toggle-thumb';
-    toggleWrap.appendChild(inp);toggleWrap.appendChild(track);toggleWrap.appendChild(thumb);
-    row.appendChild(toggleWrap);
-    c.appendChild(row);
-  });
-}
-
-// ── ADJACENT TOGGLE ──────────────────────────────────────────────────────────
-// adjActive: which branches are toggled ON by the player
-const adjActive=new Set();
-
-function onAdjToggle(id,checked){
-  if(checked){
-    const activeCount=adjActive.size;
-    if(activeCount>=2){
-      // Refuse — reset the checkbox
-      const inp=document.getElementById('adj-toggle-'+id);
-      if(inp)inp.checked=false;
-      return;
-    }
-    adjActive.add(id);
-  } else {
-    adjActive.delete(id);
+// Show character count badge
+try {
+  const idx = JSON.parse(localStorage.getItem('froyskyy_chars_index')) || [];
+  if(idx.length) {
+    const badge = document.getElementById('chars-badge');
+    badge.textContent = idx.length;
+    badge.style.display = '';
   }
-  refreshAdjVisuals();refreshSkillsPanel();
-  scheduleSave();
+} catch(e) {}
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("./sw.js");
 }
 
-function checkAdj(){
-  // Determine which branches meet the spark requirement
-  ADJ.forEach(adj=>{
-    const meetsReq=sparks[adj.req[0]]>=2&&sparks[adj.req[1]]>=2;
-    const inp=document.getElementById('adj-toggle-'+adj.id);
-    const row=document.getElementById('adj-row-'+adj.id);
-    if(!inp||!row)return;
+// ── COSMIC CALENDAR ──────────────────────────────────────────────────────────
+// Code format: AAA0  (3 uppercase letters + 1 digit 0-9)
+// Encoding: position = letter2*260 + letter1*10 + digit
+//   digit   0-9  (+1 → digit wraps, carry to letter1)
+//   letter1 A-Z  (+1 → wraps, carry to letter2)   [middle letter]
+//   letter2 A-Z  (+1 → wraps, carry to letter3)   [leftmost of right two]
+// Full code: FIXED_LETTER + letter2 + letter1 + digit
+// Wait — re-reading: format is AAA0:
+//   pos 0: letter A (fixed or slowest)
+//   pos 1: letter A
+//   pos 2: letter A
+//   pos 3: digit 0
+// Increment: digit first, then pos2, then pos1, then pos0
 
-    if(meetsReq){
-      // Enable the toggle — player can choose to activate
-      inp.disabled=false;
-      row.style.opacity='1';
-      row.classList.add('available');
-    } else {
-      // Requirement lost — disable and deactivate
-      inp.disabled=true;
-      if(adjActive.has(adj.id)){
-        adjActive.delete(adj.id);
-        inp.checked=false;
-      }
-      row.style.opacity='.3';
-      row.classList.remove('available','active-branch');
-    }
-    refreshAdjVisuals();
-  });
+function codeToIndex(code) {
+  // code = 4 chars: L L L D
+  if (!code || code.length !== 4) return 0;
+  const l0 = code.charCodeAt(0) - 65; // 0-25
+  const l1 = code.charCodeAt(1) - 65;
+  const l2 = code.charCodeAt(2) - 65;
+  const d  = parseInt(code[3])  || 0;
+  return l0 * (26 * 26 * 10) + l1 * (26 * 10) + l2 * 10 + d;
 }
 
-function refreshAdjVisuals(){
-  ADJ.forEach(adj=>{
-    const isActive=adjActive.has(adj.id);
-    const meetsReq=sparks[adj.req[0]]>=2&&sparks[adj.req[1]]>=2;
-    const row=document.getElementById('adj-row-'+adj.id);
-    const inp=document.getElementById('adj-toggle-'+adj.id);
-    if(!row||!inp)return;
-
-    // Sync checkbox
-    if(inp.checked!==isActive)inp.checked=isActive;
-
-    // Visual state
-    if(isActive){
-      row.classList.add('active-branch');
-      row.style.opacity='1';
-      const hint=row.querySelector('.adj-hint');
-      if(hint)hint.style.borderColor=adj.color;
-    } else {
-      row.classList.remove('active-branch');
-      if(meetsReq){
-        row.style.opacity='1';
-        const hint=row.querySelector('.adj-hint');
-        if(hint)hint.style.borderColor=adj.color+'44';
-        // Disable toggle if 2 already active and this one is not
-        inp.disabled = adjActive.size>=2;
-      }
-    }
-
-    // SVG diamond — show as active only if toggled on
-    if(adj.id==='stoikost'){
-      const op=isActive?'1':meetsReq?'0.7':'0.35';
-      const fill=isActive?'#c9a84c55':meetsReq?'#c9a84c22':'#1a1035';
-      document.getElementById('sto-diamond')?.setAttribute('opacity',op);
-      document.getElementById('sto-diamond')?.setAttribute('fill',fill);
-      document.getElementById('sto-text')?.setAttribute('opacity',op);
-    } else {
-      const poly=document.getElementById('svg-poly-'+adj.id);
-      const txt=document.getElementById('svg-txt-'+adj.id);
-      const op=isActive?'1':meetsReq?'0.7':'0.35';
-      poly?.setAttribute('opacity',op);
-      txt?.setAttribute('opacity',op);
-      poly?.setAttribute('fill',isActive?adj.color+'55':meetsReq?adj.color+'22':'#1a1035');
-      poly?.setAttribute('stroke-width',isActive?'2':meetsReq?'1.2':'1');
-    }
-  });
+function indexToCode(n) {
+  if (n < 0) n = 0;
+  const TOTAL = 26 * 26 * 26 * 10;
+  n = ((n % TOTAL) + TOTAL) % TOTAL; // wrap around
+  const d  = n % 10;              n = Math.floor(n / 10);
+  const l2 = n % 26;              n = Math.floor(n / 26);
+  const l1 = n % 26;              n = Math.floor(n / 26);
+  const l0 = n % 26;
+  return String.fromCharCode(65+l0) + String.fromCharCode(65+l1) + String.fromCharCode(65+l2) + d;
 }
 
-// ── HP ───────────────────────────────────────────────────────────────────────
-function buildHpBoxes(cid,n){
-  const el=document.getElementById(cid);el.innerHTML='';
-  for(let i=0;i<n;i++){
-    const b=document.createElement('div');b.className='hp-box'+(i<hpFill[cid]?' filled':'');
-    b.addEventListener('click',()=>{hpFill[cid]=hpFill[cid]===i+1?i:i+1;refreshHp(cid);scheduleSave();});
-    el.appendChild(b);
-  }
-}
-function refreshHp(cid){document.querySelectorAll('#'+cid+' .hp-box').forEach((b,i)=>b.classList.toggle('filled',i<hpFill[cid]));}
-function onMaxChange(cid,val,cap){let n=Math.min(Math.max(typeof val==='number'?val:(parseInt(val)||0),0),cap);if(hpFill[cid]>n)hpFill[cid]=n;buildHpBoxes(cid,n);}
-
-// ── OBELISKS ─────────────────────────────────────────────────────────────────
-function buildObelisks(){
-  const list=document.getElementById('obelisks-list');
-  OBELISKS.forEach(ob=>{
-    const row=document.createElement('div');row.className='obelisk-row';row.style.borderLeftColor=ob.color;
-    row.innerHTML=`<div class="obelisk-icon"><svg viewBox="0 0 24 24" fill="none"><polygon points="12,2 16,8 14,20 10,20 8,8" fill="${ob.color}" opacity=".85"/><polygon points="12,2 16,8 12,6 8,8" fill="${ob.color}"/><rect x="9" y="20" width="6" height="2" rx="1" fill="${ob.color}" opacity=".5"/></svg></div><div class="obelisk-info"><div class="obelisk-name" style="color:${ob.color}">${ob.name}</div><div class="obelisk-desc">${ob.desc}</div></div><div class="obelisk-checks" id="ob-checks-${ob.id}"></div>`;
-    list.appendChild(row);
-    const checks=document.getElementById('ob-checks-'+ob.id);
-    for(let i=0;i<8;i++){
-      const cb=document.createElement('div');cb.className='ob-check'+(i<obFill[ob.id]?' filled':'');cb.style.borderColor=ob.color+'55';
-      if(i<obFill[ob.id]){cb.style.background=ob.color;cb.style.boxShadow=`0 0 6px ${ob.color}88`;}
-      cb.addEventListener('click',()=>{obFill[ob.id]=obFill[ob.id]===i+1?i:i+1;refreshOb(ob);updateObTotal();scheduleSave();});
-      checks.appendChild(cb);
-    }
-  });
-}
-function refreshOb(ob){document.querySelectorAll('#ob-checks-'+ob.id+' .ob-check').forEach((cb,i)=>{const on=i<obFill[ob.id];cb.classList.toggle('filled',on);cb.style.background=on?ob.color:'';cb.style.boxShadow=on?`0 0 6px ${ob.color}88`:'';});}
-function updateObTotal(){document.getElementById('ob-total').textContent=OBELISKS.reduce((s,ob)=>s+obFill[ob.id],0);}
-
-// ── DICE ─────────────────────────────────────────────────────────────────────
-function addDie(n){dicePool[n]=(dicePool[n]||0)+1;updateDiceUI();}
-function clearDice(){Object.keys(dicePool).forEach(k=>delete dicePool[k]);updateDiceUI();}
-function updateDiceUI(){
-  document.querySelectorAll('.dice-btn').forEach(btn=>{
-    const s=parseInt(btn.dataset.sides),cnt=dicePool[s]||0;
-    btn.classList.toggle('active',cnt>0);
-    let badge=btn.querySelector('.dice-count');
-    if(cnt>0){if(!badge){badge=document.createElement('span');badge.className='dice-count';btn.appendChild(badge);}badge.textContent=cnt;}
-    else if(badge)badge.remove();
-  });
-  const d=document.getElementById('dice-pool-display');
-  const parts=Object.entries(dicePool).filter(([,v])=>v>0).map(([k,v])=>`${v}к${k}`);
-  if(parts.length){d.textContent=parts.join(' + ');d.classList.add('has-dice');}
-  else{d.textContent='пул пуст';d.classList.remove('has-dice');}
-}
-function rollDice(){
-  const entries=Object.entries(dicePool).filter(([,v])=>v>0);
-  if(!entries.length)return;
-  execRoll(entries.map(([s,c])=>({sides:parseInt(s),count:parseInt(c)})),0);
-}
-function execRoll(dice,bonus){
-  // dice = [{sides,count},...], bonus = flat number
-  const rolls=[],formulaParts=[],breakParts=[];
-  dice.forEach(({sides,count})=>{
-    formulaParts.push(`${count}к${sides}`);
-    for(let i=0;i<count;i++){const r=Math.ceil(Math.random()*sides);rolls.push(r);breakParts.push(r);}
-  });
-  let total=rolls.reduce((a,b)=>a+b,0)+bonus;
-  if(bonus!==0){formulaParts.push(String(bonus));breakParts.push(bonus);}
-  showRollNotif(total,'('+formulaParts.join('+')+') ',breakParts.join(' + '));
-}
-
-// ── ROLL PARSER (inline formula) — resolves stat names from sparks ───────────
-// Maps Russian stat names to sparks keys
-const STAT_MAP={
-  'атака':'atk','полёт':'fly','полет':'fly','иллюзия':'ill',
-  'защита':'def','контроль':'ctrl','исцеление':0,'стойкость':0,
-};
-function resolveFormula(formula){
-  // Replace stat names (case-insensitive) with their current spark values
-  return formula.replace(/[а-яёА-ЯЁa-zA-Z]+/g,word=>{
-    const key=STAT_MAP[word.toLowerCase()];
-    if(key===undefined)return word; // unknown word, keep as-is
-    if(key===0)return '0';
-    return String(sparks[key]||0);
-  });
-}
-function parseAndRoll(formula){
-  const resolved=resolveFormula(formula);
-  const rolls=[],formulaParts=[],breakParts=[];
-  let bonus=0;
-  // find NкM dice
-  const dr=/(\d+)[кКkK](\d+)/g;let m;
-  while((m=dr.exec(resolved))!==null){
-    const cnt=parseInt(m[1]),sides=parseInt(m[2]);
-    formulaParts.push(`${cnt}к${sides}`);
-    for(let i=0;i<cnt;i++){const r=Math.ceil(Math.random()*sides);rolls.push(r);breakParts.push(r);}
-  }
-  // remaining numbers as flat bonus (strip dice patterns first)
-  const stripped=resolved.replace(/(\d+)[кКkK](\d+)/g,'');
-  const nums=stripped.match(/[+-]?\s*\d+/g)||[];
-  nums.forEach(n=>{const v=parseInt(n.replace(/\s/g,''));if(!isNaN(v)&&v!==0){bonus+=v;}});
-  const total=rolls.reduce((a,b)=>a+b,0)+bonus;
-  // Build display showing original formula → resolved if different
-  const displayFormula=resolved!==formula?`(${formula} → ${resolved})` :`(${formulaParts.join('+')}${bonus!==0?(bonus>0?'+'+bonus:bonus):''})`;
-  if(bonus!==0)breakParts.push((bonus>0?'+':'')+bonus);
-  showRollNotif(total,displayFormula,breakParts.join(' + '));
-}
-
-// ── NOTIFICATIONS ─────────────────────────────────────────────────────────────
-function showRollNotif(total,formula,breakdown){
-  const c=document.getElementById('roll-notifications');
-  // remove oldest if already 2
-  if(c.children.length>=2){const first=c.firstElementChild;first.classList.add('closing');setTimeout(()=>first.remove(),200);}
-  const n=document.createElement('div');n.className='roll-notif';
-  n.innerHTML=`<button class="roll-notif-close" onclick="closeNotif(this)">×</button><div class="roll-notif-total">${total}</div><div class="roll-notif-formula">${formula}</div><div class="roll-notif-breakdown">${breakdown}</div>`;
-  c.appendChild(n);
-}
-function closeNotif(btn){const n=btn.closest('.roll-notif');n.classList.add('closing');setTimeout(()=>n.remove(),200);}
-
-// ── INLINE ROLL RENDERING ────────────────────────────────────────────────────
-function renderInline(cell){
-  // Get raw text, find [formula] patterns, replace with clickable spans
-  // We need to avoid double-rendering — work on plain text only
-  const plain=cell.innerText||cell.textContent||'';
-  if(!/\[/.test(plain))return;
-  // Rebuild innerHTML: escape HTML, then replace [formula] with span
-  const safe=plain.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  const rendered=safe.replace(/\[([^\]]+)\]/g,(match,inner)=>{
-    if(/\d/.test(inner))return`<span class="inline-roll" data-formula="${inner.replace(/"/g,'&quot;')}" onclick="parseAndRoll(this.dataset.formula)">[${inner}]</span>`;
-    return match;
-  });
-  // Only update if changed (avoid cursor issues on input)
-  if(cell.innerHTML!==rendered)cell.innerHTML=rendered;
-}
-
-// ── SPELLS ───────────────────────────────────────────────────────────────────
-function addSpell(data){
-  spellCount++;const id=spellCount;
-  const list=document.getElementById('spells-list');
-  const row=document.createElement('div');row.className='spell-row';row.id='spell-'+id;
-  const esc=s=>(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  row.innerHTML=`<div class="spell-cell" contenteditable="true" data-placeholder="Название..." data-idx="0">${esc(data?.name)}</div><div class="spell-cell" contenteditable="true" data-placeholder="Элемент..." data-idx="1">${esc(data?.element)}</div><div class="spell-cell" contenteditable="true" data-placeholder="0" data-idx="2">${esc(data?.mana)}</div><div class="spell-cell desc-cell" contenteditable="false" data-placeholder="Описание эффекта..." data-idx="3">${esc(data?.desc)}</div><button class="del-spell" title="Удалить" onclick="removeSpell(${id})">×</button>`;
-  const desc=row.querySelector('.desc-cell');
-
-  // Single click on desc: if clicking an inline-roll span, roll dice but don't enter edit mode
-  // Double-click anywhere in desc: enter edit mode
-  desc.addEventListener('click',e=>{
-    if(desc.contentEditable==='false'){
-      // Not in edit mode — check if clicked a formula
-      const roll=e.target.closest('.inline-roll');
-      if(roll){e.preventDefault();parseAndRoll(roll.dataset.formula);}
-      // single click does NOT activate edit — user must double-click
-    } else {
-      // Already in edit mode — formula click should roll, not just select
-      const roll=e.target.closest('.inline-roll');
-      if(roll){e.preventDefault();e.stopPropagation();parseAndRoll(roll.dataset.formula);}
-    }
-  });
-  desc.addEventListener('dblclick',e=>{
-    const roll=e.target.closest('.inline-roll');
-    if(roll)return; // dblclick on formula = roll, don't enter edit
-    desc.contentEditable='true';desc.focus();
-  });
-  desc.addEventListener('blur',()=>{
-    desc.contentEditable='false';
-    renderInline(desc);scheduleSave();
-  });
-  desc.addEventListener('input',scheduleSave);
-  row.querySelectorAll('.spell-cell:not(.desc-cell)').forEach(c=>c.addEventListener('input',scheduleSave));
-  list.appendChild(row);
-  // Render formula on load
-  if(data?.desc)setTimeout(()=>renderInline(desc),0);
-  return row;
-}
-function removeSpell(id){const e=document.getElementById('spell-'+id);if(e){e.remove();scheduleSave();}}
-
-// ── CLASS SKILLS ─────────────────────────────────────────────────────────────
-// Data loaded from Google Sheets
-let classSkillsData = [];   // [{element, level, type, name, desc, mana, requirement}]
-let adjSkillsData   = [];   // [{branch, type, name, desc, mana, requirement}]
-let buildsData      = [];   // [{branch1, branch2, name, ult_name, ult_type, ult_mana, ult_desc, icon_url}]
-let skillsLoaded    = false;
-let currentSkillTab = 'fly';
-
-const EL_COLORS = {
-  fly:'#6ab0f5', atk:'#e05c5c', ill:'#b07fd1', def:'#5b8dee', ctrl:'#4cbb8a'
-};
-const ADJ_COLORS = {
-  natisk:'#c9a84c', obman:'#e8934c', pokoj:'#9b7fe8',
-  istsel:'#7ecba1', gospod:'#e05c5c', stoikost:'#6ab0f5'
-};
-const ADJ_NAMES = {
-  natisk:'НАТИСК', obman:'ОБМАН', pokoj:'ПОКОЙ',
-  istsel:'ИСЦЕЛЕНИЕ', gospod:'ГОСПОДСТВО', stoikost:'СТОЙКОСТЬ'
-};
-
-async function loadClassSkills() {
+async function loadCalendar() {
   try {
-    const [cs, as, bs] = await Promise.all([
-      sheetsGet('class_skills'),
-      sheetsGet('adj_skills'),
-      sheetsGet('builds').catch(()=>[]),   // optional sheet — graceful fallback
-    ]);
-    classSkillsData = cs.map(r => ({
-      element:     r.element?.toLowerCase() || '',
-      level:       parseInt(r.level) || 0,
-      type:        r.type?.toLowerCase() || 'пассив',
-      name:        r.name  || '',
-      desc:        r.desc  || '',
-      mana:        r.mana  || '',
-      requirement: r.requirement || '',
-    })).filter(r => r.element && r.level && r.name);
-    adjSkillsData = as.map(r => ({
-      branch:      r.branch?.toLowerCase() || '',
-      type:        r.type?.toLowerCase() || 'пассив',
-      name:        r.name || '',
-      desc:        r.desc || '',
-      mana:        r.mana || '',
-      requirement: r.requirement || '',
-    })).filter(r => r.branch && r.name);
-    buildsData = bs.map(r => ({
-      branch1:         (r.branch1 || '').toLowerCase(),
-      branch2:         (r.branch2 || '').toLowerCase(),
-      name:            r.name        || '',
-      ult_name:        r.ult_name    || '',
-      ult_type:        (r.ult_type   || 'актив').toLowerCase(),
-      ult_mana:        r.ult_mana    || '',
-      ult_desc:        r.ult_desc    || '',
-      ult_requirement: r.ult_requirement || '',
-      icon:            r.icon        || '',
-    })).filter(r => r.branch1 && r.branch2);
-    skillsLoaded = true;
+    // Use the same sheets helper used in other pages
+    const { apiKey, spreadsheetId } = SHEETS_CONFIG;
+    if (!apiKey || apiKey === 'ВАШ_API_КЛЮЧ_ЗДЕСЬ') throw new Error('not configured');
+
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent('info')}!A:Z?key=${apiKey}`;
+    const res  = await fetch(url);
+    const data = await res.json();
+    const rows = data.values || [];
+
+    // Parse key-value pairs: first col = key, second col = value
+    const info = {};
+    rows.forEach(r => { if(r[0]) info[r[0].trim().toLowerCase()] = (r[1]||'').trim(); });
+
+    const currentCode   = (info['current_cell'] || info['current'] || info['ячейка'] || 'AAA0').toUpperCase();
+    const currentCircle = info['current_circle'] || info['круг'] || info['circle'] || '—';
+
+    renderCalendar(currentCode, currentCircle);
   } catch(e) {
-    classSkillsData = []; adjSkillsData = []; buildsData = [];
-    skillsLoaded = false;
-    const grid = document.getElementById('skills-grid');
-    if(grid) grid.innerHTML = `<div class="skills-empty">⚠ Не удалось загрузить умения.<br><span style="font-size:10px;opacity:.6">${e.message}</span></div>`;
-    return;
-  }
-  renderSkillsTab(currentSkillTab);
-  renderBuildPanel();
-}
-
-// ── BUILD PANEL ───────────────────────────────────────────────────────────────
-function renderBuildPanel() {
-  const panel     = document.getElementById('build-panel');
-  const iconEl    = document.getElementById('build-icon');
-  const titleEl   = document.getElementById('build-title');
-  const branchesEl= document.getElementById('build-branches');
-  const ultWrap   = document.getElementById('build-ult-wrap');
-  const placeholder= document.getElementById('build-placeholder');
-  if(!panel) return;
-
-  const active = [...adjActive];   // 0, 1 or 2 branch ids
-
-  // Reset
-  panel.classList.remove('build-active');
-  iconEl.classList.remove('active');
-  titleEl.classList.remove('active');
-  branchesEl.innerHTML = '';
-
-  if(active.length !== 2) {
-    // Show placeholder
-    titleEl.textContent = '—';
-    if(placeholder) placeholder.style.display = '';
-    // Remove old ult card if any
-    const old = ultWrap.querySelector('.build-ult');
-    if(old) old.remove();
-    // Show branch tags greyed
-    active.forEach(id => {
-      const tag = document.createElement('span');
-      tag.className = 'build-branch-tag';
-      tag.style.cssText = `color:${ADJ_COLORS[id]||'var(--gold)'};border-color:${ADJ_COLORS[id]||'var(--gold)'}44;`;
-      tag.textContent = ADJ_NAMES[id] || id.toUpperCase();
-      branchesEl.appendChild(tag);
-    });
-    return;
-  }
-
-  const [b1, b2] = active;
-  // Find build data — order-independent
-  const build = buildsData.find(b =>
-    (b.branch1 === b1 && b.branch2 === b2) ||
-    (b.branch1 === b2 && b.branch2 === b1)
-  );
-
-  // Branch tags
-  [b1, b2].forEach(id => {
-    const tag = document.createElement('span');
-    tag.className = 'build-branch-tag active';
-    tag.style.cssText = `color:${ADJ_COLORS[id]||'var(--gold)'};border-color:${ADJ_COLORS[id]||'var(--gold)'};background:${ADJ_COLORS[id]||'var(--gold)'}11;`;
-    tag.textContent = ADJ_NAMES[id] || id.toUpperCase();
-    branchesEl.appendChild(tag);
-  });
-
-  if(!build) {
-    // Data not in sheet yet
-    panel.classList.add('build-active');
-    titleEl.textContent = ADJ_NAMES[b1] + ' + ' + ADJ_NAMES[b2];
-    titleEl.classList.add('active');
-    if(placeholder) { placeholder.style.display = ''; placeholder.textContent = 'Данные этого билда ещё не добавлены в таблицу.'; }
-    const old = ultWrap.querySelector('.build-ult'); if(old) old.remove();
-    // Default icon
-    iconEl.textContent = getDefaultBuildIcon(b1, b2);
-    return;
-  }
-
-  // Full build found
-  panel.classList.add('build-active');
-  if(placeholder) placeholder.style.display = 'none';
-
-  // Icon
-  iconEl.classList.add('active');
-  if(build.icon) {
-    // Could be emoji or URL
-    if(build.icon.startsWith('http')) {
-      iconEl.innerHTML = `<img src="${build.icon}" alt="build icon">`;
-    } else {
-      iconEl.textContent = build.icon;
-      iconEl.style.fontSize = '28px';
-    }
-  } else {
-    iconEl.textContent = getDefaultBuildIcon(b1, b2);
-  }
-
-  // Title
-  titleEl.textContent = build.name || (ADJ_NAMES[b1] + ' + ' + ADJ_NAMES[b2]);
-  titleEl.classList.add('active');
-
-  // Remove old ult
-  const old = ultWrap.querySelector('.build-ult'); if(old) old.remove();
-
-  // Ult card
-  if(build.ult_name) {
-    const isAct = build.ult_type === 'актив';
-    // Determine gradient color (mix of both branches)
-    const c1 = ADJ_COLORS[b1] || '#c9a84c';
-    const c2 = ADJ_COLORS[b2] || '#c9a84c';
-
-    const ult = document.createElement('div');
-    ult.className = 'build-ult active';
-    ult.style.background = `linear-gradient(135deg, ${c1}0d, ${c2}08, var(--panel2))`;
-    ult.style.borderColor = c1 + '66';
-
-    // Header row
-    const hdr = document.createElement('div');
-    hdr.className = 'build-ult-header';
-
-    const badge = document.createElement('span');
-    badge.className = 'build-ult-badge';
-    badge.style.cssText = `border-color:${c1}66;color:${c1};background:${c1}11;`;
-    badge.textContent = isAct ? 'УЛЬТА' : 'ПАССИВ БИЛДА';
-    hdr.appendChild(badge);
-
-    if(isAct && build.ult_mana) {
-      const mana = document.createElement('span');
-      mana.className = 'build-ult-mana';
-      mana.style.cssText = `border-color:${c1}55;color:${c1};background:${c1}0a;`;
-      mana.textContent = '⟡ ' + build.ult_mana;
-      hdr.appendChild(mana);
-    }
-
-    if(isAct && build.ult_requirement) {
-      const ri = document.createElement('span');
-      ri.className = 'req-icon';
-      ri.style.color = c1;
-      ri.innerHTML = `◈<span class="req-tooltip"><strong>ТРЕБОВАНИЕ</strong><br>${escHtml(build.ult_requirement)}</span>`;
-      hdr.appendChild(ri);
-    }
-
-    ult.appendChild(hdr);
-
-    const nm = document.createElement('div');
-    nm.className = 'build-ult-name active';
-    nm.style.color = c1;
-    nm.textContent = build.ult_name;
-    ult.appendChild(nm);
-
-    const desc = document.createElement('div');
-    desc.className = 'build-ult-desc';
-    desc.innerHTML = renderSkillDescHtml(build.ult_desc);
-    attachSkillRolls(desc);
-    ult.appendChild(desc);
-
-    ultWrap.appendChild(ult);
+    // Fallback: render with a placeholder code so the grid still shows
+    renderCalendar('AAA0', '—', true);
   }
 }
 
-// Fallback icon — combine first chars of both branch names visually
-function getDefaultBuildIcon(b1, b2) {
-  const icons = { natisk:'⚡', obman:'🃏', pokoj:'❄', istsel:'💚', gospod:'👑', stoikost:'🏔' };
-  return (icons[b1]||'✦') + (icons[b2]||'✦');
-}
+function renderCalendar(currentCode, circleVal, isError) {
+  document.getElementById('cal-circle-val').textContent = circleVal;
 
-function switchSkillTab(el) {
-  currentSkillTab = el;
-  document.querySelectorAll('.skills-tab').forEach(t => t.classList.toggle('active', t.dataset.el === el));
-  renderSkillsTab(el);
-}
-
-function renderSkillsTab(tab) {
-  const grid = document.getElementById('skills-grid');
-  if(!grid) return;
-  if(!skillsLoaded) { grid.innerHTML = '<div class="skills-loading">⟳ Загружаем умения...</div>'; return; }
-
-  if(tab === 'adj') { renderAdjSkills(grid); return; }
-
-  const elSkills = classSkillsData.filter(s => s.element === tab).sort((a,b) => a.level - b.level);
-  if(!elSkills.length) { grid.innerHTML = '<div class="skills-empty">Умения для этого элемента ещё не добавлены в таблицу.</div>'; return; }
-
-  const curSparks = sparks[tab] || 0;
-  const color = EL_COLORS[tab] || '#a67fd1';
+  const grid    = document.getElementById('cal-grid');
+  const status  = document.getElementById('cal-status');
+  if (status) status.remove();
   grid.innerHTML = '';
-  elSkills.forEach(sk => {
-    const unlocked = curSparks >= sk.level;
-    const isActive = sk.type === 'актив';
-    const card = document.createElement('div');
-    card.className = 'skill-card ' + (unlocked ? 'unlocked' : 'locked');
-    card.style.borderColor = unlocked ? color + '66' : '';
-    card.style.background  = unlocked ? `linear-gradient(135deg, ${color}0a, var(--panel2))` : '';
 
-    // header
-    const header = document.createElement('div');
-    header.className = 'skill-card-header';
+  const centerIdx = codeToIndex(currentCode); // index of current cell
+  // 5×5 grid: offset from -12 to +12 centered on [2][2]
+  // row 0: offsets -12,-11,-10,-9,-8  ... row 4: +8,+9,+10,+11,+12
+  for (let row = 0; row < 5; row++) {
+    for (let col = 0; col < 5; col++) {
+      const offset = (row - 2) * 5 + (col - 2); // -12..+12, center = 0
+      const idx    = centerIdx + offset;
+      const code   = indexToCode(idx);
+      const isCurrent = (offset === 0);
+      const isPast    = offset < 0;
 
-    const lvlBadge = document.createElement('span');
-    lvlBadge.className = 'skill-level';
-    lvlBadge.style.cssText = `border-color:${color}66;color:${color};background:${color}11;`;
-    lvlBadge.textContent = sk.level + ' ✦';
-    header.appendChild(lvlBadge);
-
-    const typeBadge = document.createElement('span');
-    typeBadge.className = 'skill-type';
-    typeBadge.textContent = sk.type.toUpperCase();
-    header.appendChild(typeBadge);
-
-    // mana badge (only for actives)
-    if(isActive && sk.mana) {
-      const mb = document.createElement('span');
-      mb.className = 'skill-mana';
-      mb.textContent = '⟡ ' + sk.mana;
-      header.appendChild(mb);
-    }
-
-    // requirement icon (only for actives with requirement)
-    if(isActive && sk.requirement) {
-      const ri = document.createElement('span');
-      ri.className = 'req-icon';
-      ri.style.color = color;
-      ri.innerHTML = `◈<span class="req-tooltip"><strong>ТРЕБОВАНИЕ</strong><br>${escHtml(sk.requirement)}</span>`;
-      header.appendChild(ri);
-    }
-
-    card.appendChild(header);
-
-    const name = document.createElement('div');
-    name.className = 'skill-name';
-    name.style.color = unlocked ? color : 'var(--text-dim)';
-    name.textContent = sk.name;
-    card.appendChild(name);
-
-    const desc = document.createElement('div');
-    desc.className = 'skill-desc';
-    desc.innerHTML = renderSkillDescHtml(sk.desc);
-    attachSkillRolls(desc);
-    card.appendChild(desc);
-
-    grid.appendChild(card);
-  });
-}
-
-function renderAdjSkills(grid) {
-  if(!adjSkillsData.length) { grid.innerHTML = '<div class="skills-empty">Смежные умения ещё не добавлены в таблицу.</div>'; return; }
-
-  grid.innerHTML = '';
-  const byBranch = {};
-  adjSkillsData.forEach(s => { (byBranch[s.branch] = byBranch[s.branch]||[]).push(s); });
-
-  Object.entries(byBranch).forEach(([branch, skills]) => {
-    const isActive = adjActive.has(branch);
-    const color = ADJ_COLORS[branch] || '#c9a84c';
-    const adjDef = ADJ.find(a => a.id === branch);
-    const meetsReq = adjDef &&
-      sparks[adjDef.req[0]] >= 2 &&
-      sparks[adjDef.req[1]] >= 2;
-
-    // Branch header card — full width, with description
-    const header = document.createElement('div');
-    header.className = 'skill-card ' + (isActive ? 'unlocked' : 'locked');
-    header.style.cssText = `grid-column:1/-1;border-color:${isActive?color+'88':'var(--line)'};background:${isActive?color+'11':'var(--panel2)'};`;
-
-    const titleRow = document.createElement('div');
-    titleRow.style.cssText = 'display:flex;align-items:center;gap:8px;';
-
-    const titleEl = document.createElement('div');
-    titleEl.className = 'skill-name';
-    titleEl.style.cssText = `color:${isActive?color:'var(--text-dim)'};margin-bottom:0;flex:1;`;
-    titleEl.textContent = ADJ_NAMES[branch] || branch.toUpperCase();
-    titleRow.appendChild(titleEl);
-
-    const statusBadge = document.createElement('span');
-    statusBadge.style.cssText = `font-family:'Cinzel',serif;font-size:8px;letter-spacing:1px;opacity:.7;color:${isActive?color:'var(--text-dim)'};`;
-    statusBadge.textContent = isActive ? '● АКТИВНА' : meetsReq ? '○ Доступна' : '○ Заблокирована';
-    titleRow.appendChild(statusBadge);
-    header.appendChild(titleRow);
-
-    // Branch description from ADJ_DESC
-    const branchDesc = ADJ_DESC[branch];
-    if(branchDesc) {
-      const descEl = document.createElement('div');
-      descEl.className = 'adj-branch-desc';
-      descEl.style.color = isActive ? 'var(--text-mid)' : 'var(--text-dim)';
-      descEl.textContent = branchDesc;
-      header.appendChild(descEl);
-    }
-
-    grid.appendChild(header);
-
-    // Skill cards
-    skills.forEach(sk => {
-      const isAct = sk.type === 'актив';
-      const card = document.createElement('div');
-      card.className = 'skill-card ' + (isActive ? 'unlocked' : 'locked');
-      card.style.borderColor = isActive ? color + '44' : '';
-      card.style.background  = isActive ? `linear-gradient(135deg, ${color}08, var(--panel2))` : '';
-
-      const hdr = document.createElement('div');
-      hdr.className = 'skill-card-header';
-
-      const typeBadge = document.createElement('span');
-      typeBadge.className = 'skill-level';
-      typeBadge.style.cssText = `border-color:${color}55;color:${color};background:${color}0d;`;
-      typeBadge.textContent = isAct ? 'АКТ' : 'ПАС';
-      hdr.appendChild(typeBadge);
-
-      if(isAct && sk.mana) {
-        const mb = document.createElement('span');
-        mb.className = 'skill-mana';
-        mb.textContent = '⟡ ' + sk.mana;
-        hdr.appendChild(mb);
-      }
-
-      if(isAct && sk.requirement) {
-        const ri = document.createElement('span');
-        ri.className = 'req-icon';
-        ri.style.color = color;
-        ri.innerHTML = `◈<span class="req-tooltip"><strong>ТРЕБОВАНИЕ</strong><br>${escHtml(sk.requirement)}</span>`;
-        hdr.appendChild(ri);
-      }
-
-      card.appendChild(hdr);
-
-      const nm = document.createElement('div');
-      nm.className = 'skill-name';
-      nm.style.color = isActive ? color : 'var(--text-dim)';
-      nm.textContent = sk.name;
-      card.appendChild(nm);
-
-      const desc = document.createElement('div');
-      desc.className = 'skill-desc';
-      desc.innerHTML = renderSkillDescHtml(sk.desc);
-      attachSkillRolls(desc);
-      card.appendChild(desc);
-
-      grid.appendChild(card);
-    });
-  });
-}
-
-// Render [formula] patterns as clickable spans in skill descriptions
-function renderSkillDescHtml(text) {
-  return escHtml(text).replace(/\[([^\]]+)\]/g, (match, inner) => {
-    if(/\d/.test(inner))
-      return `<span class="inline-roll" data-formula="${inner.replace(/"/g,'&quot;')}">[${inner}]</span>`;
-    return match;
-  });
-}
-
-// Attach click handlers to .inline-roll spans inside a desc element
-function attachSkillRolls(descEl) {
-  descEl.querySelectorAll('.inline-roll').forEach(span => {
-    span.addEventListener('click', e => {
-      e.stopPropagation();
-      parseAndRoll(span.dataset.formula);
-    });
-  });
-}
-
-// Refresh skills display when sparks or adj toggles change
-function refreshSkillsPanel() {
-  if(skillsLoaded) renderSkillsTab(currentSkillTab);
-}
-
-// ── EQUIPMENT ────────────────────────────────────────────────────────────────
-let equipCount=0;
-function addEquip(data){
-  equipCount++;const id=equipCount;
-  const list=document.getElementById('equip-list');
-  const row=document.createElement('div');row.className='equip-row';row.id='equip-'+id;
-  const esc=s=>(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  row.innerHTML=`<div class="equip-cell" contenteditable="true" data-placeholder="Название предмета...">${esc(data?.name)}</div><div class="equip-cell" contenteditable="true" data-placeholder="Описание или эффект...">${esc(data?.desc)}</div><button class="del-equip" title="Удалить" onclick="removeEquip(${id})">×</button>`;
-  row.querySelectorAll('.equip-cell').forEach(c=>c.addEventListener('input',scheduleSave));
-  list.appendChild(row);return row;
-}
-function removeEquip(id){const e=document.getElementById('equip-'+id);if(e){e.remove();scheduleSave();}}
-const SAVE_KEY='froyskyy_v4';
-let ST=null;
-function scheduleSave(){clearTimeout(ST);ST=setTimeout(saveAll,600);}
-function collectState(){
-  const inf=document.querySelectorAll('.info-value[contenteditable]');
-  const spells=[...document.querySelectorAll('.spell-row')].map(r=>{
-    const c=r.querySelectorAll('.spell-cell');
-    return{name:c[0]?.innerText||'',element:c[1]?.innerText||'',mana:c[2]?.innerText||'',desc:c[3]?.innerText||''};
-  });
-  const equipment=[...document.querySelectorAll('.equip-row')].map(r=>{
-    const c=r.querySelectorAll('.equip-cell');
-    return{name:c[0]?.innerText||'',desc:c[1]?.innerText||''};
-  });
-  return{
-    charName:inf[0]?.textContent||'',playerName:inf[1]?.textContent||'',
-    manaCur:document.getElementById('mana-cur')?.value||'',
-    manaMaxInp:document.getElementById('mana-max-inp')?.value||'',
-    barrierMax:document.getElementById('barrier-max')?.value||'',
-    lifeMax:document.getElementById('life-max')?.value||'',
-    hpFill:{...hpFill},obFill:{...obFill},sparks:{...sparks},
-    adjActive:[...adjActive],
-    spells,equipment,
-    notes:document.getElementById('notes-area')?.value||''
-  };
-}
-function saveAll(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(collectState()));}catch(e){}}
-function applyState(s){
-  const inf=document.querySelectorAll('.info-value[contenteditable]');
-  if(inf[0])inf[0].textContent=s.charName||'';
-  if(inf[1])inf[1].textContent=s.playerName||'';
-  const mc=document.getElementById('mana-cur');if(mc)mc.value=s.manaCur||'';
-  const mm=document.getElementById('mana-max-inp');if(mm)mm.value=s.manaMaxInp||'';
-  const bm=document.getElementById('barrier-max');if(bm){bm.value=s.barrierMax||'';}
-  const lm=document.getElementById('life-max');if(lm){lm.value=s.lifeMax||'';}
-  if(s.hpFill)Object.assign(hpFill,s.hpFill);
-  buildHpBoxes('barrier-boxes',Math.min(parseInt(s.barrierMax)||0,20));
-  buildHpBoxes('life-boxes',Math.min(parseInt(s.lifeMax)||0,30));
-  if(s.sparks){Object.assign(sparks,s.sparks);ELEMENTS.forEach(el=>{document.querySelectorAll(`[data-el-id="${el.id}"] .spark-sq`).forEach((sq,i)=>sq.classList.toggle('on',i<sparks[el.id]));const cnt=document.querySelector(`[data-counter="${el.id}"]`);if(cnt)cnt.textContent=sparks[el.id]+' / 5';});checkAdj();}
-  if(s.adjActive){adjActive.clear();s.adjActive.forEach(id=>adjActive.add(id));checkAdj();refreshAdjVisuals();}
-  if(s.obFill){Object.assign(obFill,s.obFill);OBELISKS.forEach(ob=>refreshOb(ob));updateObTotal();}
-  document.getElementById('spells-list').innerHTML='';spellCount=0;(s.spells||[]).forEach(sp=>addSpell(sp));
-  document.getElementById('equip-list').innerHTML='';equipCount=0;(s.equipment||[]).forEach(eq=>addEquip(eq));
-  const na=document.getElementById('notes-area');if(na)na.value=s.notes||'';
-}
-function loadAll(){try{const r=localStorage.getItem(SAVE_KEY);if(!r)return false;applyState(JSON.parse(r));return true;}catch(e){return false;}}
-function exportJSON(){const s=collectState();const b=new Blob([JSON.stringify(s,null,2)],{type:'application/json'});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download=`${s.charName||'персонаж'}_froyskyy.json`;a.click();URL.revokeObjectURL(u);}
-function importJSON(evt){const f=evt.target.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{try{applyState(JSON.parse(e.target.result));saveAll();alert('Персонаж загружен!');}catch(err){alert('Ошибка: '+err.message);}};r.readAsText(f);evt.target.value='';}
-function clearSave(){if(confirm('Сбросить все данные?')){localStorage.removeItem(SAVE_KEY);location.reload();}}
-
-// ── WIKI INTEGRATION ─────────────────────────────────────────────────────────
-const SPELL_ADDED_KEY='froyskyy_pending_spell';
-
-function pasteSpellFromWiki(){
-  try{
-    const raw=localStorage.getItem(SPELL_ADDED_KEY);
-    if(!raw){showPasteToast('Нет заклинаний из вики. Откройте вики и выберите заклинания.');return;}
-    const data=JSON.parse(raw);
-    const arr=Array.isArray(data)?data:[data]; // поддержка и одного и массива
-    arr.forEach(sp=>addSpell({name:sp.name||'',element:sp.trauma||'',mana:String(sp.mana||''),desc:sp.desc||''}));
-    localStorage.removeItem(SPELL_ADDED_KEY);
-    scheduleSave();
-    const btn=document.getElementById('btn-paste-spell');
-    if(btn){btn.style.boxShadow='';btn.textContent='⬇ Вставить из вики';}
-    showPasteToast(arr.length>1?`${arr.length} заклинаний добавлено!`:`Заклинание «${arr[0].name}» добавлено!`);
-  }catch(e){showPasteToast('Ошибка вставки: '+e.message);}
-}
-
-// Also support direct SPELL:: line paste from clipboard
-document.addEventListener('paste',e=>{
-  const text=(e.clipboardData||window.clipboardData).getData('text');
-  if(text&&text.startsWith('SPELL::')){
-    e.preventDefault();
-    const parts=text.split('::');
-    if(parts.length>=5){
-      addSpell({name:parts[1],element:parts[2],mana:parts[3],desc:parts.slice(4).join('::')});
-      scheduleSave();
-      showPasteToast('Заклинание «'+parts[1]+'» вставлено!');
+      const cell = document.createElement('div');
+      cell.className = 'cal-cell' +
+        (isCurrent ? ' cal-current' : isPast ? ' cal-past' : ' cal-future');
+      cell.innerHTML = `<div class="cal-code">${code}</div><div class="cal-dot"></div>`;
+      grid.appendChild(cell);
     }
   }
-});
 
-function showPasteToast(msg){
-  let t=document.getElementById('paste-toast');
-  if(!t){t=document.createElement('div');t.id='paste-toast';t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:#1a1a35;border:1px solid var(--accent);border-radius:8px;padding:10px 22px;font-family:\'Cinzel\',serif;font-size:10px;letter-spacing:2px;color:var(--gold-l);opacity:0;transition:all .3s;pointer-events:none;z-index:999;';document.body.appendChild(t);}
-  t.textContent=msg;t.style.opacity='1';t.style.transform='translateX(-50%) translateY(0)';
-  clearTimeout(t._timer);t._timer=setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(-50%) translateY(20px)';},3500);
+  // Show error state if sheets not configured
+  if (isError) {
+    const note = document.createElement('div');
+    note.style.cssText = 'grid-column:1/-1;text-align:center;font-family:Cinzel,serif;font-size:7px;letter-spacing:1.5px;color:var(--text-dim);margin-top:6px;opacity:.6;';
+    note.textContent = 'Настройте config.js для синхронизации';
+    grid.appendChild(note);
+  }
 }
 
-// Check for pending spell from wiki on page load
-function checkPendingSpell(){
-  try{
-    const raw=localStorage.getItem(SPELL_ADDED_KEY);
-    if(raw){
-      const data=JSON.parse(raw);
-      const count=Array.isArray(data)?data.length:1;
-      const btn=document.getElementById('btn-paste-spell');
-      if(btn){btn.style.borderColor='#4cbb8a';btn.style.boxShadow='0 0 10px rgba(76,187,138,.3)';btn.textContent=`⬇ Вставить из вики (${count})`;}
-    }
-  }catch(e){}
-}
-
-// ── INIT ─────────────────────────────────────────────────────────────────────
-buildCircle();buildSparks();buildHpBoxes('barrier-boxes',0);buildHpBoxes('life-boxes',0);buildObelisks();
-if(!loadAll()){for(let i=0;i<5;i++)addSpell();for(let i=0;i<3;i++)addEquip();}
-checkPendingSpell();
-loadClassSkills(); // загружаем умения из Google Sheets
-// HP max listeners — input elements with digit enforcement
-document.getElementById('barrier-max').addEventListener('input',function(){
-  let v=parseInt(this.value)||0;if(v>20){v=20;this.value=20;}if(v<0){v=0;this.value=0;}
-  onMaxChange('barrier-boxes',v,20);scheduleSave();
-});
-document.getElementById('life-max').addEventListener('input',function(){
-  let v=parseInt(this.value)||0;if(v>30){v=30;this.value=30;}if(v<0){v=0;this.value=0;}
-  onMaxChange('life-boxes',v,30);scheduleSave();
-});
-// Auto-save listeners
-document.querySelectorAll('[contenteditable]').forEach(el=>el.addEventListener('input',scheduleSave));
-document.getElementById('notes-area').addEventListener('input',scheduleSave);
-document.getElementById('mana-cur').addEventListener('input',scheduleSave);
-document.getElementById('mana-max-inp').addEventListener('input',scheduleSave);
+// Load config then calendar
+(async () => {
+  try {
+    // config.js must be loaded — try dynamic import fallback
+    if (typeof SHEETS_CONFIG === 'undefined') throw new Error('no config');
+    await loadCalendar();
+  } catch(e) {
+    renderCalendar('AAA0', '—', true);
+  }
+})();
 </script>
 </body>
 </html>

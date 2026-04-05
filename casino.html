@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Казино — Фройские Маги</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#080812;--panel:#0e0e1f;--panel2:#131328;--panel3:#1a1a35;
+  --accent:#7b5ea7;--accent2:#a67fd1;--gold:#c9a84c;--gold-l:#e8c96e;--gold-d:#8a6a20;
+  --text:#e8e0f0;--text-dim:#7a6f90;--text-mid:#b0a0c8;--life:#e05c5c;--line:#2a1f45;
+  /* cursed override (set by JS) */
+  --c-accent:var(--accent);--c-gold:var(--gold);--c-gold-l:var(--gold-l);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Crimson Pro',Georgia,serif;min-height:100vh;
+  background-image:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(123,94,167,.09) 0%,transparent 70%);}
+body.cursed{
+  --bg:#0e0808;--panel:#1a0808;--panel2:#140606;--panel3:#1e0a0a;--line:#3a1515;
+  background-image:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(180,30,30,.12) 0%,transparent 70%);
+}
+.sheet{max-width:820px;margin:0 auto;padding:24px 16px 60px;position:relative;}
+
+/* HEADER */
+.header{text-align:center;padding:28px 20px 20px;border:1px solid var(--c-accent,var(--accent));
+  border-radius:12px;background:var(--panel);margin-bottom:22px;position:relative;overflow:hidden;}
+.header::before{content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 60% 80% at 50% 50%,rgba(123,94,167,.12) 0%,transparent 70%);}
+.casino-name{font-family:'Cinzel',serif;font-size:clamp(18px,5vw,28px);font-weight:700;
+  letter-spacing:5px;color:var(--c-gold-l,var(--gold-l));text-shadow:0 0 30px rgba(201,168,76,.4);
+  position:relative;margin-bottom:6px;}
+.casino-tagline{font-size:13px;color:var(--accent2);letter-spacing:3px;font-style:italic;position:relative;}
+.back-link{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-family:'Cinzel',serif;
+  font-size:9px;letter-spacing:2px;color:var(--text-dim);text-decoration:none;
+  border:1px solid var(--line);padding:6px 12px;border-radius:5px;transition:all .2s;z-index:1;}
+.back-link:hover{color:var(--gold);border-color:var(--gold-d);}
+
+/* LAYOUT */
+.casino-layout{display:grid;grid-template-columns:1fr 300px;gap:16px;}
+@media(max-width:680px){.casino-layout{grid-template-columns:1fr;}}
+
+/* MACHINE */
+.machine{background:var(--panel);border:1px solid var(--c-accent,var(--accent));
+  border-radius:12px;padding:24px;text-align:center;}
+
+/* RUNE SLOTS */
+.slots-wrap{display:flex;gap:12px;justify-content:center;margin:20px 0;perspective:600px;}
+.slot{width:100px;height:120px;background:var(--panel2);border:2px solid var(--line);
+  border-radius:10px;display:flex;align-items:center;justify-content:center;
+  font-size:52px;line-height:1;position:relative;overflow:hidden;
+  transition:border-color .3s,box-shadow .3s;}
+.slot.spin{border-color:var(--c-gold,var(--gold));box-shadow:0 0 20px rgba(201,168,76,.3);}
+.slot.win {border-color:#4cbb8a;box-shadow:0 0 24px rgba(76,187,138,.4);}
+.slot.lose{border-color:var(--life);box-shadow:0 0 16px rgba(224,92,92,.3);}
+.slot-rune{transition:transform .08s;display:block;filter:drop-shadow(0 0 6px currentColor);}
+.slot-rune.blur{animation:runeBlur .08s linear infinite;}
+@keyframes runeBlur{0%{opacity:.3;transform:translateY(-8px);}50%{opacity:1;transform:translateY(0);}100%{opacity:.3;transform:translateY(8px);}}
+
+/* WIN LINE */
+.win-line{height:3px;background:linear-gradient(90deg,transparent,#4cbb8a,transparent);
+  margin:0 auto 16px;width:0;transition:width .4s .2s;}
+.win-line.visible{width:80%;}
+
+/* RESULT MESSAGE */
+.result-msg{font-family:'Cinzel',serif;font-size:14px;letter-spacing:2px;min-height:22px;
+  margin-bottom:16px;transition:color .3s;}
+.result-msg.win {color:#4cbb8a;}
+.result-msg.lose{color:var(--life);}
+
+/* SPIN BUTTON */
+.spin-btn{font-family:'Cinzel',serif;font-size:11px;letter-spacing:3px;padding:14px 40px;
+  border-radius:8px;border:1px solid var(--c-gold,var(--gold));color:var(--c-gold-l,var(--gold-l));
+  background:linear-gradient(135deg,rgba(201,168,76,.12),rgba(201,168,76,.06));
+  cursor:pointer;transition:all .25s;position:relative;overflow:hidden;}
+.spin-btn::after{content:'';position:absolute;inset:0;background:radial-gradient(circle at center,rgba(201,168,76,.15),transparent 70%);opacity:0;transition:opacity .2s;}
+.spin-btn:hover::after{opacity:1;}
+.spin-btn:hover{background:linear-gradient(135deg,rgba(201,168,76,.22),rgba(201,168,76,.12));transform:translateY(-1px);}
+.spin-btn:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+.spin-btn.cursed-btn{border-color:var(--life);color:#e88;background:linear-gradient(135deg,rgba(224,92,92,.12),rgba(224,92,92,.06));}
+
+/* ODDS */
+.odds-row{display:flex;gap:12px;justify-content:center;margin-top:14px;flex-wrap:wrap;}
+.odds-chip{font-family:'Cinzel',serif;font-size:7.5px;letter-spacing:1px;
+  padding:4px 12px;border-radius:12px;border:1px solid var(--line);color:var(--text-dim);}
+.odds-chip span{color:var(--c-gold,var(--gold));font-weight:700;}
+
+/* SIDEBAR */
+.sidebar-col{display:flex;flex-direction:column;gap:12px;}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;}
+.card-title{font-family:'Cinzel',serif;font-size:8px;letter-spacing:2.5px;color:var(--c-gold,var(--gold));
+  margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.card-title::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--gold-d),transparent);}
+
+/* STAKE */
+.stake-empty{font-size:12px;color:var(--text-dim);font-style:italic;padding:8px 0;text-align:center;}
+.stake-item{background:var(--panel2);border:1px solid var(--line);border-radius:7px;
+  padding:8px 12px;cursor:pointer;transition:all .15s;position:relative;display:flex;align-items:center;gap:8px;}
+.stake-item:hover{border-color:var(--c-accent,var(--accent));}
+.stake-item.selected{border-color:var(--c-gold,var(--gold));background:rgba(201,168,76,.06);}
+.stake-item.locked{opacity:.4;cursor:not-allowed;pointer-events:none;}
+.stake-item-name{font-family:'Cinzel',serif;font-size:10px;color:var(--text);margin-bottom:2px;}
+.stake-item-desc{font-size:11px;color:var(--text-dim);font-style:italic;}
+.stake-item-info{flex:1;min-width:0;}
+.stake-hint{font-size:10px;color:var(--text-dim);text-align:center;margin-top:8px;font-style:italic;}
+/* rarity variants in casino */
+.stake-item.r-rare{border-color:#5b8dee44;background:rgba(91,141,238,.05);}
+.stake-item.r-rare .stake-item-name{color:#a0c4ff;}
+.stake-item.r-unique{border-color:#9b7fe844;background:rgba(155,127,232,.05);opacity:.4;cursor:not-allowed;pointer-events:none;}
+.stake-item.r-unique .stake-item-name{color:#c5aff5;}
+.stake-item.r-legendary{border-color:var(--gold-d);animation:leg-glow-casino 2.4s ease-in-out infinite;}
+.stake-item.r-legendary .stake-item-name{color:var(--gold-l);}
+@keyframes leg-glow-casino{0%,100%{box-shadow:0 0 5px rgba(201,168,76,.2);}50%{box-shadow:0 0 12px rgba(201,168,76,.45);}}
+.stake-rarity-badge{font-family:'Cinzel',serif;font-size:7px;letter-spacing:1px;
+  padding:1px 6px;border-radius:8px;border:1px solid transparent;white-space:nowrap;flex-shrink:0;}
+.stake-lock-icon{font-size:12px;flex-shrink:0;opacity:.7;}
+.max-stake-note{font-family:'Cinzel',serif;font-size:7px;letter-spacing:1.5px;color:var(--text-dim);
+  padding:6px 8px;background:var(--panel2);border-radius:5px;margin-bottom:8px;text-align:center;}
+
+/* PRIZES */
+.prize-row{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:6px;
+  background:var(--panel2);margin-bottom:5px;font-size:12px;}
+.prize-name{flex:1;color:var(--text-mid);}
+.prize-chance{font-family:'Cinzel',serif;font-size:9px;color:var(--text-dim);}
+
+/* INFO */
+.info-row{display:flex;justify-content:space-between;align-items:center;
+  padding:5px 0;border-bottom:1px solid var(--line);}
+.info-row:last-child{border-bottom:none;}
+.info-label{font-family:'Cinzel',serif;font-size:8px;letter-spacing:1.5px;color:var(--text-dim);}
+.info-val{font-size:12px;color:var(--text-mid);}
+
+/* WIN OVERLAY */
+.win-overlay{position:fixed;inset:0;z-index:9000;pointer-events:none;
+  display:flex;align-items:center;justify-content:center;}
+.win-burst{font-size:80px;opacity:0;transform:scale(0.2);
+  transition:all .4s cubic-bezier(.34,1.56,.64,1);}
+.win-burst.show{opacity:1;transform:scale(1);}
+
+/* LOADING */
+.loading-msg{text-align:center;padding:40px;font-family:'Cinzel',serif;font-size:11px;
+  letter-spacing:2px;color:var(--text-dim);}
+
+/* CONFETTI canvas */
+#confetti-canvas{position:fixed;inset:0;z-index:8999;pointer-events:none;}
+
+/* HISTORY */
+.history-row{display:flex;align-items:center;gap:8px;padding:5px 0;
+  border-bottom:1px solid rgba(42,31,69,.5);font-size:11px;}
+.history-row:last-child{border-bottom:none;}
+.hist-icon{font-size:14px;flex-shrink:0;}
+.hist-text{flex:1;color:var(--text-dim);}
+.hist-win{color:#4cbb8a;}
+.hist-lose{color:var(--life);}
+.history-wrap{max-height:140px;overflow-y:auto;}
+
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+.shake{animation:shake .4s ease;}
+</style>
+</head>
+<body>
+<canvas id="confetti-canvas"></canvas>
+<div class="win-overlay"><div class="win-burst" id="win-burst"></div></div>
+
+<div class="sheet">
+  <div class="header">
+    <a class="back-link" href="map.html">← Карта</a>
+    <div class="casino-name" id="casino-name">⟳ Загрузка...</div>
+    <div class="casino-tagline" id="casino-tagline"></div>
+  </div>
+
+  <div id="main-content" style="display:none;">
+  <div class="casino-layout">
+
+    <!-- MACHINE -->
+    <div class="machine">
+      <div class="slots-wrap" id="slots-wrap">
+        <div class="slot" id="slot-0"><span class="slot-rune" id="rune-0">🜁</span></div>
+        <div class="slot" id="slot-1"><span class="slot-rune" id="rune-1">🜂</span></div>
+        <div class="slot" id="slot-2"><span class="slot-rune" id="rune-2">🜃</span></div>
+      </div>
+      <div class="win-line" id="win-line"></div>
+      <div class="result-msg" id="result-msg">Выбери ставку и крути</div>
+      <button class="spin-btn" id="spin-btn" onclick="spin()" disabled>⟳ КРУТИТЬ</button>
+      <div class="odds-row" id="odds-row"></div>
+    </div>
+
+    <!-- SIDEBAR -->
+    <div class="sidebar-col">
+
+      <!-- STAKE -->
+      <div class="card">
+        <div class="card-title">СТАВКА</div>
+        <div id="stake-items"><div class="stake-empty">Загрузка инвентаря...</div></div>
+        <div class="stake-hint" id="stake-hint"></div>
+      </div>
+
+      <!-- PRIZES -->
+      <div class="card">
+        <div class="card-title">ВОЗМОЖНЫЕ ПРИЗЫ</div>
+        <div id="prizes-list"><div class="stake-empty">Загрузка...</div></div>
+      </div>
+
+      <!-- INFO -->
+      <div class="card">
+        <div class="card-title">О КАЗИНО</div>
+        <div id="casino-info"></div>
+      </div>
+
+      <!-- HISTORY -->
+      <div class="card">
+        <div class="card-title">ИСТОРИЯ</div>
+        <div class="history-wrap"><div id="history-list"><div class="stake-empty">Пусто</div></div></div>
+      </div>
+
+    </div><!-- /sidebar -->
+  </div>
+  </div><!-- /main-content -->
+
+  <div class="loading-msg" id="loading-msg">⟳ Загружаем казино...</div>
+</div>
+
+<script src="config.js"></script>
+<script src="sheets.js"></script>
+<script>
+// ═══════════════════════════════════════════════════════════════════════════
+// GOOGLE SHEETS FORMAT (лист "casino"):
+//
+//   name          — название казино (совпадает с URL casino_name)
+//   tagline       — слоган
+//   type          — "slots" (по умолч.) | "roulette"
+//   cursed        — "да" / "нет"
+//   win_chance    — шанс победы % (слоты)
+//   two_match_chance — % пары (слоты)
+//   red_chance    — % красного (рулетка, по умолч. 48)
+//   description, owner, prizes, prize_rare
+//   max_stake     — максимальная редкость ставки: common | rare | unique | legendary
+//
+// Лист "equipment": name | rarity   (common/rare/unique/legendary)
+// ═══════════════════════════════════════════════════════════════════════════
+
+// ── RARITY ────────────────────────────────────────────────────────────────
+const RARITY_ORDER  = { common:0, rare:1, unique:2, legendary:3 };
+const RARITY_LABELS = { common:'Обычный', rare:'Редкий', unique:'Уникальный', legendary:'Легендарный' };
+const RARITY_COLORS = { common:'var(--text-dim)', rare:'#5b8dee', unique:'#9b7fe8', legendary:'var(--gold-l)' };
+const RARITY_CLASS  = { common:'', rare:'r-rare', unique:'r-unique', legendary:'r-legendary' };
+
+let rarityData = {}; // { "name lowercase": "rarity" }
+
+function getItemRarity(name) {
+  return rarityData[(name||'').toLowerCase().trim()] || 'common';
+}
+
+async function loadRarityData() {
+  try {
+    const rows = await sheetsGet('equipment');
+    rows.forEach(r => {
+      const n = (r.name || r['название'] || '').trim().toLowerCase();
+      const v = (r.rarity || r['редкость'] || 'common').trim().toLowerCase();
+      if (n) rarityData[n] = v;
+    });
+  } catch(_) {}
+}
+
+function rarityAllowed(itemRarity, maxStakeRarity) {
+  // unique and legendary are always blocked unless max is explicitly legendary
+  if (itemRarity === 'unique')    return false; // never stakeable
+  const maxR = (maxStakeRarity || 'any').toLowerCase();
+  if (maxR === 'any') return true; // any rarity
+  return RARITY_ORDER[itemRarity] <= RARITY_ORDER[maxR];
+}
+
+// Руны для слотов
+const RUNES = ['🜁','🜂','🜃','🜄','🜏','🜎','⚗','🝆','🜺','🜹','⚕','🜛'];
+
+// Fallback
+const DEFAULT_CASINO = {
+  name: 'Казино',
+  tagline: 'Удача — это магия',
+  type: 'slots',
+  cursed: false,
+  win_chance: 33,
+  two_match_chance: 45,
+  red_chance: 48,
+  description: 'Таинственное место. Данные не загружены.',
+  owner: '—',
+  prizes: ['Зелье удачи','Монеты×50','Загадочный свиток'],
+  prize_rare: 'Артефакт Фройского Мага',
+  prize_jackpot: 'Легендарный Артефакт',
+  max_stake: 'Любой предмет',
+};
+
+let casinoData  = null;
+let selectedStake = null; // { idx, name, desc, saveKey, charName }
+let history = [];
+let isSpinning = false;
+let _allChars = []; // {saveKey, charName, equipment}
+
+// ── URL param ──────────────────────────────────────────────────────────────
+const casinoName = new URLSearchParams(location.search).get('casino_name') || '';
+
+// ── Load casino data from Sheets ───────────────────────────────────────────
+async function loadCasino() {
+  try {
+    const rows = await sheetsGet('casino');
+    const row = rows.find(r =>
+      (r.name || '').trim().toLowerCase() === casinoName.toLowerCase()
+    ) || rows[0]; // fallback to first row
+
+    if (!row) throw new Error('Казино не найдено в таблице');
+
+    casinoData = {
+      name:             row.name        || casinoName || DEFAULT_CASINO.name,
+      tagline:          row.tagline     || DEFAULT_CASINO.tagline,
+      type:             (row.type       || 'slots').toLowerCase().trim(),
+      cursed:           (row.cursed     || '').toLowerCase() === 'да',
+      win_chance:       parseFloat(row.win_chance)         || DEFAULT_CASINO.win_chance,
+      two_match_chance: parseFloat(row.two_match_chance)   || DEFAULT_CASINO.two_match_chance,
+      red_chance:       parseFloat(row.red_chance)         || DEFAULT_CASINO.red_chance,
+      description:      row.description || DEFAULT_CASINO.description,
+      owner:            row.owner       || '—',
+      prizes:           (row.prizes     || '').split('|').map(s => s.trim()).filter(Boolean),
+      prize_rare:       row.prize_rare    || DEFAULT_CASINO.prize_rare,
+      prize_jackpot:    row.prize_jackpot || DEFAULT_CASINO.prize_jackpot,
+      max_stake:        row.max_stake   || DEFAULT_CASINO.max_stake,
+    };
+    if (!casinoData.prizes.length) casinoData.prizes = DEFAULT_CASINO.prizes;
+
+  } catch(e) {
+    console.warn('Sheet load failed, using defaults:', e.message);
+    casinoData = { ...DEFAULT_CASINO, name: casinoName || DEFAULT_CASINO.name };
+  }
+
+  // Load rarity data (optional)
+  await loadRarityData();
+
+  initUI();
+}
+
+// ── Init UI ────────────────────────────────────────────────────────────────
+function initUI() {
+  const cd = casinoData;
+
+  // Apply cursed theme
+  if (cd.cursed) {
+    document.body.classList.add('cursed');
+    document.querySelector('.spin-btn').classList.add('cursed-btn');
+  }
+
+  // Header
+  document.getElementById('casino-name').textContent    = cd.name;
+  document.getElementById('casino-tagline').textContent = cd.tagline;
+  document.title = cd.name + ' — Фройские Маги';
+
+  // Odds chips
+  if (cd.type === 'roulette') {
+    document.getElementById('odds-row').innerHTML = `
+      <div class="odds-chip">Красное <span>${cd.red_chance}%</span></div>
+      <div class="odds-chip">Чёрное <span>${Math.round(100 - cd.red_chance)}%</span></div>
+    `;
+    // Replace machine content with roulette UI
+    document.querySelector('.machine').innerHTML = buildRouletteHTML();
+  } else {
+    document.getElementById('odds-row').innerHTML = `
+      <div class="odds-chip">Джекпот <span>${cd.win_chance}%</span></div>
+      <div class="odds-chip">Пара <span>${cd.two_match_chance}%</span></div>
+    `;
+  }
+
+  // Prizes
+  const pl = document.getElementById('prizes-list');
+  pl.innerHTML = '';
+  cd.prizes.forEach(p => {
+    const r = document.createElement('div');
+    r.className = 'prize-row';
+    r.innerHTML = `<span style="font-size:14px;">✦</span><span class="prize-name">${p}</span><span class="prize-chance">обычный</span>`;
+    pl.appendChild(r);
+  });
+  if (cd.prize_rare) {
+    const r = document.createElement('div');
+    r.className = 'prize-row';
+    r.style.borderLeft = '2px solid #5b8dee';
+    r.innerHTML = `<span style="font-size:14px;">🔵</span><span class="prize-name" style="color:#a0c4ff;">${cd.prize_rare}</span><span class="prize-chance" style="color:#5b8dee;">редкий</span>`;
+    pl.appendChild(r);
+  }
+  if (cd.prize_jackpot) {
+    const r = document.createElement('div');
+    r.className = 'prize-row';
+    r.style.borderLeft = '2px solid var(--gold)';
+    r.innerHTML = `<span style="font-size:14px;">⭐</span><span class="prize-name" style="color:var(--gold-l);">${cd.prize_jackpot}</span><span class="prize-chance" style="color:var(--gold);">джекпот</span>`;
+    pl.appendChild(r);
+  }
+
+  // Info
+  document.getElementById('casino-info').innerHTML = `
+    <div class="info-row"><span class="info-label">ВЛАДЕЛЕЦ</span><span class="info-val">${cd.owner}</span></div>
+    <div class="info-row"><span class="info-label">МАКС. СТАВКА</span><span class="info-val">${cd.max_stake}</span></div>
+    <div class="info-row" style="border:none;padding-top:8px;"><span style="font-size:12px;color:var(--text-dim);font-style:italic;">${cd.description}</span></div>
+  `;
+
+  // Load inventory from localStorage
+  loadInventory();
+
+  document.getElementById('loading-msg').style.display = 'none';
+  document.getElementById('main-content').style.display = '';
+}
+
+// ── Inventory (from character localStorage) ────────────────────────────────
+function loadInventory() {
+  // Collect all character saves
+  _allChars = [];
+
+  // New multi-char index
+  try {
+    const idxRaw = localStorage.getItem('froyskyy_chars_index');
+    if (idxRaw) {
+      const idx = JSON.parse(idxRaw);
+      idx.forEach(entry => {
+        const key = 'froyskyy_char_' + entry.id;
+        try {
+          const s = JSON.parse(localStorage.getItem(key));
+          if (s) {
+            _allChars.push({
+              saveKey: key,
+              charName: s.charName || entry.name || 'Персонаж',
+              equipment: Array.isArray(s.equipment) ? s.equipment.filter(e => e.name?.trim()) : [],
+            });
+          }
+        } catch(_) {}
+      });
+    }
+  } catch(_) {}
+
+  // Fallback: legacy single-save
+  if (!_allChars.length) {
+    try {
+      const s = JSON.parse(localStorage.getItem('froyskyy_v4'));
+      if (s) {
+        _allChars.push({
+          saveKey: 'froyskyy_v4',
+          charName: s.charName || 'Персонаж',
+          equipment: Array.isArray(s.equipment) ? s.equipment.filter(e => e.name?.trim()) : [],
+        });
+      }
+    } catch(_) {}
+  }
+
+  // If still nothing, scan any froyskyy_char_ keys
+  if (!_allChars.length) {
+    Object.keys(localStorage).filter(k => k.startsWith('froyskyy_char_')).forEach(key => {
+      try {
+        const s = JSON.parse(localStorage.getItem(key));
+        if (s && Array.isArray(s.equipment)) {
+          _allChars.push({
+            saveKey: key,
+            charName: s.charName || key,
+            equipment: s.equipment.filter(e => e.name?.trim()),
+          });
+        }
+      } catch(_) {}
+    });
+  }
+
+  const container = document.getElementById('stake-items');
+  container.innerHTML = '';
+
+  if (!_allChars.length) {
+    container.innerHTML = '<div class="stake-empty">Нет персонажей.<br>Сначала создай персонажа.</div>';
+    document.getElementById('stake-hint').textContent = '';
+    return;
+  }
+
+  // Character selector (only show if more than 1 character)
+  if (_allChars.length > 1) {
+    const selWrap = document.createElement('div');
+    selWrap.style.cssText = 'margin-bottom:10px;';
+    const selLabel = document.createElement('div');
+    selLabel.style.cssText = "font-family:'Cinzel',serif;font-size:7px;letter-spacing:2px;color:var(--text-dim);margin-bottom:5px;";
+    selLabel.textContent = 'ПЕРСОНАЖ';
+    selWrap.appendChild(selLabel);
+    const sel = document.createElement('select');
+    sel.id = 'char-selector';
+    sel.style.cssText = 'width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:5px;color:var(--text);font-family:Crimson Pro,Georgia,serif;font-size:13px;padding:6px 10px;outline:none;cursor:pointer;transition:border-color .2s;';
+    _allChars.forEach((ch, i) => {
+      const opt = document.createElement('option');
+      opt.value = i;
+      opt.textContent = ch.charName;
+      sel.appendChild(opt);
+    });
+    sel.onchange = () => renderCharEquipment(parseInt(sel.value));
+    selWrap.appendChild(sel);
+    container.appendChild(selWrap);
+  }
+
+  renderCharEquipment(0);
+}
+
+function renderCharEquipment(charIdx) {
+  const container = document.getElementById('stake-items');
+  const oldList = document.getElementById('char-equip-list');
+  if (oldList) oldList.remove();
+
+  const char = _allChars[charIdx];
+  if (!char) return;
+
+  const list = document.createElement('div');
+  list.id = 'char-equip-list';
+
+  const maxRarity = (casinoData?.max_stake || 'rare').toLowerCase();
+
+  if (!char.equipment.length) {
+    list.innerHTML = '<div class="stake-empty">У этого персонажа нет предметов.<br>Добавь предметы на листе персонажа.</div>';
+    document.getElementById('stake-hint').textContent = '';
+  } else {
+    // Max stake info line
+    const maxNote = document.createElement('div');
+    maxNote.className = 'max-stake-note';
+    const maxLabels = { common:'Обычный', rare:'Редкий', unique:'Уникальный', legendary:'Легендарный' };
+    maxNote.textContent = `Макс. ставка: ${maxLabels[maxRarity] || maxRarity}`;
+    list.appendChild(maxNote);
+
+    char.equipment.forEach((eq, i) => {
+      const itemRarity = (eq.rarity || getItemRarity(eq.name) || 'common').toLowerCase();
+      const blocked = !rarityAllowed(itemRarity, maxRarity);
+      const rarityClass = RARITY_CLASS[itemRarity] || '';
+      const rarityColor = RARITY_COLORS[itemRarity] || 'var(--text-dim)';
+
+      const el = document.createElement('div');
+      el.className = `stake-item ${rarityClass} ${blocked ? 'locked' : ''}`;
+      el.title = blocked
+        ? `Нельзя ставить: редкость «${maxLabels[itemRarity]}» выше разрешённой`
+        : `Поставить «${eq.name}»`;
+
+      el.innerHTML = `
+        <div class="stake-item-info">
+          <div class="stake-item-name" style="color:${rarityColor};">${escHtml(eq.name)}</div>
+          ${eq.desc ? `<div class="stake-item-desc">${escHtml(eq.desc)}</div>` : ''}
+        </div>
+        ${blocked
+          ? `<span class="stake-rarity-badge" style="color:${rarityColor};border-color:${rarityColor}44;">🔒</span>`
+          : itemRarity !== 'common'
+            ? `<span class="stake-rarity-badge" style="color:${rarityColor};border-color:${rarityColor}44;">${maxLabels[itemRarity]||''}</span>`
+            : ''}`;
+
+      if (!blocked) el.onclick = () => selectStake(i, eq, el, charIdx, itemRarity);
+      list.appendChild(el);
+    });
+    document.getElementById('stake-hint').textContent = 'Выбери предмет для ставки';
+  }
+
+  container.appendChild(list);
+  selectedStake = null;
+  document.getElementById('spin-btn').disabled = true;
+}
+
+function selectStake(idx, eq, el, charIdx, itemRarity) {
+  document.querySelectorAll('.stake-item').forEach(e => e.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedStake = { idx, name: eq.name, desc: eq.desc || '', charIdx, rarity: itemRarity || 'common' };
+  document.getElementById('spin-btn').disabled = isSpinning;
+
+  // Rarity bonus hint
+  const rarityHints = {
+    common:    '',
+    rare:      '🔵 Редкий — при паре +35% шанс редкого приза',
+    legendary: '⭐ Легендарный — при паре гарантирован редкий приз',
+  };
+  const hint = (rarityHints[itemRarity] || rarityHints.common).replace('%s', eq.name);
+  document.getElementById('stake-hint').textContent = hint.includes('%s')
+    ? hint.replace('%s', eq.name)
+    : (itemRarity != 'common' ? `Ставка: «${eq.name}» · ${hint}` : `Ставка: «${eq.name}»`);
+}
+
+// ── Inventory mutation helpers ─────────────────────────────────────────────
+function removeStakedItem(charIdx, itemIdx) {
+  const char = _allChars[charIdx];
+  if (!char) return;
+  try {
+    const s = JSON.parse(localStorage.getItem(char.saveKey));
+    if (!s || !Array.isArray(s.equipment)) return;
+    s.equipment.splice(itemIdx, 1);
+    localStorage.setItem(char.saveKey, JSON.stringify(s));
+    // Update local cache
+    char.equipment.splice(itemIdx, 1);
+  } catch(_) {}
+}
+
+function addWonItem(charIdx, itemName) {
+  const char = _allChars[charIdx];
+  if (!char) return;
+  try {
+    const s = JSON.parse(localStorage.getItem(char.saveKey));
+    if (!s) return;
+    if (!Array.isArray(s.equipment)) s.equipment = [];
+    s.equipment.push({ name: itemName, desc: '' });
+    localStorage.setItem(char.saveKey, JSON.stringify(s));
+    // Update local cache
+    char.equipment.push({ name: itemName, desc: '' });
+  } catch(_) {}
+}
+
+// ── Roulette HTML builder ──────────────────────────────────────────────────
+function buildRouletteHTML() {
+  return `
+    <div style="margin:20px 0 10px;display:flex;justify-content:center;gap:14px;">
+      <button id="bet-red-btn" class="spin-btn" style="background:linear-gradient(135deg,rgba(224,92,92,.18),rgba(224,92,92,.08));border-color:#e05c5c;color:#e88;" onclick="selectRouletteColor('red')">🔴 КРАСНОЕ</button>
+      <button id="bet-black-btn" class="spin-btn" onclick="selectRouletteColor('black')">⚫ ЧЁРНОЕ</button>
+    </div>
+    <div class="win-line" id="win-line"></div>
+    <div class="result-msg" id="result-msg">Выбери цвет и ставку</div>
+    <div id="roulette-ball" style="font-size:40px;min-height:56px;line-height:56px;text-align:center;transition:opacity .3s;"></div>
+    <button class="spin-btn" id="spin-btn" onclick="spin()" disabled>⟳ КРУТИТЬ</button>
+    <div class="odds-row" id="odds-row"></div>
+  `;
+}
+
+let selectedRouletteColor = null;
+
+function selectRouletteColor(color) {
+  selectedRouletteColor = color;
+  const redBtn   = document.getElementById('bet-red-btn');
+  const blackBtn = document.getElementById('bet-black-btn');
+  if (redBtn && blackBtn) {
+    redBtn.style.opacity   = color === 'red'   ? '1' : '0.45';
+    blackBtn.style.opacity = color === 'black' ? '1' : '0.45';
+  }
+  document.getElementById('spin-btn').disabled = isSpinning || !selectedStake;
+}
+
+// ── SPIN ───────────────────────────────────────────────────────────────────
+async function spin() {
+  if (isSpinning || !selectedStake) return;
+  if (!casinoData) return;
+
+  // Roulette mode
+  if (casinoData.type === 'roulette') {
+    if (!selectedRouletteColor) {
+      document.getElementById('result-msg').textContent = 'Выбери красное или чёрное!';
+      return;
+    }
+    isSpinning = true;
+    document.getElementById('spin-btn').disabled = true;
+    document.getElementById('win-line').classList.remove('visible');
+    const msgEl = document.getElementById('result-msg');
+    msgEl.textContent = '';
+    msgEl.className = 'result-msg';
+
+    // Ball spin animation
+    const ballEl = document.getElementById('roulette-ball');
+    const ballFrames = ['🔴','⚫','🔴','⚫','🔴','⚫','🟡'];
+    let bf = 0;
+    const ballInt = setInterval(() => { if(ballEl) ballEl.textContent = ballFrames[bf++ % ballFrames.length]; }, 120);
+    await new Promise(r => setTimeout(r, 1500));
+    clearInterval(ballInt);
+
+    const stakeRarity = selectedStake?.rarity || 'common';
+    const redChance = casinoData.red_chance;
+    const roll = Math.random() * 100;
+    const landedRed = roll < redChance;
+    const playerWon = (selectedRouletteColor === 'red') === landedRed;
+
+    if(ballEl) ballEl.textContent = landedRed ? '🔴' : '⚫';
+
+    if (playerWon) {
+      // Determine prize based on rarity
+      let prize;
+      if (stakeRarity === 'legendary' && casinoData.prize_rare) {
+        prize = casinoData.prize_rare;
+      } else if (stakeRarity === 'rare' && casinoData.prize_rare && Math.random() < 0.3) {
+        prize = casinoData.prize_rare;
+      } else {
+        prize = casinoData.prizes[Math.floor(Math.random() * casinoData.prizes.length)];
+      }
+      const colorLabel = landedRed ? '🔴 Красное' : '⚫ Чёрное';
+      msgEl.textContent = `✦ ${colorLabel}! Вы выиграли: ${prize}`;
+      msgEl.classList.add('win');
+      document.getElementById('win-line').classList.add('visible');
+      showWinBurst('✦');
+      launchConfetti();
+      addHistory('win', `Рулетка → ${prize} (поставил: ${selectedStake.name})`);
+      addWonItem(selectedStake.charIdx, prize);
+    } else {
+      const colorLabel = landedRed ? '🔴 Красное' : '⚫ Чёрное';
+      msgEl.textContent = `✕ ${colorLabel}. «${selectedStake.name}» утеряно.`;
+      msgEl.classList.add('lose');
+      document.querySelector('.machine').classList.add('shake');
+      setTimeout(() => document.querySelector('.machine').classList.remove('shake'), 500);
+      addHistory('lose', `Рулетка — проиграл «${selectedStake.name}»`);
+      removeStakedItem(selectedStake.charIdx, selectedStake.idx);
+    }
+
+    selectedStake = null;
+    selectedRouletteColor = null;
+    document.querySelectorAll('.stake-item').forEach(e => e.classList.remove('selected'));
+    document.getElementById('spin-btn').disabled = true;
+    const redBtn = document.getElementById('bet-red-btn');
+    const blackBtn = document.getElementById('bet-black-btn');
+    if(redBtn) redBtn.style.opacity = '1';
+    if(blackBtn) blackBtn.style.opacity = '1';
+    isSpinning = false;
+    loadInventory();
+    return;
+  }
+  document.getElementById('spin-btn').disabled = true;
+
+  // Reset visuals
+  ['slot-0','slot-1','slot-2'].forEach(id => {
+    const el = document.getElementById(id);
+    el.classList.remove('win','lose','spin');
+    el.classList.add('spin');
+  });
+  document.getElementById('win-line').classList.remove('visible');
+  document.getElementById('result-msg').textContent = '';
+  document.getElementById('result-msg').className = 'result-msg';
+
+  // Determine outcome — rare stakes get +15% win chance, legendary +30%
+  const stakeRarity = selectedStake?.rarity || 'common';
+  const rarityBonus = { common:0, rare:15, legendary:30 }[stakeRarity] || 0;
+  const roll     = Math.random() * 100;
+  const isWin    = roll < (casinoData.win_chance + rarityBonus);
+  const isPair   = !isWin && (roll < (casinoData.win_chance + rarityBonus + casinoData.two_match_chance));
+
+  // Pick 3 runes
+  let runes;
+  if (isWin) {
+    const r = RUNES[Math.floor(Math.random() * RUNES.length)];
+    runes = [r, r, r];
+  } else if (isPair) {
+    const r = RUNES[Math.floor(Math.random() * RUNES.length)];
+    let diff;
+    do { diff = RUNES[Math.floor(Math.random() * RUNES.length)]; } while (diff === r);
+    runes = Math.random() > 0.5 ? [r, r, diff] : [r, diff, r];
+    // shuffle so pair isn't always first two
+    runes.sort(() => Math.random() - 0.5);
+  } else {
+    runes = [];
+    while (runes.length < 3) {
+      const r = RUNES[Math.floor(Math.random() * RUNES.length)];
+      if (!runes.includes(r) || runes.length === 2) runes.push(r);
+    }
+    // ensure all different
+    while (runes[0]===runes[1]||runes[1]===runes[2]||runes[0]===runes[2]) {
+      runes = Array.from({length:3},()=>RUNES[Math.floor(Math.random()*RUNES.length)]);
+    }
+  }
+
+  // Animate spinning runes
+  await animateRunes(runes);
+
+  // Reveal outcome
+  ['slot-0','slot-1','slot-2'].forEach((id,i) => {
+    const el = document.getElementById(id);
+    el.classList.remove('spin');
+    el.classList.add(isWin ? 'win' : isPair ? 'win' : 'lose');
+  });
+
+  const msgEl = document.getElementById('result-msg');
+
+  if (isWin) {
+    // ДЖЕКПОТ: всегда prize_jackpot (особый приз)
+    const prize = casinoData.prize_jackpot
+      || casinoData.prize_rare
+      || casinoData.prizes[Math.floor(Math.random()*casinoData.prizes.length)];
+    const prefix = stakeRarity === 'legendary' ? '⭐ ЛЕГЕНДАРНЫЙ ДЖЕКПОТ!' : '✦ ДЖЕКПОТ!';
+    msgEl.textContent = `${prefix} Вы выиграли: ${prize} ✦`;
+    msgEl.classList.add('win');
+    document.getElementById('win-line').classList.add('visible');
+    showWinBurst(stakeRarity === 'legendary' ? '🌟' : '⭐');
+    launchConfetti();
+    addHistory('win', `Джекпот: ${prize} (поставил: ${selectedStake.name})`);
+    addWonItem(selectedStake.charIdx, prize);
+  } else if (isPair) {
+    // ПАРА: обычный приз + маленький шанс на редкий (НЕ джекпот)
+    // Шанс редкого: обычный ~10%, редкий ~35%, легендарный 100%
+    let prize;
+    const rareChance = { common: 0.10, rare: 0.35, legendary: 1.0 }[stakeRarity] ?? 0.10;
+    if (casinoData.prize_rare && Math.random() < rareChance) {
+      prize = casinoData.prize_rare;
+    } else {
+      prize = casinoData.prizes[Math.floor(Math.random()*casinoData.prizes.length)];
+    }
+    const isRarePrize = prize === casinoData.prize_rare;
+    msgEl.textContent = isRarePrize
+      ? `🔵 Пара! Редкая удача: ${prize}`
+      : `⟡ Пара! Вы получаете: ${prize}`;
+    msgEl.classList.add('win');
+    document.getElementById('win-line').classList.add('visible');
+    showWinBurst(isRarePrize ? '🔵' : '✦');
+    if (isRarePrize) launchConfetti();
+    addHistory('pair', `Пара → ${prize} (поставил: ${selectedStake.name})`);
+    addWonItem(selectedStake.charIdx, prize);
+  } else {
+    msgEl.textContent = `✕ Увы. «${selectedStake.name}» утеряно.`;
+    msgEl.classList.add('lose');
+    // Shake machine
+    document.querySelector('.machine').classList.add('shake');
+    setTimeout(() => document.querySelector('.machine').classList.remove('shake'), 500);
+    addHistory('lose', `Проиграл «${selectedStake.name}»`);
+    // Remove staked item from character inventory on loss
+    removeStakedItem(selectedStake.charIdx, selectedStake.idx);
+  }
+
+  // Reset stake selection after spin
+  selectedStake = null;
+  document.querySelectorAll('.stake-item').forEach(e => e.classList.remove('selected'));
+  document.getElementById('stake-hint').textContent = 'Выбери следующую ставку';
+
+  isSpinning = false;
+  document.getElementById('spin-btn').disabled = true; // need to re-select stake
+
+  // Reload inventory to reflect changes (removed/added items)
+  loadInventory();
+}
+
+// ── Rune animation ─────────────────────────────────────────────────────────
+function animateRunes(finalRunes) {
+  return new Promise(resolve => {
+    const duration = 1800; // ms total
+    const intervals = [];
+    const startTimes = [0, 200, 400]; // stagger
+
+    finalRunes.forEach((finalRune, i) => {
+      const runeEl = document.getElementById('rune-' + i);
+      const slotEl = document.getElementById('slot-' + i);
+
+      setTimeout(() => {
+        let elapsed = 0;
+        const tick = 80;
+        const id = setInterval(() => {
+          elapsed += tick;
+          runeEl.classList.add('blur');
+          runeEl.textContent = RUNES[Math.floor(Math.random() * RUNES.length)];
+
+          const stopAt = duration - (i * 200);
+          if (elapsed >= stopAt) {
+            clearInterval(id);
+            runeEl.classList.remove('blur');
+            runeEl.textContent = finalRune;
+
+            // Bounce effect
+            slotEl.style.transform = 'scale(1.08)';
+            setTimeout(() => slotEl.style.transform = '', 120);
+
+            if (i === 2) setTimeout(resolve, 200);
+          }
+        }, tick);
+        intervals.push(id);
+      }, startTimes[i]);
+    });
+  });
+}
+
+// ── Win burst ──────────────────────────────────────────────────────────────
+function showWinBurst(emoji) {
+  const el = document.getElementById('win-burst');
+  el.textContent = emoji;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 800);
+}
+
+// ── Confetti ───────────────────────────────────────────────────────────────
+function launchConfetti() {
+  const canvas = document.getElementById('confetti-canvas');
+  const ctx    = canvas.getContext('2d');
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  const colors = ['#c9a84c','#e8c96e','#a67fd1','#4cbb8a','#e8e0f0','#7b5ea7'];
+  const particles = Array.from({length:90}, () => ({
+    x: Math.random() * canvas.width,
+    y: -10,
+    w: 6 + Math.random() * 6,
+    h: 8 + Math.random() * 10,
+    color: colors[Math.floor(Math.random()*colors.length)],
+    vy: 2 + Math.random() * 4,
+    vx: (Math.random()-0.5)*3,
+    rot: Math.random()*360,
+    drot: (Math.random()-0.5)*8,
+  }));
+
+  let frame;
+  function draw() {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    let alive = false;
+    particles.forEach(p => {
+      if (p.y > canvas.height + 20) return;
+      alive = true;
+      p.y  += p.vy; p.x += p.vx; p.rot += p.drot;
+      ctx.save();
+      ctx.translate(p.x,p.y);
+      ctx.rotate(p.rot * Math.PI/180);
+      ctx.fillStyle = p.color;
+      ctx.globalAlpha = 0.85;
+      ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);
+      ctx.restore();
+    });
+    if (alive) frame = requestAnimationFrame(draw);
+    else ctx.clearRect(0,0,canvas.width,canvas.height);
+  }
+  cancelAnimationFrame(frame);
+  draw();
+}
+
+// ── History ────────────────────────────────────────────────────────────────
+function addHistory(type, text) {
+  const icons = { win:'⭐', pair:'✦', lose:'✕' };
+  const cls   = type === 'lose' ? 'hist-lose' : 'hist-win';
+  history.unshift({ icon: icons[type], text, cls });
+  if (history.length > 10) history.pop();
+
+  const list = document.getElementById('history-list');
+  list.innerHTML = '';
+  history.forEach(h => {
+    const r = document.createElement('div');
+    r.className = 'history-row';
+    r.innerHTML = `<span class="hist-icon">${h.icon}</span><span class="hist-text ${h.cls}">${h.text}</span>`;
+    list.appendChild(r);
+  });
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+function escHtml(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ── INIT ───────────────────────────────────────────────────────────────────
+loadCasino();
+</script>
+</body>
+</html>

@@ -8,6 +8,7 @@ const urlsToCache = [
   "character.html",
   "characters.html",
   "index.html",
+  "map.html",
 ];
 
 self.addEventListener("install", event => {

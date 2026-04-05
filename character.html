@@ -209,7 +209,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;bac
 /* EQUIPMENT */
 .equip-panel{background:var(--panel);border:1px solid var(--accent);border-radius:10px;padding:16px 14px;margin-bottom:16px;}
 .equip-list{display:flex;flex-direction:column;gap:6px;margin-bottom:8px;}
-.equip-row{display:grid;grid-template-columns:18px 1fr 2fr 22px 22px;gap:6px;align-items:center;padding:6px 8px;border-radius:5px;background:var(--panel2);transition:background .15s;cursor:default;}
+.equip-row{display:grid;grid-template-columns:18px 1fr 2fr 22px 22px 22px;gap:6px;align-items:center;padding:6px 8px;border-radius:5px;background:var(--panel2);transition:background .15s,border-color .3s,box-shadow .3s;cursor:default;border:1px solid transparent;}
 .equip-row:hover{background:rgba(123,94,167,.08);}
 .equip-row.dragging{opacity:.35;border:1px dashed var(--accent);}
 .equip-row.drag-over{background:rgba(123,94,167,.18);border:1px dashed var(--accent);}
@@ -228,6 +228,67 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;bac
 .send-equip:hover{background:rgba(76,187,138,.15);border-color:#4cbb8a;color:#4cbb8a;}
 .add-equip-btn{margin-top:4px;background:none;border:1px dashed var(--accent);color:var(--accent2);font-family:'Crimson Pro',serif;font-size:13px;padding:5px 14px;border-radius:5px;cursor:pointer;letter-spacing:1px;transition:all .2s;}
 .add-equip-btn:hover{background:rgba(123,94,167,.1);border-color:var(--gold);color:var(--gold-l);}
+/* ── WARP BAG ── */
+.warp-bag-panel{background:var(--panel);border:1px solid #9b7fe8;border-radius:10px;padding:14px 14px;margin-bottom:16px;position:relative;}
+.warp-bag-panel::before{content:'';position:absolute;inset:0;border-radius:10px;pointer-events:none;
+  background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(155,127,232,.07) 0%,transparent 70%);}
+.warp-bag-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.warp-bag-icon{font-size:20px;filter:drop-shadow(0 0 6px rgba(155,127,232,.6));}
+.warp-bag-title{font-family:'Cinzel',serif;font-size:10px;letter-spacing:3px;color:#c5aff5;flex:1;}
+.warp-bag-sync{font-family:'Cinzel',serif;font-size:7px;letter-spacing:1px;color:var(--text-dim);display:flex;align-items:center;gap:4px;}
+.warp-bag-dot{width:6px;height:6px;border-radius:50%;background:#4cbb8a;animation:warp-pulse 2s ease-in-out infinite;}
+@keyframes warp-pulse{0%,100%{opacity:.5;box-shadow:0 0 0 0 rgba(76,187,138,0);}50%{opacity:1;box-shadow:0 0 0 4px rgba(76,187,138,.15);}}
+.warp-bag-dot.offline{background:var(--life);animation:none;}
+.warp-bag-list{display:flex;flex-direction:column;gap:5px;margin-bottom:8px;min-height:32px;}
+.warp-item{display:grid;grid-template-columns:1fr 2fr 26px;gap:8px;align-items:center;
+  padding:7px 10px;border-radius:6px;background:rgba(155,127,232,.06);
+  border:1px solid rgba(155,127,232,.2);transition:background .15s;}
+.warp-item:hover{background:rgba(155,127,232,.12);}
+.warp-item-name{font-family:'Cinzel',serif;font-size:10px;color:#c5aff5;}
+.warp-item-desc{font-size:11px;color:var(--text-dim);font-style:italic;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.warp-take-btn{width:22px;height:22px;border-radius:50%;background:none;border:1px solid rgba(155,127,232,.4);
+  color:#9b7fe8;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:all .15s;line-height:1;padding:0;flex-shrink:0;}
+.warp-take-btn:hover{background:rgba(155,127,232,.2);border-color:#9b7fe8;color:#c5aff5;}
+.warp-bag-empty{font-size:11px;color:var(--text-dim);font-style:italic;padding:8px 4px;text-align:center;}
+.warp-bag-btn{background:none;border:1px dashed rgba(155,127,232,.4);color:#9b7fe8;
+  font-family:'Crimson Pro',serif;font-size:11px;padding:4px 12px;border-radius:5px;
+  cursor:pointer;transition:all .2s;letter-spacing:.5px;}
+.warp-bag-btn:hover{background:rgba(155,127,232,.1);border-color:#9b7fe8;}
+/* button on equip row to put into warp bag */
+.warp-equip-btn{width:20px;height:20px;border-radius:50%;background:none;border:1px solid var(--line);
+  color:var(--text-dim);font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:all .15s;line-height:1;padding:0;opacity:0;}
+.equip-row:hover .warp-equip-btn{opacity:1;}
+.warp-equip-btn:hover{background:rgba(155,127,232,.15);border-color:#9b7fe8;color:#9b7fe8;}
+/* ── RARITY ── */
+.rarity-common{}
+/* rare: blue tint */
+.rarity-rare{border-color:#5b8dee55!important;background:linear-gradient(135deg,rgba(91,141,238,.06),var(--panel2))!important;}
+.rarity-rare .equip-cell{color:#a0c4ff;}
+/* unique: purple — no send/del, lock icon on right */
+.rarity-unique{border-color:#9b7fe855!important;background:linear-gradient(135deg,rgba(155,127,232,.07),var(--panel2))!important;}
+.rarity-unique .equip-cell{color:#c5aff5;}
+.rarity-unique .send-equip,.rarity-unique .del-equip{opacity:0!important;pointer-events:none!important;}
+/* legendary: gold animated glow, fully editable */
+.rarity-legendary{border-color:var(--gold)!important;animation:leg-glow 2.4s ease-in-out infinite!important;position:relative;}
+.rarity-legendary .equip-cell{color:var(--gold-l);font-weight:600;}
+@keyframes leg-glow{
+  0%,100%{box-shadow:0 0 6px rgba(201,168,76,.3),inset 0 0 6px rgba(201,168,76,.04);}
+  50%{box-shadow:0 0 18px rgba(201,168,76,.55),inset 0 0 12px rgba(201,168,76,.08);}
+}
+.rarity-legendary::before{
+  content:'';position:absolute;inset:0;border-radius:5px;pointer-events:none;
+  background:
+    radial-gradient(1px 1px at 15% 30%,rgba(232,201,110,.7) 0%,transparent 100%),
+    radial-gradient(1px 1px at 80% 20%,rgba(232,201,110,.5) 0%,transparent 100%),
+    radial-gradient(1px 1px at 50% 70%,rgba(232,201,110,.6) 0%,transparent 100%),
+    radial-gradient(1px 1px at 90% 60%,rgba(232,201,110,.4) 0%,transparent 100%);
+  animation:leg-sparkle 3s ease-in-out infinite;
+}
+@keyframes leg-sparkle{0%,100%{opacity:0;}25%{opacity:1;}50%{opacity:0;}75%{opacity:.8;}}
+/* unique lock icon — right side, replaces send button */
+.unique-lock{font-size:11px;color:#9b7fe8;opacity:.7;flex-shrink:0;align-self:center;cursor:default;}
 /* SEND MODAL */
 .modal-overlay{position:fixed;inset:0;background:rgba(8,8,18,.85);z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(3px);}
 .modal-overlay.hidden{display:none;}
@@ -316,6 +377,24 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;bac
 .build-ult-desc .inline-roll:hover{background:rgba(76,187,138,.25);}
 .build-no-data{font-family:'Crimson Pro',serif;font-size:12px;color:var(--text-dim);font-style:italic;text-align:center;padding:10px 0;}
 @media(max-width:600px){.build-icon{width:48px;height:48px;font-size:20px;}}
+/* ── СОЗВЕЗДИЕ ──────────────────────────────────────────────────────────── */
+.constellation-panel{background:var(--panel);border:1px solid var(--accent);border-radius:10px;padding:16px 14px;margin-bottom:16px;}
+.constellation-wrap{display:flex;flex-direction:column;align-items:center;gap:14px;}
+.constellation-canvas-wrap{position:relative;display:flex;justify-content:center;}
+#constellation-canvas{display:block;cursor:crosshair;border-radius:8px;background:radial-gradient(ellipse 80% 80% at 50% 50%,#0e0a1e 0%,#080812 100%);touch-action:none;width:260px;height:260px;}
+.constellation-info{width:100%;max-width:360px;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;}
+.constellation-name{font-family:'Cinzel',serif;font-size:13px;font-weight:700;color:var(--gold-l);letter-spacing:1px;min-height:18px;}
+.constellation-effect{font-size:12px;color:var(--text-mid);line-height:1.55;min-height:36px;}
+.constellation-code{font-family:monospace;font-size:10px;color:var(--text-dim);letter-spacing:.5px;min-height:14px;}
+.constellation-btns{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:4px;}
+.con-btn{font-family:'Cinzel',serif;font-size:8px;letter-spacing:1.5px;padding:7px 16px;border-radius:6px;cursor:pointer;transition:all .2s;border:1px solid;}
+.con-btn-check{border-color:var(--accent);color:var(--accent2);background:none;}
+.con-btn-check:hover{background:rgba(123,94,167,.15);}
+.con-btn-check.error{border-color:var(--life)!important;color:var(--life)!important;background:rgba(224,92,92,.1)!important;animation:con-shake .35s ease;}
+.con-btn-check.success{border-color:var(--gold);color:var(--gold-l);background:rgba(201,168,76,.08);}
+.con-btn-clear{border-color:var(--line);color:var(--text-dim);background:none;}
+.con-btn-clear:hover{border-color:var(--life);color:var(--life);}
+@keyframes con-shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-5px)}40%{transform:translateX(5px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
 </style>
 </head>
 <body>
@@ -327,6 +406,36 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;bac
   <h1>ЛИСТ ПЕРСОНАЖА</h1>
   <div class="header-sub">Фройский Маг &nbsp;•&nbsp; Гном &nbsp;•&nbsp; Том II</div>
 </div>
+
+<!-- ARENA BANNER — shown only when this character is in an active arena fight -->
+<div id="arena-banner" style="display:none;margin-bottom:16px;background:#1a0c0c;border:1px solid rgba(192,57,43,.5);border-radius:10px;padding:16px 18px;position:relative;overflow:hidden;">
+  <div style="position:absolute;inset:0;background:radial-gradient(ellipse 60% 80% at 50% 50%,rgba(192,57,43,.08) 0%,transparent 70%);pointer-events:none;"></div>
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;position:relative;">
+    <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:3px;color:#e05c5c;animation:arena-pulse 2s ease-in-out infinite;">⚔ НА АРЕНЕ</div>
+    <div style="flex:1;height:1px;background:linear-gradient(90deg,rgba(192,57,43,.4),transparent);"></div>
+    <a id="arena-banner-link" href="#" style="font-family:'Cinzel',serif;font-size:8px;letter-spacing:2px;color:rgba(224,92,92,.7);text-decoration:none;border:1px solid rgba(192,57,43,.3);padding:3px 10px;border-radius:4px;transition:all .2s;" onmouseover="this.style.color='#e05c5c';this.style.borderColor='rgba(192,57,43,.7)'" onmouseout="this.style.color='rgba(224,92,92,.7)';this.style.borderColor='rgba(192,57,43,.3)'">→ Арена</a>
+  </div>
+  <div style="font-family:'Cinzel',serif;font-size:8px;letter-spacing:2px;color:rgba(224,92,92,.6);margin-bottom:10px;position:relative;">ПРОТИВНИК</div>
+  <div id="arena-opponent-card" style="background:rgba(0,0,0,.3);border-radius:8px;padding:12px;position:relative;">
+    <div id="arena-opp-name" style="font-family:'Cinzel',serif;font-size:13px;color:#f0e0e0;margin-bottom:6px;">—</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+      <div>
+        <div style="font-family:'Cinzel',serif;font-size:7px;letter-spacing:2px;color:#5b8dee;margin-bottom:3px;">БАРЬЕР</div>
+        <div style="background:rgba(0,0,0,.3);border-radius:3px;height:6px;overflow:hidden;margin-bottom:2px;"><div id="arena-opp-barrier-bar" style="height:100%;background:linear-gradient(90deg,#3a6fd8,#5b8dee);transition:width .4s;width:100%;border-radius:3px;"></div></div>
+        <div id="arena-opp-barrier-num" style="font-family:'Cinzel',serif;font-size:9px;color:#5b8dee;text-align:right;">— / —</div>
+      </div>
+      <div>
+        <div style="font-family:'Cinzel',serif;font-size:7px;letter-spacing:2px;color:#e05c5c;margin-bottom:3px;">ЖИЗНЬ</div>
+        <div style="background:rgba(0,0,0,.3);border-radius:3px;height:6px;overflow:hidden;margin-bottom:2px;"><div id="arena-opp-life-bar" style="height:100%;background:linear-gradient(90deg,#c0302a,#e05c5c);transition:width .4s;width:100%;border-radius:3px;"></div></div>
+        <div id="arena-opp-life-num" style="font-family:'Cinzel',serif;font-size:9px;color:#e05c5c;text-align:right;">— / —</div>
+      </div>
+    </div>
+    <div id="arena-opp-build" style="font-family:'Cinzel',serif;font-size:8px;color:var(--gold);"></div>
+  </div>
+</div>
+<style>
+@keyframes arena-pulse{0%,100%{opacity:.6;}50%{opacity:1;}}
+</style>
 
 <div class="info-row">
   <div class="info-field"><div class="info-label">Имя персонажа</div><span class="info-value" contenteditable="true" data-placeholder="Введите имя…"></span></div>
@@ -421,6 +530,25 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;bac
   </div>
 </div>
 
+<!-- ── СОЗВЕЗДИЕ ─────────────────────────────────────────────────────────── -->
+<div class="constellation-panel">
+  <div class="section-title">СОЗВЕЗДИЕ</div>
+  <div class="constellation-wrap">
+    <div class="constellation-canvas-wrap">
+      <canvas id="constellation-canvas" width="260" height="260"></canvas>
+    </div>
+    <div class="constellation-info">
+      <div class="constellation-code" id="con-code">Нарисуй путь по точкам</div>
+      <div class="constellation-name" id="con-name"></div>
+      <div class="constellation-effect" id="con-effect"></div>
+      <div class="constellation-btns">
+        <button class="con-btn con-btn-check" id="con-check-btn" onclick="checkConstellation()">Проверить</button>
+        <button class="con-btn con-btn-clear" onclick="clearConstellation()">Очистить</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="dice-panel">
   <div class="section-title">ДАЙСЫ</div>
   <div class="dice-row">
@@ -470,11 +598,23 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;bac
 
 <div class="equip-panel">
   <div class="section-title">СНАРЯЖЕНИЕ</div>
-  <div class="equip-header-row">
-    <span></span><span>Предмет</span><span>Описание / Эффект</span><span></span><span></span>
+  <div class="equip-header-row" style="grid-template-columns:18px 1fr 2fr 22px 22px 22px;">
+    <span></span><span>Предмет</span><span>Описание / Эффект</span><span></span><span></span><span></span>
   </div>
   <div class="equip-list" id="equip-list"></div>
   <button class="add-equip-btn" onclick="addEquip()">+ Добавить предмет</button>
+</div>
+
+<!-- WARP BAG — shown only when player has "Сумка Варпа" in inventory -->
+<div class="warp-bag-panel" id="warp-bag-panel" style="display:none;">
+  <div class="warp-bag-header">
+    <span class="warp-bag-icon">🌀</span>
+    <span class="warp-bag-title">СУМКА ВАРПА</span>
+    <span class="warp-bag-sync"><span class="warp-bag-dot" id="warp-dot"></span><span id="warp-sync-text">синхронизация</span></span>
+  </div>
+  <div class="warp-bag-list" id="warp-bag-list">
+    <div class="warp-bag-empty">Сумка пуста</div>
+  </div>
 </div>
 
 <!-- SEND ITEMS MODAL -->
@@ -833,6 +973,7 @@ function buildHpBoxes(cid,n){
       refreshHp(cid);
       syncHpCurField(cid);
       scheduleSave();
+      if(typeof syncArenaHp==='function') syncArenaHp(cid);
     });
     el.appendChild(b);
   }
@@ -1084,6 +1225,23 @@ async function loadClassSkills() {
       sheetsGet('adj_skills'),
       sheetsGet('builds').catch(()=>[]),   // optional sheet — graceful fallback
     ]);
+    // Load equipment rarities (optional — fail silently)
+    try {
+      const eqRows = await sheetsGet('equipment');
+      rarityData = {};
+      eqRows.forEach(r => {
+        const n = (r.name || r['название'] || '').trim().toLowerCase();
+        const v = (r.rarity || r['редкость'] || 'common').trim().toLowerCase();
+        const d = (r.description || r['описание'] || r.desc || '').trim();
+        if (n) rarityData[n] = { rarity: v, desc: d };
+      });
+      // Re-apply rarities to already-rendered equip rows
+      document.querySelectorAll('.equip-row').forEach(row => {
+        const nameCell = row.querySelectorAll('.equip-cell')[0];
+        const itemName = nameCell?.innerText?.trim() || '';
+        if (itemName) refreshRowRarity(row, itemName);
+      });
+    } catch(_) {}
     classSkillsData = cs.map(r => ({
       element:     r.element?.toLowerCase() || '',
       level:       parseInt(r.level) || 0,
@@ -1510,6 +1668,40 @@ function refreshSkillsPanel() {
   if(skillsLoaded) renderSkillsTab(currentSkillTab);
 }
 
+// ── RARITY DATA (loaded from sheets) ─────────────────────────────────────────
+let rarityData = {}; // { "name lowercase": { rarity, desc } }
+
+const RARITY_ORDER  = { common:0, rare:1, unique:2, legendary:3 };
+const isDigit = (char) => /^\d$/.test(char);
+
+function getItemRarity(name) {
+  let regex = /-(\d+)/;
+  let match = name.match(regex);
+
+  if (match) {
+    let num = parseInt(match[1]);
+
+    if (num > 17) return 'common';
+
+    let replace;
+    if (num >= 10){
+      return 'legendary';
+    }
+    if (num >= 4) {
+      return 'rare';
+    } else {
+      return 'common';
+    }
+
+    name = name.replace(regex, replace);
+  }
+
+  return rarityData[(name || '').toLowerCase().trim()]?.rarity || 'common';
+}
+function getItemDesc(name) {
+  return rarityData[(name||'').toLowerCase().trim()]?.desc || '';
+}
+
 // ── EQUIPMENT ────────────────────────────────────────────────────────────────
 let equipCount=0;
 let _dragSrc=null;
@@ -1522,14 +1714,26 @@ function addEquip(data){
   row.draggable=true;
 
   const esc=s=>(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const name    = data?.name || '';
+  const rarity  = data?.rarity || getItemRarity(name);
+  const isUnique = rarity === 'unique';
+  // For unique items: desc from sheet takes priority
+  const desc = isUnique ? (getItemDesc(name) || data?.desc || '') : (data?.desc || '');
 
-  // drag handle | name cell | desc cell | send btn | del btn
+  row.classList.add('rarity-' + rarity);
+
+  // grid: drag | name | desc | lock-or-send | del
+  // unique: lock icon instead of send, no del
+  // legendary: fully editable, send+del visible
   row.innerHTML=`
     <div class="equip-drag" title="Перетащить">⠿</div>
-    <div class="equip-cell" contenteditable="true" data-placeholder="Название...">${esc(data?.name)}</div>
-    <div class="equip-cell" contenteditable="true" data-placeholder="Описание или эффект...">${esc(data?.desc)}</div>
-    <button class="send-equip" title="Передать игроку" onclick="openSendModal(${id})">→</button>
-    <button class="del-equip"  title="Удалить" onclick="removeEquip(${id})">×</button>`;
+    <div class="equip-cell" contenteditable="true" data-placeholder="Название...">${esc(name)}</div>
+    <div class="equip-cell" contenteditable="${isUnique?'false':'true'}" data-placeholder="Описание или эффект...">${esc(desc)}</div>
+    ${isUnique
+      ? `<span class="unique-lock" title="Уникальный предмет — нельзя передать или удалить">🔒</span><span></span><span></span>`
+      : `<button class="send-equip" title="Передать игроку" onclick="openSendModal(${id})">→</button>
+         <button class="warp-equip-btn" title="Положить в Сумку Варпа" onclick="putInWarpBag(${id})">🌀</button>`}
+         <button class="del-equip" title="Удалить" onclick="removeEquip(${id})">×</button>`;
 
   // drag events
   row.addEventListener('dragstart', e=>{
@@ -1550,9 +1754,38 @@ function addEquip(data){
     scheduleSave();
   });
 
-  row.querySelectorAll('.equip-cell').forEach(c=>c.addEventListener('input',scheduleSave));
+  // Live rarity re-check on name edit (fix 5: exact match only)
+  const nameCell = row.querySelector('.equip-cell');
+  if(nameCell && !isUnique) {
+    nameCell.addEventListener('input', ()=>{
+      const n = nameCell.innerText?.trim() || '';
+      refreshRowRarity(row, n);
+      scheduleSave();
+    });
+  }
+  row.querySelectorAll('.equip-cell[contenteditable="true"]').forEach(c=>{
+    if(c !== nameCell) c.addEventListener('input', scheduleSave);
+  });
+
   list.appendChild(row);return row;
 }
+
+// refreshRowRarity: re-applies rarity class and updates lock/buttons in place
+// Fix 5: uses exact lowercase match — partial names don't trigger rarity
+function refreshRowRarity(row, name) {
+  const newRarity = getItemRarity(name); // exact match or 'common'
+  const classes = ['rarity-common','rarity-rare','rarity-unique','rarity-legendary'];
+  classes.forEach(c => row.classList.remove(c));
+  row.classList.add('rarity-' + newRarity);
+}
+
+// Legacy alias
+function applyEquipRarity(row, rarity) {
+  const classes = ['rarity-common','rarity-rare','rarity-unique','rarity-legendary'];
+  classes.forEach(c => row.classList.remove(c));
+  row.classList.add('rarity-' + rarity);
+}
+
 function removeEquip(id){const e=document.getElementById('equip-'+id);if(e){e.remove();scheduleSave();}}
 // ── SEND MODAL ────────────────────────────────────────────────────────────────
 let _sendTargetUuid  = null;
@@ -1619,6 +1852,8 @@ function _openItemPicker(preselectedRowId) {
   } else {
     rows.forEach(row => {
       const rid = parseInt(row.id.replace('equip-', ''));
+      // Unique items cannot be transferred
+      if (row.classList.contains('rarity-unique')) return;
       const cells = row.querySelectorAll('.equip-cell');
       const name  = cells[0]?.innerText?.trim() || '';
       const desc  = cells[1]?.innerText?.trim() || '';
@@ -1851,7 +2086,7 @@ function applyReagentDelta(delta) {
   });
 }
 let ST=null;
-function scheduleSave(){clearTimeout(ST);ST=setTimeout(saveAll,600);}
+function scheduleSave(){clearTimeout(ST);ST=setTimeout(()=>{saveAll();checkWarpBagPresence();},600);}
 function collectState(){
   const inf=document.querySelectorAll('.info-value[contenteditable]');
   const spells=[...document.querySelectorAll('.spell-row')].map(r=>{
@@ -1860,7 +2095,10 @@ function collectState(){
   });
   const equipment=[...document.querySelectorAll('.equip-row')].map(r=>{
     const c=r.querySelectorAll('.equip-cell');
-    return{name:c[0]?.innerText||'',desc:c[1]?.innerText||''};
+    const name=c[0]?.innerText?.trim()||'';
+    const rarity=getItemRarity(name)||'common';
+    const desc = rarity==='unique' ? (getItemDesc(name)||c[1]?.innerText?.trim()||'') : (c[1]?.innerText?.trim()||'');
+    return{name,desc,rarity};
   });
   return{
     charName:inf[0]?.textContent||'',playerName:inf[1]?.textContent||'',
@@ -1873,6 +2111,7 @@ function collectState(){
     buildName:(()=>{const active=[...adjActive];if(active.length!==2)return'';const b=buildsData.find(b=>(b.branch1===active[0]&&b.branch2===active[1])||(b.branch1===active[1]&&b.branch2===active[0]));return b?.name||'';})(),
     reagents:getReagents(),
     charUUID:CHAR_UUID,
+    constellationPath: (typeof window._constellationGetPath==='function') ? window._constellationGetPath() : [],
     spells,equipment,
     notes:document.getElementById('notes-area')?.value||''
   };
@@ -1914,6 +2153,9 @@ function applyState(s){
   document.getElementById('equip-list').innerHTML='';equipCount=0;(s.equipment||[]).forEach(eq=>addEquip(eq));
   const na=document.getElementById('notes-area');if(na)na.value=s.notes||'';
   if(s.reagents) setReagents(s.reagents);
+  if(s.constellationPath && typeof window._constellationSetPath==='function') window._constellationSetPath(s.constellationPath);
+  // Check warp bag after state restore
+  setTimeout(checkWarpBagPresence, 0);
 }
 function loadAll(){try{const r=localStorage.getItem(SAVE_KEY);if(!r)return false;applyState(JSON.parse(r));return true;}catch(e){return false;}}
 function exportJSON(){const s=collectState();const b=new Blob([JSON.stringify(s,null,2)],{type:'application/json'});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download=`${s.charName||'персонаж'}_froyskyy.json`;a.click();URL.revokeObjectURL(u);}
@@ -1972,9 +2214,335 @@ function checkPendingSpell(){
   }catch(e){}
 }
 
+// ── СОЗВЕЗДИЕ ─────────────────────────────────────────────────────────────────
+(function(){
+  const LOGICAL  = 260;
+  const CX = LOGICAL/2, CY = LOGICAL/2;
+  const OUTER_R  = 108, DOT_R = 7, HIT_R = 20;
+
+  // HiDPI setup
+  const canvas = document.getElementById('constellation-canvas');
+  if(!canvas) return;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width  = LOGICAL * dpr;
+  canvas.height = LOGICAL * dpr;
+  canvas.style.width  = LOGICAL + 'px';
+  canvas.style.height = LOGICAL + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+
+  // 16 points clockwise from top + center (index 16 = code "0")
+  const POINTS = [];
+  for(let i = 0; i < 16; i++){
+    const a = (i / 16) * Math.PI * 2 - Math.PI / 2;
+    POINTS.push({ x: CX + OUTER_R * Math.cos(a), y: CY + OUTER_R * Math.sin(a) });
+  }
+  POINTS.push({ x: CX, y: CY });
+
+  let path = [];
+  let drawing = false;
+  let mouseX = 0, mouseY = 0;
+  let currentState = 'idle';
+  let constellationsData = [];
+
+  // Expose for save/load
+  window._constellationGetPath = () => [...path];
+  window._constellationSetPath = (p) => { path = p || []; updateCodeDisplay(); draw(); };
+
+  // ── Sheets ────────────────────────────────────────────────────────────────
+  async function loadConstellations(){
+    try{
+      const rows = await sheetsGet('constellations');
+      constellationsData = rows.map(r=>({
+        code:   (r.code   || r['\u043a\u043e\u0434'] || '').trim(),
+        name:   (r.name   || r['\u043d\u0430\u0437\u0432\u0430\u043d\u0438\u0435'] || '').trim(),
+        effect: (r.effect || r['\u044d\u0444\u0444\u0435\u043a\u0442'] || '').trim(),
+      })).filter(r=>r.code && r.name);
+    }catch(e){ constellationsData=[]; }
+  }
+  loadConstellations();
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
+  function getPos(e){
+    const rect = canvas.getBoundingClientRect();
+    const sx = LOGICAL / rect.width, sy = LOGICAL / rect.height;
+    if(e.touches) return { x:(e.touches[0].clientX-rect.left)*sx, y:(e.touches[0].clientY-rect.top)*sy };
+    return { x:(e.clientX-rect.left)*sx, y:(e.clientY-rect.top)*sy };
+  }
+  function nearestPoint(x,y){
+    let best=-1, bestD=Infinity;
+    POINTS.forEach((p,i)=>{ const d=Math.hypot(p.x-x,p.y-y); if(d<HIT_R&&d<bestD){bestD=d;best=i;} });
+    return best;
+  }
+
+  // ── Draw ──────────────────────────────────────────────────────────────────
+  function draw(){
+    ctx.clearRect(0,0,LOGICAL,LOGICAL);
+    const isSuccess=currentState==='success', isError=currentState==='error';
+    const lineCol = isSuccess?'#c9a84c':isError?'rgba(224,92,92,0.5)':' rgba(166,127,209,0.75)';
+    const dotCol  = isSuccess?'#e8c96e':isError?'#e05c5c':'#a67fd1';
+    const glowCol = isSuccess?'rgba(201,168,76,0.4)':' rgba(123,94,167,0.3)';
+
+    // Orbit ring
+    ctx.beginPath(); ctx.arc(CX,CY,OUTER_R,0,Math.PI*2);
+    ctx.strokeStyle='rgba(42,31,69,0.55)'; ctx.lineWidth=1; ctx.stroke();
+
+    // Lines
+    if(path.length>=2){
+      ctx.beginPath(); ctx.moveTo(POINTS[path[0]].x,POINTS[path[0]].y);
+      for(let i=1;i<path.length;i++) ctx.lineTo(POINTS[path[i]].x,POINTS[path[i]].y);
+      if(drawing) ctx.lineTo(mouseX,mouseY);
+      ctx.strokeStyle=lineCol; ctx.lineWidth=isSuccess?2.5:2;
+      ctx.lineCap='round'; ctx.lineJoin='round';
+      ctx.shadowColor=glowCol; ctx.shadowBlur=isSuccess?16:10;
+      ctx.stroke(); ctx.shadowBlur=0;
+    } else if(drawing&&path.length===1){
+      ctx.beginPath(); ctx.moveTo(POINTS[path[0]].x,POINTS[path[0]].y); ctx.lineTo(mouseX,mouseY);
+      ctx.strokeStyle=lineCol; ctx.lineWidth=2; ctx.lineCap='round'; ctx.stroke();
+    }
+
+    // Dots + labels
+    POINTS.forEach((p,i)=>{
+      const inPath=path.includes(i), isCenter=i===16;
+      ctx.beginPath(); ctx.arc(p.x,p.y,DOT_R,0,Math.PI*2);
+      if(inPath){
+        ctx.fillStyle=dotCol; ctx.shadowColor=dotCol; ctx.shadowBlur=path[0]===i?14:8;
+        ctx.fill(); ctx.shadowBlur=0;
+        ctx.beginPath(); ctx.arc(p.x,p.y,3,0,Math.PI*2);
+        ctx.fillStyle=isSuccess?'#fffbe8':'#f0ecff'; ctx.fill();
+      } else {
+        ctx.fillStyle=isCenter?'rgba(123,94,167,0.3)':'rgba(30,24,48,0.95)'; ctx.fill();
+        ctx.strokeStyle=isCenter?'rgba(166,127,209,0.55)':'rgba(58,42,90,0.9)'; ctx.lineWidth=1; ctx.stroke();
+        if(isCenter){ ctx.beginPath(); ctx.arc(p.x,p.y,2.5,0,Math.PI*2); ctx.fillStyle='rgba(166,127,209,0.7)'; ctx.fill(); }
+      }
+      // Crisp label — integer px, snapped to whole pixel
+      ctx.font='bold 9px monospace';
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillStyle=inPath?(isSuccess?'rgba(8,8,18,0.9)':'rgba(232,224,240,0.95)'):(isCenter?'rgba(166,127,209,0.7)':'rgba(110,96,145,0.65)');
+      ctx.fillText(i===16?'0':String(i+1), Math.round(p.x), Math.round(p.y));
+    });
+  }
+
+  function updateCodeDisplay(){
+    const el=document.getElementById('con-code');
+    if(!el) return;
+    if(!path.length){ el.textContent='\u041d\u0430\u0440\u0438\u0441\u0443\u0439 \u043f\u0443\u0442\u044c \u043f\u043e \u0442\u043e\u0447\u043a\u0430\u043c'; return; }
+    el.textContent='\u041f\u0443\u0442\u044c: '+path.map(i=>i===16?'0':String(i+1)).join('-');
+  }
+
+  // ── Events ────────────────────────────────────────────────────────────────
+  function onStart(e){
+    e.preventDefault();
+    const {x,y}=getPos(e); const pt=nearestPoint(x,y); if(pt===-1) return;
+    currentState='idle'; path=[pt]; drawing=true; mouseX=x; mouseY=y;
+    resetResult(); draw(); updateCodeDisplay();
+  }
+  function onMove(e){
+    e.preventDefault(); if(!drawing) return;
+    const {x,y}=getPos(e); mouseX=x; mouseY=y;
+    const pt=nearestPoint(x,y);
+    if(pt!==-1&&!path.includes(pt)){ path.push(pt); updateCodeDisplay(); }
+    draw();
+  }
+  function onEnd(e){
+    e.preventDefault(); if(!drawing) return;
+    drawing=false; draw();
+    if(typeof scheduleSave==='function') scheduleSave();
+  }
+
+  canvas.addEventListener('mousedown',onStart);
+  canvas.addEventListener('mousemove',onMove);
+  canvas.addEventListener('mouseup',onEnd);
+  canvas.addEventListener('mouseleave',onEnd);
+  canvas.addEventListener('touchstart',onStart,{passive:false});
+  canvas.addEventListener('touchmove',onMove,{passive:false});
+  canvas.addEventListener('touchend',onEnd,{passive:false});
+
+  // ── Public ────────────────────────────────────────────────────────────────
+  function resetResult(){
+    document.getElementById('con-name').textContent='';
+    document.getElementById('con-effect').textContent='';
+    const btn=document.getElementById('con-check-btn');
+    if(btn){btn.classList.remove('error','success');btn.textContent='\u041f\u0440\u043e\u0432\u0435\u0440\u0438\u0442\u044c';}
+  }
+
+  window.clearConstellation=function(){
+    path=[]; drawing=false; currentState='idle';
+    resetResult(); updateCodeDisplay(); draw();
+    if(typeof scheduleSave==='function') scheduleSave();
+  };
+
+  window.checkConstellation=async function(){
+    if(path.length<2) return;
+    const code=path.map(i=>i===16?'0':String(i+1)).join('-');
+    await loadConstellations();
+    const match=constellationsData.find(c=>c.code===code);
+    const btn=document.getElementById('con-check-btn');
+    if(match){
+      currentState='success';
+      document.getElementById('con-name').textContent=match.name;
+      document.getElementById('con-effect').textContent=match.effect;
+      if(btn){btn.classList.remove('error');btn.classList.add('success');btn.textContent='\u2713 \u041d\u0430\u0439\u0434\u0435\u043d\u043e';}
+    } else {
+      currentState='error';
+      if(btn){
+        btn.classList.remove('success');btn.classList.add('error');btn.textContent='\u2717 \u041d\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043d\u043e';
+        setTimeout(()=>btn.classList.remove('error'),500);
+      }
+      setTimeout(()=>{ path=[]; currentState='idle'; resetResult(); updateCodeDisplay(); draw();
+        if(typeof scheduleSave==='function') scheduleSave();
+      },600);
+    }
+    draw();
+  };
+
+  draw();
+})();
+
+
+// ── WARP BAG ─────────────────────────────────────────────────────────────────
+// Firebase path: /warpbag/items  →  { pushKey: {name, desc, addedBy, addedByName, ts} }
+// Visible only when player has item named exactly "Сумка Варпа" in inventory
+// SSE listener for instant updates
+
+const WARP_ITEM_NAME = 'Сумка Варпа'; // exact name to match
+let _warpEs         = null;
+let _warpItems      = {};  // local mirror of Firebase warpbag/items
+let _hasWarpBag     = false;
+
+// Check if current inventory contains the Warp Bag item
+function checkWarpBagPresence() {
+  const rows = [...document.querySelectorAll('.equip-row')];
+  const found = rows.some(r => {
+    const n = r.querySelectorAll('.equip-cell')[0]?.innerText?.trim() || '';
+    return n.toLowerCase() === WARP_ITEM_NAME.toLowerCase();
+  });
+  if (found === _hasWarpBag) return;
+  _hasWarpBag = found;
+  const panel = document.getElementById('warp-bag-panel');
+  if (panel) panel.style.display = found ? '' : 'none';
+  if (found && !_warpEs) initWarpBagListener();
+  if (!found && _warpEs) { _warpEs.close(); _warpEs = null; }
+}
+
+// SSE listener — Firebase streams changes in real time
+function initWarpBagListener() {
+  if (!FIREBASE_CONFIG?.databaseURL) return;
+  const url = `${FIREBASE_CONFIG.databaseURL}/warpbag/items.json`;
+  _warpEs = new EventSource(url);
+
+  _warpEs.addEventListener('put', e => {
+    try {
+      const d = JSON.parse(e.data);
+      if (d.path === '/') {
+        _warpItems = d.data || {};
+      } else {
+        const key = d.path.replace(/^\//, '');
+        if (d.data === null) delete _warpItems[key];
+        else _warpItems[key] = d.data;
+      }
+      renderWarpBag();
+      setWarpStatus('online');
+    } catch(_) {}
+  });
+
+  _warpEs.onerror = () => setWarpStatus('offline');
+}
+
+function setWarpStatus(s) {
+  const dot  = document.getElementById('warp-dot');
+  const text = document.getElementById('warp-sync-text');
+  if (!dot || !text) return;
+  if (s === 'online')  { dot.classList.remove('offline'); text.textContent = 'синхронизировано'; }
+  else                 { dot.classList.add('offline');    text.textContent = 'нет связи'; }
+}
+
+// Render warp bag items list
+function renderWarpBag() {
+  const list = document.getElementById('warp-bag-list');
+  if (!list) return;
+  const keys = Object.keys(_warpItems);
+  if (!keys.length) {
+    list.innerHTML = '<div class="warp-bag-empty">Сумка пуста</div>';
+    return;
+  }
+  list.innerHTML = '';
+  keys.forEach(key => {
+    const item = _warpItems[key];
+    const row  = document.createElement('div');
+    row.className = 'warp-item';
+    row.innerHTML = `
+      <div class="warp-item-name">${escHtml(item.name||'')}</div>
+      <div class="warp-item-desc">${escHtml(item.desc||'')}${item.addedByName?` <span style="color:var(--text-dim);font-style:italic;">— ${escHtml(item.addedByName)}</span>`:''}</div>
+      <button class="warp-take-btn" title="Забрать в инвентарь" onclick="takeFromWarpBag('${key}')">⬇</button>`;
+    list.appendChild(row);
+  });
+}
+
+// Put item from inventory into warp bag
+async function putInWarpBag(rowId) {
+  if (!FIREBASE_CONFIG?.databaseURL) return;
+  if (!_hasWarpBag) return;
+
+  const row = document.getElementById('equip-' + rowId);
+  if (!row) return;
+  const cells = row.querySelectorAll('.equip-cell');
+  const name  = cells[0]?.innerText?.trim() || '';
+  const desc  = cells[1]?.innerText?.trim() || '';
+  if (!name || name === WARP_ITEM_NAME) return; // don't put the bag itself in itself
+
+  // Remove from local inventory immediately
+  removeEquip(rowId);
+  scheduleSave();
+
+  // Push to Firebase
+  try {
+    const charName = document.querySelector('.info-value[contenteditable]')?.textContent?.trim() || 'Игрок';
+    const pushKey  = 'wi_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+    await fetch(`${FIREBASE_CONFIG.databaseURL}/warpbag/items/${pushKey}.json`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, desc, addedBy: CHAR_UUID, addedByName: charName, ts: Date.now() }),
+    });
+  } catch(e) {
+    // If Firebase fails, return item to inventory
+    addEquip({ name, desc });
+    scheduleSave();
+    if (typeof showFbNotification === 'function') showFbNotification('Не удалось добавить в сумку варпа', 'warn');
+  }
+}
+
+// Take item from warp bag into inventory
+async function takeFromWarpBag(key) {
+  if (!FIREBASE_CONFIG?.databaseURL) return;
+  const item = _warpItems[key];
+  if (!item) return;
+
+  // Optimistic: remove from local mirror and re-render
+  delete _warpItems[key];
+  renderWarpBag();
+
+  try {
+    // Delete from Firebase — all others will see it disappear via SSE
+    await fetch(`${FIREBASE_CONFIG.databaseURL}/warpbag/items/${key}.json`, { method: 'DELETE' });
+    // Add to local inventory
+    addEquip({ name: item.name, desc: item.desc });
+    scheduleSave();
+  } catch(e) {
+    // Restore on failure
+    _warpItems[key] = item;
+    renderWarpBag();
+    if (typeof showFbNotification === 'function') showFbNotification('Не удалось забрать предмет', 'warn');
+  }
+}
+
+// Hook warp bag check into scheduleSave so it updates as inventory changes
+const _origScheduleSave = typeof scheduleSave !== 'undefined' ? scheduleSave : null;
+
 // ── INIT ─────────────────────────────────────────────────────────────────────
 buildCircle();buildSparks();buildHpBoxes('barrier-boxes',0);buildHpBoxes('life-boxes',0);buildObelisks();
 if(!loadAll()){for(let i=0;i<5;i++)addSpell();for(let i=0;i<3;i++)addEquip();}
+checkWarpBagPresence();
 checkPendingSpell();
 loadClassSkills();
 // Firebase realtime — пати, логи, уведомления
@@ -1996,6 +2564,163 @@ document.querySelectorAll('[contenteditable]').forEach(el=>el.addEventListener('
 document.getElementById('notes-area').addEventListener('input',scheduleSave);
 document.getElementById('mana-cur').addEventListener('input',scheduleSave);
 document.getElementById('mana-max-inp').addEventListener('input',scheduleSave);
+
+// ── ARENA BANNER ─────────────────────────────────────────────────────────────
+// Polls all active arenas to find if this character is currently fighting.
+// Updates in realtime via SSE once found.
+(function initArenaBanner() {
+  if (!FIREBASE_CONFIG?.databaseURL) return;
+  const FB = FIREBASE_CONFIG.databaseURL;
+  const ADJ_COLORS_A = {natisk:'#c9a84c',obman:'#e8934c',pokoj:'#9b7fe8',istsel:'#7ecba1',gospod:'#e05c5c',stoikost:'#6ab0f5'};
+  const ADJ_NAMES_A  = {natisk:'Натиск',obman:'Обман',pokoj:'Покой',istsel:'Исцеление',gospod:'Господство',stoikost:'Стойкость'};
+
+  let bannerEs = null;
+  let bannerArenaId = null;
+
+  const banner   = document.getElementById('arena-banner');
+  const linkEl   = document.getElementById('arena-banner-link');
+  const nameEl   = document.getElementById('arena-opp-name');
+  const barrierB = document.getElementById('arena-opp-barrier-bar');
+  const barrierN = document.getElementById('arena-opp-barrier-num');
+  const lifeB    = document.getElementById('arena-opp-life-bar');
+  const lifeN    = document.getElementById('arena-opp-life-num');
+  const buildEl  = document.getElementById('arena-opp-build');
+
+  function renderOpponent(opp) {
+    if (!opp) {
+      nameEl.textContent = 'Ожидание соперника…';
+      barrierB.style.width = '0%'; barrierN.textContent = '— / —';
+      lifeB.style.width = '0%';    lifeN.textContent = '— / —';
+      buildEl.textContent = '';
+      return;
+    }
+    nameEl.textContent = opp.charName || '—';
+    const bPct = opp.barrierMax > 0 ? Math.max(0, Math.min(100, opp.barrierCur / opp.barrierMax * 100)) : 0;
+    const lPct = opp.lifeMax    > 0 ? Math.max(0, Math.min(100, opp.lifeCur    / opp.lifeMax    * 100)) : 0;
+    barrierB.style.width = bPct + '%';
+    barrierN.textContent = opp.barrierCur + ' / ' + opp.barrierMax;
+    lifeB.style.width = lPct + '%';
+    lifeN.textContent = opp.lifeCur + ' / ' + opp.lifeMax;
+    const tags = (opp.adjActive || []).map(id => {
+      const c = ADJ_COLORS_A[id] || '#c9a84c';
+      return `<span style="font-family:'Cinzel',serif;font-size:7px;padding:1px 6px;border-radius:8px;border:1px solid ${c}44;color:${c};background:${c}0d;margin-right:3px;">${ADJ_NAMES_A[id]||id}</span>`;
+    }).join('');
+    buildEl.innerHTML = (opp.buildName ? `✦ ${opp.buildName} &nbsp;` : '') + tags;
+  }
+
+  function handleArenaUpdate(data) {
+    if (!data) { hideBanner(); return; }
+    if (data.status === 'done') { hideBanner(); return; }
+    const fighters = data.fighters || {};
+    // Find my side
+    let mySide = null, oppSide = null;
+    if (fighters.a?.uuid === CHAR_UUID) { mySide = 'a'; oppSide = 'b'; }
+    else if (fighters.b?.uuid === CHAR_UUID) { mySide = 'b'; oppSide = 'a'; }
+    if (!mySide) { hideBanner(); return; }
+    banner.style.display = '';
+    renderOpponent(fighters[oppSide] || null);
+  }
+
+  function hideBanner() {
+    banner.style.display = 'none';
+    if (bannerEs) { bannerEs.close(); bannerEs = null; bannerArenaId = null; }
+  }
+
+  function subscribeToArena(arenaId) {
+    if (bannerArenaId === arenaId) return;
+    if (bannerEs) { bannerEs.close(); bannerEs = null; }
+    bannerArenaId = arenaId;
+    linkEl.href = 'arena.html?arena=' + encodeURIComponent(arenaId);
+    bannerEs = new EventSource(`${FB}/arena/${encodeURIComponent(arenaId)}.json`);
+    bannerEs.addEventListener('put', e => {
+      try { const d = JSON.parse(e.data); handleArenaUpdate(d.data); } catch{}
+    });
+    bannerEs.onerror = () => {};
+  }
+
+  async function scanArenas() {
+    try {
+      const r = await fetch(`${FB}/arena.json?shallow=true`);
+      if (!r.ok) return;
+      const arenas = await r.json();
+      if (!arenas) return;
+      for (const arenaId of Object.keys(arenas)) {
+        const r2 = await fetch(`${FB}/arena/${encodeURIComponent(arenaId)}.json`);
+        if (!r2.ok) continue;
+        const data = await r2.json();
+        if (!data || data.status === 'done') continue;
+        const fighters = data.fighters || {};
+        const isInArena = fighters.a?.uuid === CHAR_UUID || fighters.b?.uuid === CHAR_UUID;
+        if (isInArena) {
+          subscribeToArena(arenaId);
+          handleArenaUpdate(data);
+          return;
+        }
+      }
+    } catch{}
+  }
+
+  // Initial scan + re-scan every 15s in case a new arena starts
+  scanArenas();
+  setInterval(scanArenas, 1500);
+
+  // Called by HP box click to push updated HP into the active arena
+  window.syncArenaHp = async function(cid) {
+  if (!FIREBASE_CONFIG?.databaseURL) return;
+
+  let arenaId = bannerArenaId;
+  // 🔥 если баннер ещё не нашёл арену — ищем прямо сейчас
+  if (!arenaId) {
+    try {
+      const r = await fetch(`${FB}/arena.json`);
+      if (!r.ok) return;
+      const arenas = await r.json();
+      if (!arenas) return;
+
+      for (const aid of Object.keys(arenas)) {
+        const fighters = arenas[aid]?.fighters || {};
+        if (fighters.a?.uuid === CHAR_UUID || fighters.b?.uuid === CHAR_UUID) {
+          arenaId = aid;
+          bannerArenaId = aid; // кешируем
+          break;
+        }
+      }
+    } catch {}
+  }
+
+  if (!arenaId) return;
+
+  try {
+    const r = await fetch(`${FB}/arena/${encodeURIComponent(arenaId)}.json`);
+    console.log("SYNC");
+    if (!r.ok) return;
+    const data = await r.json();
+    if (!data || data.status === 'done') return;
+
+    const fighters = data.fighters || {};
+    let mySide = null;
+
+    if (fighters.a?.uuid === CHAR_UUID) mySide = 'a';
+    else if (fighters.b?.uuid === CHAR_UUID) mySide = 'b';
+
+    if (!mySide) return;
+
+    const patch = {};
+    if (cid === 'barrier-boxes') patch.barrierCur = hpFill['barrier-boxes'] || 0;
+    else patch.lifeCur = hpFill['life-boxes'] || 0;
+
+    await fetch(`${FB}/arena/${encodeURIComponent(arenaId)}/fighters/${mySide}.json`, {
+      method: 'PATCH',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(patch)
+    });
+
+  } catch (e) {
+    console.error('syncArenaHp error:', e);
+  }
+};
+  
+})();
 </script>
 </body>
 </html>

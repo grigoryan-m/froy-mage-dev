@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Арена — Фройский Маг</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#080812;--panel:#0e0e1f;--panel2:#131328;--panel3:#1a1a35;
+  --accent:#7b5ea7;--accent2:#a67fd1;--gold:#c9a84c;--gold-l:#e8c96e;--gold-d:#8a6a20;
+  --text:#e8e0f0;--text-dim:#7a6f90;--text-mid:#b0a0c8;
+  --barrier:#5b8dee;--life:#e05c5c;--line:#2a1f45;--spark-off:#1e1830;
+  --red:#e05c5c;--green:#4cbb8a;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  background:var(--bg);color:var(--text);
+  font-family:'Crimson Pro',Georgia,serif;
+  min-height:100vh;padding:24px 16px 60px;
+  background-image:
+    radial-gradient(ellipse 80% 60% at 50% 0%,rgba(123,94,167,.09) 0%,transparent 70%),
+    radial-gradient(ellipse 40% 40% at 20% 80%,rgba(91,141,238,.05) 0%,transparent 60%);
+}
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:
+    radial-gradient(1px 1px at 10% 15%,rgba(255,255,255,.18) 0%,transparent 100%),
+    radial-gradient(1px 1px at 25% 40%,rgba(255,255,255,.12) 0%,transparent 100%),
+    radial-gradient(1px 1px at 40% 8%,rgba(255,255,255,.15) 0%,transparent 100%),
+    radial-gradient(1px 1px at 60% 25%,rgba(255,255,255,.10) 0%,transparent 100%),
+    radial-gradient(1px 1px at 75% 55%,rgba(255,255,255,.14) 0%,transparent 100%),
+    radial-gradient(1px 1px at 88% 12%,rgba(255,255,255,.16) 0%,transparent 100%),
+    radial-gradient(1px 1px at 33% 85%,rgba(255,255,255,.11) 0%,transparent 100%),
+    radial-gradient(1px 1px at 92% 45%,rgba(255,255,255,.13) 0%,transparent 100%);
+}
+.sheet{position:relative;max-width:900px;margin:0 auto;z-index:1;}
+
+/* ── HEADER ── */
+.header{
+  text-align:center;padding:28px 20px 20px;
+  border:1px solid var(--accent);border-radius:10px;
+  background:var(--panel);margin-bottom:20px;position:relative;overflow:hidden;
+}
+.header::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 80% at 50% 50%,rgba(123,94,167,.12) 0%,transparent 70%);}
+.header-deco{position:absolute;top:14px;left:50%;transform:translateX(-50%);width:200px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);}
+.header h1{font-family:'Cinzel',serif;font-size:26px;font-weight:700;letter-spacing:6px;color:var(--gold-l);text-shadow:0 0 30px rgba(201,168,76,.4);position:relative;}
+.header-sub{font-size:13px;color:var(--accent2);letter-spacing:3px;margin-top:6px;font-style:italic;position:relative;}
+.back-link{
+  position:absolute;left:16px;top:50%;transform:translateY(-50%);
+  font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;color:var(--text-dim);
+  text-decoration:none;border:1px solid var(--line);padding:6px 12px;border-radius:5px;
+  transition:all .2s;z-index:1;
+}
+.back-link:hover{color:var(--gold);border-color:var(--gold-d);}
+
+/* ── LIVE INDICATOR ── */
+.live-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  font-family:'Cinzel',serif;font-size:8px;letter-spacing:2px;color:var(--green);
+  position:absolute;right:16px;top:50%;transform:translateY(-50%);
+  border:1px solid rgba(76,187,138,.3);padding:5px 12px;border-radius:20px;
+  background:rgba(76,187,138,.06);
+}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:live-pulse 1.5s ease-in-out infinite;}
+.live-badge.offline{color:var(--text-dim);border-color:rgba(122,111,144,.3);background:rgba(122,111,144,.05);}
+.live-badge.offline .live-dot{background:var(--text-dim);animation:none;}
+@keyframes live-pulse{0%,100%{opacity:.5;transform:scale(1);}50%{opacity:1;transform:scale(1.3);}}
+
+/* ── SECTION TITLE ── */
+.section-title{
+  font-family:'Cinzel',serif;font-size:10px;letter-spacing:3px;color:var(--gold-l);
+  margin-bottom:12px;display:flex;align-items:center;gap:8px;
+}
+.section-title::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--gold-d),transparent);}
+
+/* ── PHASE PANELS ── */
+#phase-select, #phase-wait, #phase-fight, #phase-spectate{display:none;}
+#phase-select.active, #phase-wait.active, #phase-fight.active, #phase-spectate.active{display:block;}
+
+/* ── CHARACTER PICKER ── */
+.pick-panel{
+  background:var(--panel);border:1px solid var(--accent);border-radius:10px;
+  padding:20px;margin-bottom:16px;
+}
+.char-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-top:12px;}
+.char-card{
+  background:var(--panel2);border:1px solid var(--line);border-radius:8px;
+  padding:14px 16px;cursor:pointer;transition:all .2s;position:relative;
+}
+.char-card:hover{border-color:var(--accent2);background:var(--panel3);}
+.char-card.selected{border-color:var(--gold);background:rgba(201,168,76,.07);}
+.char-card.disabled{opacity:.4;pointer-events:none;}
+.char-name{font-family:'Cinzel',serif;font-size:13px;color:var(--text);margin-bottom:4px;}
+.char-player{font-size:11px;color:var(--text-dim);font-style:italic;}
+.char-hp-preview{display:flex;gap:12px;margin-top:8px;}
+.char-hp-item{font-family:'Cinzel',serif;font-size:9px;letter-spacing:1px;}
+.char-hp-item.b{color:var(--barrier);}
+.char-hp-item.l{color:var(--life);}
+.char-tags{margin-top:8px;display:flex;flex-wrap:wrap;gap:3px;}
+.no-chars{font-size:13px;color:var(--text-dim);font-style:italic;padding:20px 0;text-align:center;}
+
+/* ── ENTER BUTTON ── */
+.enter-btn{
+  font-family:'Cinzel',serif;font-size:10px;letter-spacing:3px;
+  padding:12px 32px;border-radius:6px;border:1px solid var(--gold);
+  color:var(--gold-l);background:rgba(201,168,76,.08);cursor:pointer;
+  transition:all .2s;margin-top:16px;display:block;width:100%;
+  text-align:center;
+}
+.enter-btn:hover{background:rgba(201,168,76,.18);box-shadow:0 0 20px rgba(201,168,76,.15);}
+.enter-btn:disabled{opacity:.4;cursor:not-allowed;pointer-events:none;}
+
+/* ── WAIT PANEL ── */
+.wait-panel{
+  background:var(--panel);border:1px solid var(--accent);border-radius:10px;
+  padding:28px 20px;text-align:center;
+}
+.wait-icon{font-size:36px;margin-bottom:16px;animation:wait-spin 4s linear infinite;}
+@keyframes wait-spin{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
+.wait-title{font-family:'Cinzel',serif;font-size:14px;letter-spacing:3px;color:var(--gold-l);margin-bottom:8px;}
+.wait-sub{font-size:13px;color:var(--text-dim);font-style:italic;}
+.leave-btn{
+  font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;
+  padding:8px 22px;border-radius:5px;border:1px solid var(--line);
+  color:var(--text-dim);background:none;cursor:pointer;
+  transition:all .2s;margin-top:20px;
+}
+.leave-btn:hover{border-color:var(--life);color:var(--life);}
+
+/* ── FIGHT PANEL ── */
+.fight-arena{position:relative;}
+
+/* VS HEADER */
+.vs-row{
+  display:grid;grid-template-columns:1fr 60px 1fr;align-items:center;
+  gap:16px;margin-bottom:20px;
+}
+.vs-label{
+  font-family:'Cinzel',serif;font-size:20px;font-weight:700;letter-spacing:4px;
+  color:var(--gold-l);text-align:center;text-shadow:0 0 20px rgba(201,168,76,.4);
+  animation:vs-pulse 2s ease-in-out infinite;
+}
+@keyframes vs-pulse{0%,100%{opacity:.8;}50%{opacity:1;text-shadow:0 0 30px rgba(201,168,76,.7);}}
+
+/* FIGHTER CARD */
+.fighter-card{
+  background:var(--panel);border-radius:10px;padding:18px;
+  border:1px solid var(--line);position:relative;overflow:hidden;
+  transition:border-color .3s;
+}
+.fighter-card.is-me{border-color:var(--accent);}
+.fighter-card.dead{border-color:rgba(224,92,92,.3);opacity:.7;}
+.fighter-card::before{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse 60% 60% at 50% 0%,rgba(123,94,167,.07) 0%,transparent 70%);
+}
+.fighter-name{font-family:'Cinzel',serif;font-size:16px;color:var(--gold-l);margin-bottom:3px;letter-spacing:1px;}
+.fighter-player{font-size:11px;color:var(--text-dim);font-style:italic;margin-bottom:14px;}
+.me-badge{
+  display:inline-block;font-family:'Cinzel',serif;font-size:7px;letter-spacing:2px;
+  color:var(--accent2);border:1px solid var(--accent);padding:2px 8px;border-radius:10px;
+  margin-left:6px;vertical-align:middle;
+}
+
+/* HP BARS */
+.hp-section{margin-bottom:12px;}
+.hp-label{font-family:'Cinzel',serif;font-size:8px;letter-spacing:2px;margin-bottom:4px;}
+.hp-label.b{color:var(--barrier);}
+.hp-label.l{color:var(--life);}
+.hp-bar-wrap{background:rgba(0,0,0,.35);border-radius:4px;height:10px;overflow:hidden;margin-bottom:3px;position:relative;}
+.hp-bar{height:100%;border-radius:4px;transition:width .5s cubic-bezier(.4,0,.2,1);}
+.hp-bar.b{background:linear-gradient(90deg,#3a6fd8,var(--barrier));box-shadow:0 0 8px rgba(91,141,238,.3);}
+.hp-bar.l{background:linear-gradient(90deg,#c0302a,var(--life));box-shadow:0 0 8px rgba(224,92,92,.3);}
+.hp-nums{font-family:'Cinzel',serif;font-size:10px;text-align:right;}
+.hp-nums.b{color:var(--barrier);}
+.hp-nums.l{color:var(--life);}
+
+/* BUILD TAGS */
+.build-row{
+  margin-top:12px;padding-top:10px;border-top:1px solid var(--line);
+  font-family:'Cinzel',serif;font-size:9px;
+}
+.build-row-label{color:var(--text-dim);letter-spacing:2px;margin-bottom:5px;}
+.build-name{color:var(--gold);margin-bottom:4px;}
+.tag-list{display:flex;gap:4px;flex-wrap:wrap;}
+
+/* REALTIME FLASH */
+@keyframes hp-flash{0%{box-shadow:0 0 0 0 rgba(201,168,76,.6);}50%{box-shadow:0 0 0 6px rgba(201,168,76,.0);}100%{box-shadow:none;}}
+.hp-updated{animation:hp-flash .6s ease-out;}
+
+/* ── VICTORY BANNER ── */
+#victory-overlay{
+  display:none;position:fixed;inset:0;z-index:500;
+  background:rgba(4,4,18,.88);backdrop-filter:blur(6px);
+  align-items:center;justify-content:center;
+}
+#victory-overlay.show{display:flex;}
+.victory-modal{
+  background:var(--panel);border:1px solid var(--gold-d);border-radius:16px;
+  padding:40px 48px;text-align:center;max-width:420px;width:90%;
+  box-shadow:0 20px 80px rgba(0,0,0,.8),0 0 60px rgba(201,168,76,.15);
+  animation:modal-in .5s cubic-bezier(.34,1.56,.64,1);position:relative;overflow:hidden;
+}
+@keyframes modal-in{from{opacity:0;transform:scale(.8) translateY(30px);}to{opacity:1;transform:scale(1) translateY(0);}}
+.victory-modal::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 80% at 50% 20%,rgba(201,168,76,.10) 0%,transparent 70%);}
+.victory-icon{font-size:48px;margin-bottom:16px;position:relative;}
+.victory-title{font-family:'Cinzel',serif;font-size:11px;letter-spacing:4px;color:var(--text-dim);margin-bottom:8px;position:relative;}
+.victory-name{font-family:'Cinzel',serif;font-size:26px;font-weight:700;color:var(--gold-l);letter-spacing:3px;margin-bottom:20px;text-shadow:0 0 30px rgba(201,168,76,.5);position:relative;}
+.mmr-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:24px;position:relative;}
+.mmr-cell{background:var(--panel2);border-radius:8px;padding:12px 16px;border:1px solid var(--line);}
+.mmr-cell-name{font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;color:var(--text-dim);margin-bottom:5px;}
+.mmr-cell-name.winner{color:var(--green);}
+.mmr-cell-name.loser{color:var(--life);}
+.mmr-val{font-family:'Cinzel',serif;font-size:18px;font-weight:700;}
+.mmr-val.win{color:var(--green);}
+.mmr-val.lose{color:var(--life);}
+.mmr-delta{font-size:11px;font-style:italic;color:var(--text-dim);}
+.rematch-btn{
+  font-family:'Cinzel',serif;font-size:10px;letter-spacing:3px;
+  padding:12px 36px;border-radius:6px;border:1px solid var(--gold);
+  color:var(--gold-l);background:rgba(201,168,76,.08);cursor:pointer;
+  transition:all .2s;width:100%;
+}
+.rematch-btn:hover{background:rgba(201,168,76,.2);}
+
+/* ── SPECTATOR VIEW ── */
+.spectate-header{
+  background:var(--panel);border:1px solid rgba(123,94,167,.4);border-radius:10px;
+  padding:12px 18px;margin-bottom:20px;display:flex;align-items:center;gap:10px;
+}
+.spectate-badge{
+  font-family:'Cinzel',serif;font-size:8px;letter-spacing:3px;color:var(--accent2);
+  border:1px solid rgba(123,94,167,.4);padding:4px 12px;border-radius:20px;
+  background:rgba(123,94,167,.08);animation:spec-pulse 3s ease-in-out infinite;
+}
+@keyframes spec-pulse{0%,100%{opacity:.7;}50%{opacity:1;}}
+.spectate-info{font-size:12px;color:var(--text-dim);font-style:italic;}
+
+/* ── GENERAL PANELS ── */
+.arena-panel{
+  background:var(--panel);border:1px solid var(--accent);border-radius:10px;
+  padding:16px;margin-bottom:16px;
+}
+.arena-empty{
+  font-size:13px;color:var(--text-dim);font-style:italic;text-align:center;padding:24px 0;
+}
+
+/* ── TOAST ── */
+#arena-toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:var(--panel3);border:1px solid var(--accent);border-radius:8px;
+  padding:10px 22px;font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;
+  color:var(--gold-l);opacity:0;transition:all .3s;pointer-events:none;z-index:999;
+  white-space:nowrap;
+}
+
+/* ── ARENA STATUS BAR ── */
+.arena-status-bar{
+  background:var(--panel2);border:1px solid var(--line);border-radius:8px;
+  padding:10px 16px;margin-bottom:16px;display:flex;align-items:center;
+  justify-content:space-between;gap:12px;font-family:'Cinzel',serif;
+  font-size:9px;letter-spacing:2px;color:var(--text-dim);
+}
+.status-arena-id{color:var(--accent2);font-size:8px;}
+
+/* ── MMR DISPLAY ── */
+.mmr-display{
+  display:inline-flex;align-items:center;gap:6px;
+  font-family:'Cinzel',serif;font-size:9px;letter-spacing:1px;
+  color:var(--gold);border:1px solid var(--gold-d);
+  padding:4px 12px;border-radius:10px;background:rgba(201,168,76,.06);
+  margin-top:4px;
+}
+
+@media(max-width:640px){
+  .vs-row{grid-template-columns:1fr;gap:8px;}
+  .vs-label{font-size:16px;}
+  .mmr-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+<div class="sheet">
+
+<!-- ── HEADER ── -->
+<div class="header">
+  <a href="characters.html" class="back-link">← Персонажи</a>
+  <div class="header-deco"></div>
+  <h1>АРЕНА</h1>
+  <div class="header-sub">Бой в реальном времени &nbsp;•&nbsp; Фройский Маг</div>
+  <div class="live-badge" id="live-badge">
+    <div class="live-dot"></div>
+    LIVE
+  </div>
+</div>
+
+<!-- ── PHASE: SELECT CHARACTER ── -->
+<div id="phase-select">
+  <div class="pick-panel">
+    <div class="section-title">ВЫБЕРИ ПЕРСОНАЖА</div>
+    <div style="font-size:12px;color:var(--text-dim);font-style:italic;margin-bottom:14px;">
+      Войди в арену с одним из своих персонажей. Сохранённые данные загрузятся автоматически.
+    </div>
+    <div class="char-grid" id="char-grid">
+      <div class="no-chars">Загружаем персонажей…</div>
+    </div>
+    <button class="enter-btn" id="enter-btn" disabled onclick="enterArena()">⚔ ВОЙТИ В АРЕНУ</button>
+  </div>
+</div>
+
+<!-- ── PHASE: WAITING FOR OPPONENT ── -->
+<div id="phase-wait">
+  <div class="wait-panel">
+    <div class="wait-icon">⚔</div>
+    <div class="wait-title">ОЖИДАНИЕ СОПЕРНИКА</div>
+    <div class="wait-sub" id="wait-sub">Ждём второго бойца…</div>
+    <div style="margin-top:16px;font-family:'Cinzel',serif;font-size:8px;letter-spacing:2px;color:var(--text-dim);">
+      ID АРЕНЫ: <span id="wait-arena-id" style="color:var(--accent2);">—</span>
+    </div>
+    <button class="leave-btn" onclick="leaveArena()">← Покинуть арену</button>
+  </div>
+</div>
+
+<!-- ── PHASE: FIGHT ── -->
+<div id="phase-fight">
+  <div class="arena-status-bar">
+    <div>⚔ БОЙ ИДЁТ</div>
+    <div>АРЕНА: <span id="fight-arena-id" class="status-arena-id">—</span></div>
+    <div id="fight-sync-label" style="color:var(--green);">● онлайн</div>
+  </div>
+
+  <div class="fight-arena">
+    <div class="vs-row">
+      <!-- Fighter A -->
+      <div class="fighter-card" id="card-a">
+        <div class="fighter-name" id="name-a">—</div>
+        <div class="fighter-player" id="player-a">игрок</div>
+        <div class="hp-section">
+          <div class="hp-label b">⬡ БАРЬЕР</div>
+          <div class="hp-bar-wrap"><div class="hp-bar b" id="bar-barrier-a" style="width:100%"></div></div>
+          <div class="hp-nums b" id="num-barrier-a">— / —</div>
+        </div>
+        <div class="hp-section">
+          <div class="hp-label l">♥ ЖИЗНЬ</div>
+          <div class="hp-bar-wrap"><div class="hp-bar l" id="bar-life-a" style="width:100%"></div></div>
+          <div class="hp-nums l" id="num-life-a">— / —</div>
+        </div>
+        <div class="build-row">
+          <div class="build-row-label">БИЛД</div>
+          <div class="build-name" id="build-name-a">—</div>
+          <div class="tag-list" id="tags-a"></div>
+        </div>
+        <div style="margin-top:8px;"><div class="mmr-display">ММР: <span id="mmr-a">—</span></div></div>
+      </div>
+
+      <div class="vs-label">VS</div>
+
+      <!-- Fighter B -->
+      <div class="fighter-card" id="card-b">
+        <div class="fighter-name" id="name-b">—</div>
+        <div class="fighter-player" id="player-b">игрок</div>
+        <div class="hp-section">
+          <div class="hp-label b">⬡ БАРЬЕР</div>
+          <div class="hp-bar-wrap"><div class="hp-bar b" id="bar-barrier-b" style="width:100%"></div></div>
+          <div class="hp-nums b" id="num-barrier-b">— / —</div>
+        </div>
+        <div class="hp-section">
+          <div class="hp-label l">♥ ЖИЗНЬ</div>
+          <div class="hp-bar-wrap"><div class="hp-bar l" id="bar-life-b" style="width:100%"></div></div>
+          <div class="hp-nums l" id="num-life-b">— / —</div>
+        </div>
+        <div class="build-row">
+          <div class="build-row-label">БИЛД</div>
+          <div class="build-name" id="build-name-b">—</div>
+          <div class="tag-list" id="tags-b"></div>
+        </div>
+        <div style="margin-top:8px;"><div class="mmr-display">ММР: <span id="mmr-b">—</span></div></div>
+      </div>
+    </div><!-- .vs-row -->
+  </div><!-- .fight-arena -->
+</div>
+
+<!-- ── PHASE: SPECTATE ── -->
+<div id="phase-spectate">
+  <div class="spectate-header">
+    <div class="spectate-badge">👁 НАБЛЮДАТЕЛЬ</div>
+    <div class="spectate-info">Вы наблюдаете за боем. Все данные обновляются в реальном времени.</div>
+  </div>
+  <!-- same fight UI reused — spectators see identical cards -->
+</div>
+
+</div><!-- .sheet -->
+
+<!-- ── VICTORY OVERLAY ── -->
+<div id="victory-overlay">
+  <div class="victory-modal">
+    <div class="victory-icon" id="victory-icon">🏆</div>
+    <div class="victory-title">ПОБЕДИТЕЛЬ</div>
+    <div class="victory-name" id="victory-winner-name">—</div>
+    <div class="mmr-grid" id="victory-mmr-grid"></div>
+    <button class="rematch-btn" onclick="onVictoryClose()">↻ НОВЫЙ БОЙ</button>
+  </div>
+</div>
+
+<div id="arena-toast"></div>
+
+<script src="config.js"></script>
+<script>
+// ════════════════════════════════════════════════════════════════════════════
+// ARENA.HTML — Real-time PvP arena
+// Uses Firebase Realtime Database + SSE (EventSource) for instant updates.
+// No polling. Data path: /arena/{arenaId}
+//
+// Schema:
+// /arena/{id}: {
+//   status: 'waiting' | 'fight' | 'done',
+//   fighters: {
+//     a: { uuid, charId, charName, playerName, barrierCur, barrierMax, lifeCur, lifeMax, buildName, adjActive[], mmr },
+//     b: { ... }
+//   },
+//   winner: 'a'|'b',          // set when status='done'
+//   mmrDelta: { a: +N, b: -N } // MMR change after fight
+// }
+// ════════════════════════════════════════════════════════════════════════════
+
+const FB = (typeof FIREBASE_CONFIG !== 'undefined' && FIREBASE_CONFIG?.databaseURL)
+  ? FIREBASE_CONFIG.databaseURL
+  : null;
+
+// ── COLOUR MAP FOR ADJ TAGS ──────────────────────────────────────────────────
+const ADJ_COLORS = {natisk:'#c9a84c',obman:'#e8934c',pokoj:'#9b7fe8',istsel:'#7ecba1',gospod:'#e05c5c',stoikost:'#6ab0f5'};
+const ADJ_NAMES  = {natisk:'Натиск',obman:'Обман',pokoj:'Покой',istsel:'Исцеление',gospod:'Господство',stoikost:'Стойкость'};
+
+// ── STATE ────────────────────────────────────────────────────────────────────
+let myCharId   = null;   // localStorage key suffix for selected char
+let myCharData = null;   // snapshot of char data at entry time
+let myUUID     = null;   // uuid stored per-char
+let arenaId    = null;   // current arena Firebase key
+let mySide     = null;   // 'a' or 'b'
+let arenaEs    = null;   // EventSource listening to arena node
+let lastState  = null;   // last known arena data snapshot
+let victoryShown = false;
+
+// ── UTIL ─────────────────────────────────────────────────────────────────────
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function el(id){ return document.getElementById(id); }
+
+function showToast(msg, dur=3000){
+  const t = el('arena-toast');
+  t.textContent = msg;
+  t.style.opacity = '1';
+  t.style.transform = 'translateX(-50%) translateY(0)';
+  clearTimeout(t._t);
+  t._t = setTimeout(()=>{
+    t.style.opacity='0';
+    t.style.transform='translateX(-50%) translateY(20px)';
+  }, dur);
+}
+
+function setLive(on){
+  const b = el('live-badge');
+  if(on) b.classList.remove('offline');
+  else   b.classList.add('offline');
+}
+
+function showPhase(name){
+  ['phase-select','phase-wait','phase-fight','phase-spectate'].forEach(id=>{
+    const e = el(id);
+    if(e) e.classList.remove('active');
+  });
+  const target = el('phase-' + name);
+  if(target) target.classList.add('active');
+}
+
+// ── CHARACTER LOADING ────────────────────────────────────────────────────────
+function loadAllChars(){
+  // Characters are stored as froyskyy_chars_index in localStorage,
+  // each entry { id, name, savedAt } and data at froyskyy_char_{id}
+  const grid = el('char-grid');
+  const idxRaw = localStorage.getItem('froyskyy_chars_index');
+  const idx = idxRaw ? JSON.parse(idxRaw) : [];
+
+  if(!idx.length){
+    grid.innerHTML = '<div class="no-chars">Нет сохранённых персонажей. Создай персонажа на странице <a href="characters.html" style="color:var(--accent2)">Персонажи</a>.</div>';
+    return;
+  }
+
+  grid.innerHTML = '';
+  idx.forEach(entry => {
+    const raw = localStorage.getItem('froyskyy_char_' + entry.id);
+    if(!raw) return;
+    let data;
+    try { data = JSON.parse(raw); } catch{ return; }
+
+    const barrierMax = parseInt(data.barrierMax)||0;
+    const lifeMax    = parseInt(data.lifeMax)||0;
+    const barrierCur = data.hpFill?.['barrier-boxes'] || 0;
+    const lifeCur    = data.hpFill?.['life-boxes']    || 0;
+
+    // Build tag
+    const adjActive = data.adjActive || [];
+    const tagsHtml = adjActive.map(id => {
+      const c = ADJ_COLORS[id]||'#c9a84c';
+      return `<span style="font-family:'Cinzel',serif;font-size:7px;padding:1px 6px;border-radius:8px;border:1px solid ${c}44;color:${c};background:${c}0d;">${ADJ_NAMES[id]||id}</span>`;
+    }).join('');
+
+    const card = document.createElement('div');
+    card.className = 'char-card';
+    card.dataset.charId = entry.id;
+    card.innerHTML = `
+      <div class="char-name">${esc(data.charName||entry.name||'Безымянный')}</div>
+      <div class="char-player">${esc(data.playerName||'—')}</div>
+      <div class="char-hp-preview">
+        <span class="char-hp-item b">⬡ ${barrierCur}/${barrierMax}</span>
+        <span class="char-hp-item l">♥ ${lifeCur}/${lifeMax}</span>
+      </div>
+      ${tagsHtml ? `<div class="char-tags">${tagsHtml}</div>` : ''}
+    `;
+    card.onclick = () => selectChar(card, entry.id);
+    grid.appendChild(card);
+  });
+}
+
+let selectedCharId = null;
+function selectChar(card, charId){
+  document.querySelectorAll('.char-card').forEach(c=>c.classList.remove('selected'));
+  card.classList.add('selected');
+  selectedCharId = charId;
+  el('enter-btn').disabled = false;
+}
+
+// ── ENTER ARENA ──────────────────────────────────────────────────────────────
+async function enterArena(){
+  if(!selectedCharId) return;
+  if(!FB){ showToast('Firebase не настроен — реалтайм недоступен'); return; }
+
+  const raw = localStorage.getItem('froyskyy_char_' + selectedCharId);
+  if(!raw){ showToast('Данные персонажа не найдены'); return; }
+  let data;
+  try { data = JSON.parse(raw); } catch{ showToast('Ошибка данных персонажа'); return; }
+
+  myCharId   = selectedCharId;
+  myCharData = data;
+  // UUID stored per character save key
+  const uuidKey = 'froyskyy_char_' + selectedCharId + '_uuid';
+  myUUID = localStorage.getItem(uuidKey) || data.charUUID || ('anon-' + Date.now());
+
+  // Get MMR
+  const mmrKey = 'arena_mmr_' + myUUID;
+  const myMmr  = parseInt(localStorage.getItem(mmrKey)) || 1000;
+
+  const adjActive = data.adjActive || [];
+  const buildName = data.buildName || (()=>{
+    // Try to reconstruct buildName from adjActive
+    return '';
+  })();
+
+  const fighterPayload = {
+    uuid:       myUUID,
+    charId:     myCharId,
+    charName:   data.charName  || 'Безымянный',
+    playerName: data.playerName|| '—',
+    barrierCur: data.hpFill?.['barrier-boxes'] || 0,
+    barrierMax: parseInt(data.barrierMax)||0,
+    lifeCur:    data.hpFill?.['life-boxes']    || 0,
+    lifeMax:    parseInt(data.lifeMax)||0,
+    buildName:  data.buildName || '',
+    adjActive:  adjActive,
+    mmr:        myMmr,
+  };
+
+  // Check for existing open arenas (status='waiting')
+  try {
+    const r = await fetch(`${FB}/arena.json?shallow=true`);
+    const arenas = r.ok ? (await r.json()) : null;
+    let joinedExisting = false;
+
+    if(arenas){
+      for(const aid of Object.keys(arenas)){
+        const r2 = await fetch(`${FB}/arena/${encodeURIComponent(aid)}.json`);
+        if(!r2.ok) continue;
+        const aData = await r2.json();
+        if(!aData || aData.status !== 'waiting') continue;
+        const fighters = aData.fighters || {};
+        // Don't join if we are already fighter A (same UUID)
+        if(fighters.a?.uuid === myUUID) continue;
+        // Don't join if same char is already in an active arena
+        if(fighters.a?.charId === myCharId) continue;
+        // Validate: fighter A's UUID must differ
+        if(!fighters.a) continue;
+
+        // Join as fighter B
+        arenaId = aid;
+        mySide  = 'b';
+        await fetch(`${FB}/arena/${encodeURIComponent(arenaId)}/fighters/b.json`, {
+          method:'PUT', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify(fighterPayload)
+        });
+        // Start fight
+        await fetch(`${FB}/arena/${encodeURIComponent(arenaId)}.json`, {
+          method:'PATCH', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ status:'fight' })
+        });
+        joinedExisting = true;
+        break;
+      }
+    }
+
+    if(!joinedExisting){
+      // Create new arena, wait as fighter A
+      arenaId = 'arena_' + Date.now() + '_' + Math.random().toString(36).slice(2,6);
+      mySide  = 'a';
+      await fetch(`${FB}/arena/${encodeURIComponent(arenaId)}.json`, {
+        method:'PUT', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          status: 'waiting',
+          fighters: { a: fighterPayload }
+        })
+      });
+      showPhase('wait');
+      el('wait-arena-id').textContent = arenaId;
+    }
+
+    subscribeToArena();
+    if(joinedExisting){
+      showPhase('fight');
+      el('fight-arena-id').textContent = arenaId;
+    }
+
+  } catch(e){
+    showToast('Ошибка подключения к арене: ' + e.message);
+  }
+}
+
+// ── LEAVE / CLEAN UP ─────────────────────────────────────────────────────────
+async function leaveArena(){
+  if(!arenaId || !FB) { resetToSelect(); return; }
+  try {
+    // Only delete if still in waiting state
+    const r = await fetch(`${FB}/arena/${encodeURIComponent(arenaId)}.json`);
+    const d = r.ok ? await r.json() : null;
+    if(d && d.status === 'waiting'){
+      await fetch(`${FB}/arena/${encodeURIComponent(arenaId)}.json`, { method:'DELETE' });
+    }
+  } catch{}
+  resetToSelect();
+}
+
+function resetToSelect(){
+  if(arenaEs){ arenaEs.close(); arenaEs = null; }
+  arenaId = null; mySide = null; myCharId = null; myCharData = null;
+  selectedCharId = null; lastState = null; victoryShown = false;
+  document.querySelectorAll('.char-card').forEach(c=>c.classList.remove('selected'));
+  el('enter-btn').disabled = true;
+  loadAllChars();
+  showPhase('select');
+}
+
+// ── SSE SUBSCRIPTION ─────────────────────────────────────────────────────────
+function subscribeToArena(){
+  if(!arenaId || !FB) return;
+  if(arenaEs){ arenaEs.close(); arenaEs = null; }
+
+  const url = `${FB}/arena/${encodeURIComponent(arenaId)}.json`;
+  arenaEs = new EventSource(url);
+
+  arenaEs.addEventListener('put', e => {
+    try {
+      const msg = JSON.parse(e.data);
+      // msg.path is '/' or '/fighters/a/barrierCur' etc.
+      if(msg.path === '/'){
+        lastState = msg.data;
+      } else {
+        // Patch lastState
+        lastState = lastState || {};
+        applyPatch(lastState, msg.path, msg.data);
+      }
+      setLive(true);
+      handleArenaState(lastState);
+    } catch{}
+  });
+
+  arenaEs.addEventListener('patch', e => {
+    try {
+      const msg = JSON.parse(e.data);
+      lastState = lastState || {};
+      if(msg.path === '/'){
+        Object.assign(lastState, msg.data||{});
+      } else {
+        applyPatch(lastState, msg.path, msg.data);
+      }
+      setLive(true);
+      handleArenaState(lastState);
+    } catch{}
+  });
+
+  arenaEs.onerror = () => { setLive(false); el('fight-sync-label').style.color='var(--life)'; el('fight-sync-label').textContent='● офлайн'; };
+}
+
+// Deep-apply a Firebase path patch to a local object
+function applyPatch(obj, path, data){
+  const parts = path.replace(/^\//, '').split('/').filter(Boolean);
+  if(!parts.length){ Object.assign(obj, data||{}); return; }
+  let cur = obj;
+  for(let i=0;i<parts.length-1;i++){
+    if(cur[parts[i]] === undefined || typeof cur[parts[i]] !== 'object') cur[parts[i]] = {};
+    cur = cur[parts[i]];
+  }
+  cur[parts[parts.length-1]] = data;
+}
+
+// ── HANDLE ARENA STATE ────────────────────────────────────────────────────────
+function handleArenaState(state){
+  if(!state){ return; }
+
+  const status   = state.status;
+  const fighters = state.fighters || {};
+
+  // Update sync indicator
+  el('fight-sync-label').style.color = 'var(--green)';
+  el('fight-sync-label').textContent  = '● онлайн';
+
+  // If this page is a spectator (no mySide), just render fight view
+  if(!mySide){
+    if(status === 'fight' || status === 'done'){
+      showPhase('spectate');
+      // Spectate phase shows the fight cards — we'll inject them into phase-fight
+      // then also show phase-fight inside phase-spectate wrapper
+      el('phase-fight').style.display = 'block';
+    }
+    renderFighters(fighters);
+    if(status === 'done' && !victoryShown) showVictory(state, fighters);
+    return;
+  }
+
+  if(status === 'waiting'){
+    showPhase('wait');
+    el('wait-arena-id').textContent = arenaId;
+    return;
+  }
+
+  if(status === 'fight'){
+    showPhase('fight');
+    el('fight-arena-id').textContent = arenaId;
+    // Mark my card
+    const myCardId   = 'card-' + mySide;
+    const theirCardId= 'card-' + (mySide==='a'?'b':'a');
+    el(myCardId)?.classList.add('is-me');
+    el(theirCardId)?.classList.remove('is-me');
+    renderFighters(fighters);
+  }
+
+  if(status === 'done' && !victoryShown){
+    showPhase('fight');
+    renderFighters(fighters);
+    showVictory(state, fighters);
+  }
+}
+
+// ── RENDER FIGHTERS ───────────────────────────────────────────────────────────
+let _prevHp = {};
+function renderFighters(fighters){
+  ['a','b'].forEach(side => {
+    const f = fighters[side];
+    if(!f) return;
+
+    const bPct = f.barrierMax>0 ? Math.max(0,Math.min(100, f.barrierCur/f.barrierMax*100)) : 0;
+    const lPct = f.lifeMax>0   ? Math.max(0,Math.min(100, f.lifeCur   /f.lifeMax   *100)) : 0;
+
+    el(`name-${side}`).textContent   = f.charName   || '—';
+    el(`player-${side}`).textContent = f.playerName || '—';
+
+    // HP bars with flash animation on change
+    const prevB = _prevHp[side+'b']; const prevL = _prevHp[side+'l'];
+    const barrierBar = el(`bar-barrier-${side}`);
+    const lifeBar    = el(`bar-life-${side}`);
+
+    barrierBar.style.width = bPct + '%';
+    lifeBar.style.width    = lPct + '%';
+
+    if(prevB !== undefined && prevB !== f.barrierCur){
+      flashEl(barrierBar.parentElement);
+    }
+    if(prevL !== undefined && prevL !== f.lifeCur){
+      flashEl(lifeBar.parentElement);
+    }
+    _prevHp[side+'b'] = f.barrierCur;
+    _prevHp[side+'l'] = f.lifeCur;
+
+    el(`num-barrier-${side}`).textContent = (f.barrierCur??'—') + ' / ' + (f.barrierMax??'—');
+    el(`num-life-${side}`).textContent    = (f.lifeCur??'—')    + ' / ' + (f.lifeMax??'—');
+
+    // Build
+    el(`build-name-${side}`).textContent = f.buildName || '—';
+    const tagsEl = el(`tags-${side}`);
+    const adjArr = f.adjActive || [];
+    tagsEl.innerHTML = adjArr.map(id=>{
+      const c = ADJ_COLORS[id]||'#c9a84c';
+      return `<span style="font-family:'Cinzel',serif;font-size:7px;padding:1px 7px;border-radius:8px;border:1px solid ${c}44;color:${c};background:${c}0d;">${ADJ_NAMES[id]||id}</span>`;
+    }).join('');
+
+    // MMR
+    const mmrEl = el(`mmr-${side}`);
+    if(mmrEl) mmrEl.textContent = f.mmr ?? '—';
+
+    // Dead state
+    const card = el(`card-${side}`);
+    if(card) card.classList.toggle('dead', (f.lifeCur||0) <= 0 && (f.lifeMax||0) > 0);
+  });
+}
+
+function flashEl(el){
+  el.classList.remove('hp-updated');
+  void el.offsetWidth; // reflow
+  el.classList.add('hp-updated');
+  setTimeout(()=>el.classList.remove('hp-updated'), 700);
+}
+
+// ── VICTORY ───────────────────────────────────────────────────────────────────
+function showVictory(state, fighters){
+  victoryShown = true;
+  const winSide   = state.winner;   // 'a' or 'b'
+  const loseSide  = winSide === 'a' ? 'b' : 'a';
+  const winner    = fighters[winSide]  || {};
+  const loser     = fighters[loseSide] || {};
+  const delta     = state.mmrDelta || {};
+
+  el('victory-winner-name').textContent = winner.charName || '—';
+  el('victory-icon').textContent = winSide === mySide ? '🏆' : (mySide ? '💀' : '🏆');
+
+  const winMmrNew  = (winner.mmr || 1000) + (delta[winSide]  || 0);
+  const loseMmrNew = (loser.mmr  || 1000) + (delta[loseSide] || 0);
+  const winDelta   = delta[winSide]  > 0 ? '+' + delta[winSide]  : String(delta[winSide]  || '+0');
+  const loseDelta  = delta[loseSide] < 0 ? String(delta[loseSide]) : '-' + Math.abs(delta[loseSide]||0);
+
+  el('victory-mmr-grid').innerHTML = `
+    <div class="mmr-cell">
+      <div class="mmr-cell-name winner">🏆 ${esc(winner.charName||'—')}</div>
+      <div class="mmr-val win">${winMmrNew}</div>
+      <div class="mmr-delta">${winDelta} ММР</div>
+    </div>
+    <div class="mmr-cell">
+      <div class="mmr-cell-name loser">💀 ${esc(loser.charName||'—')}</div>
+      <div class="mmr-val lose">${loseMmrNew}</div>
+      <div class="mmr-delta">${loseDelta} ММР</div>
+    </div>`;
+
+  // Save updated MMR to localStorage for our character
+  if(mySide && fighters[mySide]){
+    const uuid    = fighters[mySide].uuid;
+    const mmrKey  = 'arena_mmr_' + uuid;
+    const myDelta = delta[mySide] || 0;
+    const oldMmr  = fighters[mySide].mmr || 1000;
+    localStorage.setItem(mmrKey, Math.max(0, oldMmr + myDelta));
+  }
+
+  el('victory-overlay').classList.add('show');
+}
+
+function onVictoryClose(){
+  el('victory-overlay').classList.remove('show');
+  // Mark arena done so fresh entrants don't re-use it
+  if(arenaId && FB){
+    fetch(`${FB}/arena/${encodeURIComponent(arenaId)}.json`,{
+      method:'PATCH', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({status:'done'})
+    }).catch(()=>{});
+  }
+  if(arenaEs){ arenaEs.close(); arenaEs = null; }
+  victoryShown = false;
+  lastState = null;
+  arenaId = null; mySide = null;
+  resetToSelect();
+}
+
+// ── SPECTATOR MODE ────────────────────────────────────────────────────────────
+// If ?arena=ID is in URL and user is not a fighter, show spectator view
+async function maybeSpectate(){
+  const params   = new URLSearchParams(location.search);
+  const specArena= params.get('arena');
+  if(!specArena || !FB) return false;
+
+  try {
+    const r = await fetch(`${FB}/arena/${encodeURIComponent(specArena)}.json`);
+    if(!r.ok) return false;
+    const data = await r.json();
+    if(!data) return false;
+
+    const fighters = data.fighters || {};
+    // Check if user is a fighter
+    const allCharsRaw = localStorage.getItem('froyskyy_chars_index');
+    const allChars    = allCharsRaw ? JSON.parse(allCharsRaw) : [];
+    const myUUIDs     = allChars.map(e => localStorage.getItem('froyskyy_char_'+e.id+'_uuid')).filter(Boolean);
+    const amFighter   = myUUIDs.some(u => fighters.a?.uuid === u || fighters.b?.uuid === u);
+
+    if(amFighter) return false; // let normal flow handle it
+
+    // Pure spectator
+    arenaId = specArena;
+    mySide  = null;
+    lastState = data;
+    showPhase('spectate');
+    // also show the fight cards
+    el('phase-fight').style.display = 'block';
+    el('fight-arena-id').textContent = arenaId;
+    renderFighters(fighters);
+    subscribeToArena();
+    if(data.status === 'done') showVictory(data, fighters);
+    return true;
+  } catch{ return false; }
+}
+
+// ── DEATH DETECTION ───────────────────────────────────────────────────────────
+// We need to detect when a fighter's HP hits 0 and write the winner.
+// Only fighter A's client does this to avoid race conditions.
+// Both clients watch HP; fighter A writes winner when it detects a death.
+let deathHandled = false;
+
+async function checkForDeath(fighters){
+  if(deathHandled) return;
+  if(mySide !== 'a') return; // only fighter A arbitrates
+  if(!arenaId || !FB) return;
+
+  const fa = fighters.a;
+  const fb = fighters.b;
+  if(!fa || !fb) return;
+
+  const aDead = (fa.lifeCur||0) <= 0 && (fa.lifeMax||0) > 0;
+  const bDead = (fb.lifeCur||0) <= 0 && (fb.lifeMax||0) > 0;
+
+  if(!aDead && !bDead) return;
+
+  deathHandled = true;
+  const winner = aDead ? 'b' : 'a';
+  const MMR_WIN = 25; const MMR_LOSE = -20;
+  const delta = { a: winner==='a' ? MMR_WIN : MMR_LOSE, b: winner==='b' ? MMR_WIN : MMR_LOSE };
+
+  try {
+    await fetch(`${FB}/arena/${encodeURIComponent(arenaId)}.json`, {
+      method:'PATCH', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ status:'done', winner, mmrDelta: delta })
+    });
+  } catch{}
+}
+
+// Override renderFighters to also check death
+const _origRender = renderFighters;
+// (death check is wired in handleArenaState below)
+const _origHandle = handleArenaState;
+handleArenaState = function(state){
+  if(!state) return;
+  const fighters = state.fighters || {};
+  _origHandle.call(this, state);
+  if(state.status === 'fight'){
+    checkForDeath(fighters);
+  }
+};
+
+// ── INIT ─────────────────────────────────────────────────────────────────────
+(async function init(){
+  if(!FB){
+    showToast('Firebase не настроен. Проверьте config.js', 5000);
+    setLive(false);
+  }
+
+  // Check if we should spectate a specific arena from URL
+  const wasSpectating = await maybeSpectate();
+  if(wasSpectating) return;
+
+  // Show character selection
+  showPhase('select');
+  loadAllChars();
+})();
+</script>
+</body>
+</html>

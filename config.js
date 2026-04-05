@@ -37,6 +37,6 @@ const SHEETS_CONFIG = {
 // ═══════════════════════════════════════════════════════════════════════
 
 const FIREBASE_CONFIG = {
-  databaseURL: 'https://dnd-froy-a02d8-default-rtdb.europe-west1.firebasedatabase.app',
+  databaseURL: 'https://dnd-froy-a02d8-default-rtdb.europe-west1.firebasedatabase.app/',
 };
 

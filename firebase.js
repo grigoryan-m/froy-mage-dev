@@ -25,6 +25,22 @@ async function fbSet(path, value) {
   } catch(e) {}
 }
 
+async function fbUpdate(path, value) {
+  try {
+    await fetch(`${FB_BASE}/${path}.json`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(value),
+    });
+  } catch(e) {}
+}
+
+async function fbDelete(path) {
+  try {
+    await fetch(`${FB_BASE}/${path}.json`, { method: 'DELETE' });
+  } catch(e) {}
+}
+
 // ── SSE listener (Firebase streaming) ────────────────────────────────────────
 // Используется только для пати — мгновенная реакция
 
@@ -328,7 +344,25 @@ function initFirebase(uuid) {
 const _pendingTrades = new Set(); // tradeIds we've processed
 let _tradesInterval = null;
 
+function _respondedKey() { return 'froyskyy_responded_trades'; }
+function _loadRespondedTrades() {
+  try {
+    const raw = localStorage.getItem(_respondedKey());
+    if (raw) JSON.parse(raw).forEach(id => _pendingTrades.add(id));
+  } catch(_) {}
+}
+function _saveRespondedTrades() {
+  try {
+    // Only persist 'responded_' entries (not shown_ / cancelled_ / done_ / rej_)
+    const toSave = [..._pendingTrades].filter(k => k.startsWith('responded_'));
+    // Keep only last 100 to avoid unbounded growth
+    const trimmed = toSave.slice(-100);
+    localStorage.setItem(_respondedKey(), JSON.stringify(trimmed));
+  } catch(_) {}
+}
+
 function initTradesPoller(uuid) {
+  _loadRespondedTrades(); // restore from localStorage on init
   if (_tradesInterval) clearInterval(_tradesInterval);
   pollTrades(uuid);
   _tradesInterval = setInterval(() => pollTrades(uuid), 5000);
@@ -340,6 +374,9 @@ async function pollTrades(uuid) {
 
   Object.entries(all).forEach(([tid, trade]) => {
     if (!trade) return;
+
+    // Skip trades we already responded to (persistent across reloads)
+    if (_pendingTrades.has('responded_' + tid)) return;
 
     // ── INCOMING: we are the recipient ───────────────────────────────────
     if (trade.to === uuid) {
@@ -417,14 +454,19 @@ async function respondToTrade(tradeId, status) {
   if (trade.status === 'cancelled') {
     showFbNotification('Отправитель отменил передачу', 'warn');
     if (typeof removeTradeCard === 'function') removeTradeCard(tradeId);
+    // Mark so we don't re-show it
+    _pendingTrades.add('responded_' + tradeId);
     return;
   }
-  if (trade.status !== 'pending') return; // already handled
-
-  await fbUpdate(`trades/${tradeId}`, { status });
+  if (trade.status !== 'pending') {
+    // Already handled — mark so it won't re-appear
+    _pendingTrades.add('responded_' + tradeId);
+    return;
+  }
 
   if (status === 'accepted') {
-    // Add items to recipient's inventory
+    // Add items to recipient's inventory BEFORE updating status
+    // so sender's poller sees 'accepted' only after items are applied
     if (trade.items && trade.items.length && typeof addEquip === 'function') {
       trade.items.forEach(it => addEquip({ name: it.name, desc: it.desc }));
     }
@@ -436,6 +478,16 @@ async function respondToTrade(tradeId, status) {
     const summary = _buildTradeSummary(trade.items, trade.reagents);
     showFbNotification(`Получено от ${trade.fromName||'игрока'}: ${summary}`, 'item');
   }
+
+  // Update status in Firebase so sender is notified
+  await fbUpdate(`trades/${tradeId}`, { status });
+
+  // Mark as responded so we never show this trade card again (survives page reload)
+  _pendingTrades.add('responded_' + tradeId);
+  _saveRespondedTrades();
+
+  // Delete the trade entry after a short delay (sender needs ~6s to poll the status)
+  setTimeout(() => fbDelete(`trades/${tradeId}`), 8000);
 }
 
 async function cancelTradeOffer(tradeId) {
