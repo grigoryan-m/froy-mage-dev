@@ -188,6 +188,15 @@ body::before{
   <div class="live-badge offline" id="live-badge"><div class="live-dot"></div><span id="live-text">OFFLINE</span></div>
 </div>
 
+<!-- PHASE: LOADING -->
+<div id="phase-loading" class="phase active">
+  <div class="wait-panel">
+    <div class="wait-icon" style="animation:wait-spin 1.6s linear infinite;">✦</div>
+    <div class="wait-title" id="loading-title">ПОДКЛЮЧЕНИЕ</div>
+    <div class="wait-sub" id="loading-sub">Проверяем состояние арены…</div>
+  </div>
+</div>
+
 <!-- PHASE: SELECT -->
 <div id="phase-select" class="phase">
   <div class="pick-panel">
@@ -294,18 +303,25 @@ body::before{
 <script src="config.js"></script>
 <script>
 // ══════════════════════════════════════════════════════════════════════════════
-// ARENA — два слоя синхронизации:
-//   1. SSE EventSource — Firebase push (мгновенно)
-//   2. Поллинг каждые 1500мс — надёжный резерв, всегда работает
+// ARENA — единственная арена на всё приложение.
+// Firebase path: /arena/current
+// Schema: { status:'waiting'|'fight'|'done',
+//           fighters: { a:{...}, b:{...} },
+//           winner:'a'|'b', mmrDelta:{a:N,b:N} }
 //
-// Восстановление после перезагрузки:
-//   При старте ищем UUID наших персонажей в активных аренах Firebase.
-//   Если нашли — восстанавливаем сессию, не создаём новую арену.
+// Синхронизация:
+//   1. SSE EventSource — мгновенный Firebase push
+//   2. Поллинг каждые 1500мс — надёжный резерв
+//
+// Восстановление сессии при перезагрузке:
+//   Читаем /arena/current, ищем свой UUID — восстанавливаем без пересоздания.
 // ══════════════════════════════════════════════════════════════════════════════
 
 const FB = (typeof FIREBASE_CONFIG !== 'undefined' && FIREBASE_CONFIG?.databaseURL)
   ? FIREBASE_CONFIG.databaseURL : null;
-  console.log("FB URL =", FB);
+
+// Единый путь арены — всегда один
+const ARENA_PATH = '/arena/current';
 
 const ADJ_COLORS = {natisk:'#c9a84c',obman:'#e8934c',pokoj:'#9b7fe8',istsel:'#7ecba1',gospod:'#e05c5c',stoikost:'#6ab0f5'};
 const ADJ_NAMES  = {natisk:'Натиск',obman:'Обман',pokoj:'Покой',istsel:'Исцеление',gospod:'Господство',stoikost:'Стойкость'};
@@ -313,17 +329,15 @@ const MMR_WIN=25, MMR_LOSE=-20;
 const POLL_MS=1500;
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
-let myUUID       = null;
-let myCharId     = null;
-let arenaId      = null;
-let mySide       = null;   // 'a' | 'b' | null=spectator
-let arenaEs      = null;
-let pollTimer    = null;
-let prevHp       = {};
-let victoryShown = false;
-let deathHandled = false;
+let myUUID         = null;
+let myCharId       = null;
+let mySide         = null;   // 'a' | 'b' | null = spectator
+let arenaEs        = null;
+let pollTimer      = null;
+let prevHp         = {};
+let victoryShown   = false;
+let deathHandled   = false;
 let selectedCharId = null;
-let lastGoodState = null;
 
 // ── UTIL ──────────────────────────────────────────────────────────────────────
 const $   = id => document.getElementById(id);
@@ -335,16 +349,26 @@ function showToast(msg, dur=3000){
   clearTimeout(t._t);
   t._t=setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(-50%) translateY(20px)';},dur);
 }
+
 function setLive(on){
   const b=$('live-badge'), tx=$('live-text');
   if(on){b.classList.remove('offline');tx.textContent='LIVE';}
   else  {b.classList.add('offline');   tx.textContent='OFFLINE';}
 }
-function showPhase(name){
-  ['phase-select','phase-wait','phase-fight'].forEach(id=>{
+
+function showPhase(name, loadingText, loadingSub){
+  ['phase-loading','phase-select','phase-wait','phase-fight'].forEach(id=>{
     const e=$(id); if(e) e.classList.remove('active');
   });
+  if(name==='loading'){
+    if(loadingText) $('loading-title').textContent=loadingText;
+    if(loadingSub)  $('loading-sub').textContent=loadingSub;
+  }
   const t=$('phase-'+name); if(t) t.classList.add('active');
+}
+
+function setLoading(title, sub){
+  showPhase('loading', title||'ЗАГРУЗКА', sub||'Пожалуйста, подождите…');
 }
 
 // ── CHARACTER PICKER ──────────────────────────────────────────────────────────
@@ -410,36 +434,22 @@ function buildPayload(charId){
 
 // ── FIREBASE HELPERS ──────────────────────────────────────────────────────────
 async function fbFetch(path){
-  const hasQuery = path.includes('?');
-  const url = hasQuery
-    ? `${FB}${path.replace('?', '.json?')}`
-    : `${FB}${path}.json`;
-
-  const r = await fetch(url);
-  if(!r.ok) throw new Error(await r.text());
+  const r=await fetch(`${FB}${path}.json`);
+  if(!r.ok) throw new Error(r.status);
   return r.json();
 }
 async function fbPut(path,data){
-  return fetch(`${FB}${path}.json`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+  const r=await fetch(`${FB}${path}.json`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+  if(!r.ok) throw new Error(r.status);
+  return r.json();
 }
 async function fbPatch(path,data){
-  return fetch(`${FB}${path}.json`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+  const r=await fetch(`${FB}${path}.json`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+  if(!r.ok) throw new Error(r.status);
+  return r.json();
 }
-
-// ── FIND EXISTING ARENA FOR UUID ──────────────────────────────────────────────
-async function findMyActiveArena(uuid){
-  try{
-    const arenas=await fbFetch('/arena');
-    if(!arenas) return null;
-    for(const aid of Object.keys(arenas)){
-      const d=await fbFetch(`/arena/${encodeURIComponent(aid)}`);
-      if(!d||d.status==='done') continue;
-      const f=d.fighters||{};
-      if(f.a?.uuid===uuid) return {id:aid,side:'a',data:d};
-      if(f.b?.uuid===uuid) return {id:aid,side:'b',data:d};
-    }
-  }catch{}
-  return null;
+async function fbDelete(path){
+  return fetch(`${FB}${path}.json`,{method:'DELETE'});
 }
 
 // ── ENTER ARENA ───────────────────────────────────────────────────────────────
@@ -448,81 +458,99 @@ async function enterArena(){
   if(!FB){showToast('Firebase не настроен',5000);return;}
   const payload=buildPayload(selectedCharId);
   if(!payload){showToast('Данные персонажа не найдены');return;}
-  myCharId=selectedCharId; myUUID=payload.uuid;
-  
-  $('enter-btn').disabled=true; $('enter-btn').textContent='Подключение…';
 
-  // 1. Already in an active arena?
-  const existing=await findMyActiveArena(myUUID);
-  if(existing){
-    arenaId=existing.id; mySide=existing.side;
-    startSync();
-    applyArenaState(existing.data);
-    $('enter-btn').disabled=false; $('enter-btn').textContent='⚔ ВОЙТИ В АРЕНУ';
-    return;
-  }
+  myCharId=selectedCharId;
+  myUUID=payload.uuid;
 
-  // 2. Find a waiting arena to join
+  setLoading('ВХОД В АРЕНУ','Проверяем текущий бой…');
+
   try{
-    const arenas=await fbFetch('/arena?shallow=true');
-    if(arenas){
-      for(const aid of Object.keys(arenas)){
-        const d=await fbFetch(`/arena/${encodeURIComponent(aid)}`);
-        if(!d||d.status!=='waiting') continue;
-        const fa=d.fighters?.a;
-        if(!fa||fa.uuid===myUUID||fa.charId===myCharId) continue;
-        // Join as B
-        arenaId=aid; mySide='b';
-        await fbPut(`/arena/${encodeURIComponent(arenaId)}/fighters/b`,payload);
-        await fbPatch(`/arena/${encodeURIComponent(arenaId)}`,{status:'fight'});
+    const current=await fbFetch(ARENA_PATH).catch(()=>null);
+
+    // ── Уже является бойцом в текущем активном бою ─────────────────────────
+    if(current && current.status!=='done'){
+      const f=current.fighters||{};
+      if(f.a?.uuid===myUUID){ mySide='a'; startSync(); applyArenaState(current); return; }
+      if(f.b?.uuid===myUUID){ mySide='b'; startSync(); applyArenaState(current); return; }
+    }
+
+    // ── Арена занята активным боем другими — только наблюдать ──────────────
+    if(current && current.status==='fight'){
+      mySide=null;
+      $('spectate-header-wrap').style.display='';
+      startSync();
+      applyArenaState(current);
+      return;
+    }
+
+    // ── Кто-то ждёт — присоединиться как B ─────────────────────────────────
+    if(current && current.status==='waiting'){
+      const fa=current.fighters?.a;
+      if(fa && fa.uuid!==myUUID && fa.charId!==myCharId){
+        mySide='b';
+        await fbPatch(ARENA_PATH,{
+          'fighters/b': payload,
+          status:'fight'
+        });
         startSync();
-        $('enter-btn').disabled=false; $('enter-btn').textContent='⚔ ВОЙТИ В АРЕНУ';
+        return;
+      }
+      // Это наша собственная ожидающая арена — восстанавливаем
+      if(fa && fa.uuid===myUUID){
+        mySide='a';
+        startSync();
+        applyArenaState(current);
         return;
       }
     }
-    // 3. Create new arena
-    arenaId='arena_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
 
+    // ── Арена свободна (done или пустая) — создать новую ───────────────────
     mySide='a';
-    await fbPut(`/arena/${encodeURIComponent(arenaId)}`,{status:'waiting',fighters:{a:payload}});
-    showPhase('wait');
-    $('wait-arena-id').textContent=arenaId;
+    await fbPut(ARENA_PATH,{status:'waiting', fighters:{a:payload}});
     startSync();
-  }catch(e){showToast('Ошибка: '+e.message);}
-  $('enter-btn').disabled=false; $('enter-btn').textContent='⚔ ВОЙТИ В АРЕНУ';
-  
-  
+
+  }catch(e){
+    showToast('Ошибка подключения: '+e.message);
+    showPhase('select');
+    $('enter-btn').disabled=false;
+    $('enter-btn').textContent='⚔ ВОЙТИ В АРЕНУ';
+  }
 }
 
 // ── LEAVE ─────────────────────────────────────────────────────────────────────
 async function leaveArena(){
+  setLoading('ВЫХОД','Покидаем арену…');
   stopSync();
-  if(arenaId&&FB){
+  if(FB){
     try{
-      const d=await fbFetch(`/arena/${encodeURIComponent(arenaId)}`);
-      if(d&&d.status==='waiting') await fetch(`${FB}/arena/${encodeURIComponent(arenaId)}.json`,{method:'DELETE'});
+      const d=await fbFetch(ARENA_PATH).catch(()=>null);
+      // Удаляем арену только если мы fighter A и она ещё waiting
+      if(d && d.status==='waiting' && d.fighters?.a?.uuid===myUUID){
+        await fbDelete(ARENA_PATH);
+      }
     }catch{}
   }
   doReset();
 }
 
 function doReset(){
-  stopSync(); arenaId=null; mySide=null; myUUID=null; myCharId=null;
+  stopSync();
+  mySide=null; myUUID=null; myCharId=null;
   selectedCharId=null; prevHp={}; victoryShown=false; deathHandled=false;
   document.querySelectorAll('.char-card').forEach(c=>c.classList.remove('selected'));
   $('enter-btn').disabled=true;
+  $('enter-btn').textContent='⚔ ВОЙТИ В АРЕНУ';
   $('spectate-header-wrap').style.display='none';
-  loadAllChars(); showPhase('select');
+  loadAllChars();
+  showPhase('select');
 }
 
 // ── SYNC: SSE + POLLING ───────────────────────────────────────────────────────
 function startSync(){
   stopSync();
   subscribeSSE();
-  // Polling as reliable backbone — fires every 1500ms regardless of SSE state
   pollTimer=setInterval(fetchAndApply, POLL_MS);
-  // Immediate first fetch
-  fetchAndApply();
+  fetchAndApply(); // immediate
 }
 function stopSync(){
   if(arenaEs){arenaEs.close();arenaEs=null;}
@@ -530,100 +558,66 @@ function stopSync(){
 }
 
 function subscribeSSE(){
-  console.log(arenaId + " " + FB);
-  if(!arenaId||!FB) return;
-  arenaEs=new EventSource(`${FB}/arena/${encodeURIComponent(arenaId)}.json`);
-  // On full snapshot (initial connect or reconnect)
-  arenaEs.addEventListener('put', e=>{
-  try{
-    const msg = JSON.parse(e.data);
-
-    if(msg.path === '/'){
-      // ❗ игнорим пустые или неполные данные
-      if(!msg.data || !msg.data.fighters){
-        console.warn('Ignored empty SSE state:', msg.data);
-        return;
+  if(!FB) return;
+  arenaEs=new EventSource(`${FB}${ARENA_PATH}.json`);
+  arenaEs.addEventListener('put',e=>{
+    try{
+      const msg=JSON.parse(e.data);
+      if(msg.path==='/'){
+        if(msg.data && msg.data.fighters){ setLive(true); applyArenaState(msg.data); }
+      } else {
+        fetchAndApply();
       }
-
-      setLive(true);
-      applyArenaState(msg.data);
-    } else {
-      fetchAndApply();
-    }
-
-  }catch{}
-});
-  arenaEs.addEventListener('patch',e=>{
-    try{JSON.parse(e.data); fetchAndApply();}catch{}
+    }catch{}
   });
+  arenaEs.addEventListener('patch',e=>{ try{JSON.parse(e.data); fetchAndApply();}catch{} });
   arenaEs.onerror=()=>setLive(false);
 }
 
 async function fetchAndApply(){
-  if(!arenaId||!FB) return;
+  if(!FB) return;
   try{
-    const data=await fbFetch(`/arena/${encodeURIComponent(arenaId)}`);
+    const data=await fbFetch(ARENA_PATH);
     setLive(true);
     applyArenaState(data);
-  }catch{setLive(false);}
+  }catch{ setLive(false); }
 }
 
 // ── CORE STATE HANDLER ────────────────────────────────────────────────────────
 function applyArenaState(state){
-  if(!state){
-    console.warn('skip null state');
-    return;
-  }
+  if(!state || !state.fighters) return;
 
-  // ❗ если нет fighters — это мусорный апдейт
-  if(!state.fighters || (!state.fighters.a && !state.fighters.b)){
-    console.warn('skip bad state', state);
-    return;
-  }
-
-  // ✅ сохраняем как последний нормальный
-  lastGoodState = state;
-
-  renderArena(state);
-}
-function renderArena(state){
-  if(!state) return;
-   if(!state || !state.fighters) return;
   $('fight-sync-label').textContent='● онлайн';
   $('fight-sync-label').style.color='var(--green)';
 
-  const status=state.status;
-  const fighters=state.fighters||{};
+  const status  = state.status;
+  const fighters= state.fighters||{};
 
-  // Resolve side if unknown (spectator / session restore)
-  if(!mySide&&myUUID){
-    if(fighters.a?.uuid===myUUID) mySide='a';
+  // Разрешаем сторону при восстановлении сессии
+  if(!mySide && myUUID){
+    if(fighters.a?.uuid===myUUID)      mySide='a';
     else if(fighters.b?.uuid===myUUID) mySide='b';
   }
 
   if(status==='waiting'){
     showPhase('wait');
-    $('wait-arena-id').textContent=arenaId||'—';
+    $('wait-arena-id').textContent='арена/current';
     return;
   }
 
   if(status==='fight'||status==='done'){
     showPhase('fight');
-    $('fight-arena-id').textContent=arenaId||'—';
+    $('fight-arena-id').textContent='текущая';
     $('fight-status-text').textContent=status==='done'?'БОЙ ЗАВЕРШЁН':'БОЙ ИДЁТ';
 
-    // Spectator badge
     if(!mySide) $('spectate-header-wrap').style.display='';
-
-    // Mark my card
     if(mySide){
       $('card-'+mySide)?.classList.add('is-me');
       $('card-'+(mySide==='a'?'b':'a'))?.classList.remove('is-me');
     }
 
     renderFighters(fighters);
-
-    if(status==='fight') maybeWriteWinner(fighters);
+    if(status==='fight')               maybeWriteWinner(fighters);
     if(status==='done'&&!victoryShown) showVictory(state,fighters);
   }
 }
@@ -642,12 +636,10 @@ function renderFighters(fighters){
     const lPct=lMax>0?Math.max(0,Math.min(100,lCur/lMax*100)):0;
 
     const prevB=prevHp[side+'_b'], prevL=prevHp[side+'_l'];
-
     $('bar-barrier-'+side).style.width=bPct+'%';
     $('bar-life-'+side).style.width   =lPct+'%';
     $('num-barrier-'+side).textContent=bCur+' / '+bMax;
     $('num-life-'+side).textContent   =lCur+' / '+lMax;
-
     if(prevB!==undefined&&prevB!==bCur) hpFlash($('wrap-barrier-'+side));
     if(prevL!==undefined&&prevL!==lCur) hpFlash($('wrap-life-'+side));
     prevHp[side+'_b']=bCur; prevHp[side+'_l']=lCur;
@@ -670,22 +662,19 @@ function hpFlash(el){
 }
 
 // ── WINNER DETECTION ──────────────────────────────────────────────────────────
-// Fighter A writes the result. Fighter B writes only if it's the one who died
-// (handles case where A's tab closed).
 async function maybeWriteWinner(fighters){
-  if(deathHandled||!mySide||!arenaId||!FB) return;
+  if(deathHandled||!mySide||!FB) return;
   const fa=fighters.a, fb=fighters.b; if(!fa||!fb) return;
   const aDead=(fa.lifeCur||0)<=0&&(fa.lifeMax||0)>0;
   const bDead=(fb.lifeCur||0)<=0&&(fb.lifeMax||0)>0;
   if(!aDead&&!bDead) return;
-  // A arbitrates; B only writes if it's itself that died (loser confirms)
-  if(mySide==='b'&&!bDead) return;
+  if(mySide==='b'&&!bDead) return; // B пишет только свою смерть
   deathHandled=true;
   const winner=aDead?'b':'a';
   const delta={a:winner==='a'?MMR_WIN:MMR_LOSE, b:winner==='b'?MMR_WIN:MMR_LOSE};
   try{
-    await fbPatch(`/arena/${encodeURIComponent(arenaId)}`,{status:'done',winner,mmrDelta:delta});
-  }catch{deathHandled=false;}
+    await fbPatch(ARENA_PATH,{status:'done',winner,mmrDelta:delta});
+  }catch{ deathHandled=false; }
 }
 
 // ── VICTORY SCREEN ────────────────────────────────────────────────────────────
@@ -718,78 +707,53 @@ function showVictory(state,fighters){
     localStorage.setItem('arena_mmr_'+uuid,Math.max(0,old+(delta[mySide]||0)));
   }
   $('victory-overlay').classList.add('show');
-  stopSync(); // stop polling — fight is over
+  stopSync();
 }
 
 function onVictoryClose(){
   $('victory-overlay').classList.remove('show');
-  if(arenaId&&FB) fbPatch(`/arena/${encodeURIComponent(arenaId)}`,{status:'done'}).catch(()=>{});
+  // Помечаем done, чтобы следующий вход увидел чистую арену
+  if(FB) fbPatch(ARENA_PATH,{status:'done'}).catch(()=>{});
   doReset();
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 (async function init(){
-  if(!FB){ showToast('Firebase не настроен — проверьте config.js',6000); setLive(false); }
-  const storedArenaId = localStorage.getItem('arena_current_id');
-  console.log(storedArenaId);
-if(storedArenaId && FB){
+  setLoading('ПОДКЛЮЧЕНИЕ','Проверяем состояние арены…');
+
+  if(!FB){
+    showToast('Firebase не настроен — проверьте config.js',6000);
+    setLive(false);
+    showPhase('select');
+    loadAllChars();
+    return;
+  }
+
   try{
-    const d = await fbFetch(`/arena/${encodeURIComponent(storedArenaId)}`);
+    const current=await fbFetch(ARENA_PATH).catch(()=>null);
 
-    if(d && d.status !== 'done'){
-      arenaId = storedArenaId;
+    if(current && current.status!=='done'){
+      // Ищем себя среди бойцов
+      const allRaw=localStorage.getItem('froyskyy_chars_index');
+      const all=allRaw?JSON.parse(allRaw):[];
+      const myUUIDs=all.map(e=>localStorage.getItem('froyskyy_char_'+e.id+'_uuid')).filter(Boolean);
+      const myCharIds=all.map(e=>e.id);
+      const f=current.fighters||{};
 
-      // определить сторону
-      const f = d.fighters || {};
-      if(f.a?.uuid === myUUID) mySide = 'a';
-      else if(f.b?.uuid === myUUID) mySide = 'b';
+      if(myUUIDs.includes(f.a?.uuid)){
+        mySide='a'; myUUID=f.a.uuid; myCharId=f.a.charId;
+      } else if(myUUIDs.includes(f.b?.uuid)){
+        mySide='b'; myUUID=f.b.uuid; myCharId=f.b.charId;
+      }
+      // Иначе — наблюдатель, mySide остаётся null
 
-      applyArenaState(d);
+      applyArenaState(current);
       startSync();
-
-      console.log('Restored from localStorage:', arenaId);
       return;
     }
+  }catch{}
 
-  }catch(e){
-    console.warn('Restore failed:', e);
-  }
-}
-  // Spectator via ?arena=ID
-  const urlArena=new URLSearchParams(location.search).get('arena');
-  if(urlArena&&FB){
-    try{
-      const d=await fbFetch(`/arena/${encodeURIComponent(urlArena)}`);
-      if(d&&d.status!=='done'){
-        const allRaw=localStorage.getItem('froyskyy_chars_index');
-        const all=allRaw?JSON.parse(allRaw):[];
-        const myUUIDs=all.map(e=>localStorage.getItem('froyskyy_char_'+e.id+'_uuid')).filter(Boolean);
-        const f=d.fighters||{};
-        arenaId=urlArena;
-        if(myUUIDs.includes(f.a?.uuid)){mySide='a';myUUID=f.a?.uuid;myCharId=f.a?.charId;}
-        else if(myUUIDs.includes(f.b?.uuid)){mySide='b';myUUID=f.b?.uuid;myCharId=f.b?.charId;}
-        else{mySide=null; $('spectate-header-wrap').style.display='';}
-        applyArenaState(d); startSync(); return;
-      }
-    }catch{}
-  }
-
-  // Session restore: check all my characters against active arenas
-  if(FB){
-    const allRaw=localStorage.getItem('froyskyy_chars_index');
-    const all=allRaw?JSON.parse(allRaw):[];
-    for(const entry of all){
-      const uuidKey='froyskyy_char_'+entry.id+'_uuid';
-      const uuid=localStorage.getItem(uuidKey); if(!uuid) continue;
-      const found=await findMyActiveArena(uuid);
-      if(found){
-        arenaId=found.id; mySide=found.side; myUUID=uuid; myCharId=entry.id;
-        applyArenaState(found.data); startSync(); return;
-      }
-    }
-  }
-
-  // Default: character picker
+  // Арена пуста или done — показываем выбор персонажа
   showPhase('select');
   loadAllChars();
 })();

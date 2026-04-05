@@ -39,11 +39,11 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;bac
 .empty-state p{font-size:14px;font-style:italic;margin-bottom:20px;}
 
 /* CHAR CARDS GRID */
-.chars-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;}
+.chars-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;overflow:visible;}
 
 /* CHAR CARD */
-.char-card{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden;transition:border-color .2s,transform .15s;cursor:pointer;text-decoration:none;display:block;}
-.char-card:hover{border-color:var(--accent);transform:translateY(-2px);}
+.char-card{background:var(--panel);border:1px solid var(--line);border-radius:10px;transition:border-color .2s,transform .15s;cursor:pointer;text-decoration:none;display:block;}
+.char-card:hover{border-color:var(--accent);transform:translateY(-2px);z-index:10;position:relative;}
 .char-card-header{padding:14px 16px 10px;border-bottom:1px solid var(--line);background:linear-gradient(135deg,rgba(123,94,167,.06),transparent);}
 .char-name{font-family:'Cinzel',serif;font-size:14px;font-weight:700;color:var(--text);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .char-player{font-size:11px;color:var(--text-dim);font-style:italic;}
@@ -68,7 +68,29 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;bac
 .char-btn-export:hover{border-color:var(--gold-d);color:var(--gold);}
 .char-btn-delete{border-color:var(--line);color:var(--text-dim);}
 .char-btn-delete:hover{border-color:var(--life);color:var(--life);}
-.char-mmr-badge{font-family:'Cinzel',serif;font-size:8px;letter-spacing:1.5px;padding:2px 8px;border-radius:8px;border:1px solid var(--gold-d);color:var(--gold);background:rgba(201,168,76,.07);white-space:nowrap;}
+.char-mmr-badge{
+  font-family:'Cinzel',serif;font-size:8px;letter-spacing:1.5px;
+  padding:3px 9px;border-radius:8px;border:1px solid;
+  white-space:nowrap;position:relative;cursor:default;
+}
+.char-mmr-badge:hover .rank-tooltip{opacity:1;transform:translateX(-50%) translateY(0);}
+.rank-tooltip{
+  position:absolute;bottom:calc(100% + 8px);left:50%;
+  transform:translateX(-50%) translateY(5px);
+  background:var(--panel3);border:1px solid;border-radius:8px;
+  padding:10px 16px;white-space:nowrap;z-index:99;
+  opacity:0;transition:opacity .18s,transform .18s;pointer-events:none;
+  display:flex;flex-direction:column;align-items:center;gap:2px;
+  box-shadow:0 8px 28px rgba(0,0,0,.65);
+}
+.rank-tooltip::after{
+  content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);
+  border:5px solid transparent;border-top-color:var(--panel3);
+}
+.rank-icon{font-size:18px;margin-bottom:3px;}
+.rank-name{font-family:'Cinzel',serif;font-size:11px;font-weight:700;letter-spacing:2px;}
+.rank-division{font-family:'Cinzel',serif;font-size:8px;letter-spacing:2px;opacity:.65;margin-top:1px;}
+.rank-range{font-family:'Crimson Pro',serif;font-size:10px;opacity:.45;margin-top:3px;font-style:italic;}
 .avg-mmr-bar{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 16px;display:flex;align-items:center;gap:12px;margin-bottom:22px;}
 .avg-mmr-label{font-family:'Cinzel',serif;font-size:8px;letter-spacing:2px;color:var(--text-dim);}
 .avg-mmr-val{font-family:'Cinzel',serif;font-size:14px;font-weight:700;color:var(--gold-l);}
@@ -113,6 +135,44 @@ const CHAR_INDEX_KEY = 'froyskyy_chars_index';
 const CHAR_PREFIX    = 'froyskyy_char_';
 const DEFAULT_MMR    = 1000;
 
+// ── RANK SYSTEM ───────────────────────────────────────────────────────────────
+// Divisions: III → II → I (low to high within a tier)
+const RANKS = [
+  // mmr threshold (floor), name, divisions, icon, color, bg, border
+  { min:    0, max:  799, name:'Железо',     divs:['III','II','I'], icon:'⛓',  color:'#8a7a6a', bg:'rgba(138,122,106,.10)', border:'#8a7a6a44' },
+  { min:  800, max:  999, name:'Бронза',     divs:['III','II','I'], icon:'🥉',  color:'#b87333', bg:'rgba(184,115,51,.10)',  border:'#b8733344' },
+  { min: 1000, max: 1099, name:'Серебро',    divs:['III','II','I'], icon:'🥈',  color:'#a0aab4', bg:'rgba(160,170,180,.10)', border:'#a0aab444' },
+  { min: 1100, max: 1249, name:'Золото',     divs:['III','II','I'], icon:'🥇',  color:'#c9a84c', bg:'rgba(201,168,76,.10)',  border:'#c9a84c55' },
+  { min: 1250, max: 1399, name:'Платина',    divs:['III','II','I'], icon:'💠',  color:'#5bc8c8', bg:'rgba(91,200,200,.10)',  border:'#5bc8c844' },
+  { min: 1400, max: 1549, name:'Изумруд',    divs:['III','II','I'], icon:'💚',  color:'#4cbb8a', bg:'rgba(76,187,138,.10)',  border:'#4cbb8a44' },
+  { min: 1550, max: 1699, name:'Бриллиант',  divs:['III','II','I'], icon:'💎',  color:'#6ab0f5', bg:'rgba(106,176,245,.10)', border:'#6ab0f555' },
+  { min: 1700, max: 1849, name:'Мастер',     divs:['III','II','I'], icon:'👑',  color:'#a67fd1', bg:'rgba(166,127,209,.12)', border:'#a67fd155' },
+  { min: 1850, max: 1999, name:'Грандмастер',divs:['II','I'],       icon:'🔮',  color:'#e8934c', bg:'rgba(232,147,76,.10)',  border:'#e8934c55' },
+  { min: 2000, max: 2199, name:'Архимаг',    divs:['II','I'],       icon:'✦',   color:'#e05c5c', bg:'rgba(224,92,92,.12)',   border:'#e05c5c55' },
+  { min: 2200, max: 2499, name:'Провидец',   divs:['I'],            icon:'🌟',  color:'#e8c96e', bg:'rgba(232,201,110,.13)', border:'#e8c96e66' },
+  { min: 2500, max: Infinity, name:'Пророк', divs:[],               icon:'☀',   color:'#ffffff', bg:'rgba(255,255,255,.08)', border:'rgba(255,255,255,.35)' },
+];
+
+function getRank(mmr) {
+  const tier = RANKS.find(r => mmr >= r.min && mmr <= r.max) || RANKS[0];
+  let division = '';
+  if (tier.divs.length > 0) {
+    // Divide the tier range evenly among divisions (low div = high roman = worse)
+    const span = tier.max === Infinity ? 300 : (tier.max - tier.min + 1);
+    const divSpan = Math.ceil(span / tier.divs.length);
+    const idx = Math.min(
+      Math.floor((mmr - tier.min) / divSpan),
+      tier.divs.length - 1
+    );
+    // idx 0 = lowest division = last in array (III), last idx = best (I)
+    division = tier.divs[tier.divs.length - 1 - idx];
+  }
+  const rangeStr = tier.max === Infinity
+    ? `${tier.min}+ ММР`
+    : `${tier.min}–${tier.max} ММР`;
+  return { ...tier, division, rangeStr };
+}
+
 const ADJ_COLORS = {
   natisk:'#c9a84c', obman:'#e8934c', pokoj:'#9b7fe8',
   istsel:'#7ecba1', gospod:'#e05c5c', stoikost:'#6ab0f5',
@@ -122,9 +182,17 @@ const ADJ_NAMES = {
   istsel:'ИСЦЕЛЕНИЕ', gospod:'ГОСПОДСТВО', stoikost:'СТОЙКОСТЬ',
 };
 
-async function fbGetMMR(uuid) {
+async function getMMR(uuid) {
+  if (!uuid) return DEFAULT_MMR;
+  // 1. localStorage (saved by arena.html after each fight)
+  const local = localStorage.getItem('arena_mmr_' + uuid);
+  if (local !== null) {
+    const v = parseInt(local);
+    if (!isNaN(v)) return v;
+  }
+  // 2. Firebase fallback
   try {
-    if (!uuid || !FIREBASE_CONFIG?.databaseURL) return DEFAULT_MMR;
+    if (!FIREBASE_CONFIG?.databaseURL) return DEFAULT_MMR;
     const r = await fetch(`${FIREBASE_CONFIG.databaseURL}/mmr/${uuid}.json`);
     if (!r.ok) return DEFAULT_MMR;
     const v = await r.json();
@@ -217,15 +285,23 @@ async function renderChars() {
   const entries = idx.slice().reverse();
   const mmrValues = await Promise.all(entries.map(entry => {
     const data = getChar(entry.id) || {};
-    return fbGetMMR(data.charUUID || '');
+    return getMMR(data.charUUID || '');
   }));
 
-  // Avg MMR
-  const validMMRs = mmrValues.filter(v => typeof v === 'number');
-  if (validMMRs.length) {
-    const avg = Math.round(validMMRs.reduce((a,b) => a+b, 0) / validMMRs.length);
-    document.getElementById('avg-mmr-val').textContent = avg;
-    document.getElementById('avg-mmr-bar').style.display = '';
+  // Avg MMR — exclude chars with exactly DEFAULT_MMR (1000), they haven't fought
+  const rankedMMRs = mmrValues.filter(v => typeof v === 'number' && v !== DEFAULT_MMR);
+  const avgBar = document.getElementById('avg-mmr-bar');
+  if (rankedMMRs.length) {
+    const avg = Math.round(rankedMMRs.reduce((a,b) => a+b, 0) / rankedMMRs.length);
+    const delta = avg - DEFAULT_MMR;
+    const sign  = delta >= 0 ? '+' : '';
+    const color = delta > 0 ? '#4cbb8a' : delta < 0 ? 'var(--life)' : 'var(--gold-l)';
+    document.getElementById('avg-mmr-val').innerHTML =
+      `<span style="color:${color}">${avg}</span>` +
+      `<span style="font-family:'Crimson Pro',serif;font-size:11px;color:var(--text-dim);margin-left:8px;font-style:italic;">${sign}${delta} от базы &nbsp;·&nbsp; ${rankedMMRs.length}\u00a0перс${rankedMMRs.length===1?'онаж':'онажа'} в рейтинге</span>`;
+    avgBar.style.display = '';
+  } else {
+    avgBar.style.display = 'none';
   }
 
   entries.forEach((entry, i) => {
@@ -240,9 +316,21 @@ async function renderChars() {
     const lifeFill    = (data.hpFill?.['life-boxes'])    || 0;
     const activeAdj   = Array.isArray(data.adjActive) ? data.adjActive : [];
 
-    const mmrBadge = (mmr !== DEFAULT_MMR)
-      ? `<span class="char-mmr-badge">MMR ${mmr}</span>`
-      : '';
+    let mmrBadge = '';
+    if (mmr !== DEFAULT_MMR) {
+      const rank = getRank(mmr);
+      const divLabel = rank.division ? `${rank.name} ${rank.division}` : rank.name;
+      mmrBadge = `
+        <span class="char-mmr-badge" style="color:${rank.color};background:${rank.bg};border-color:${rank.border};">
+          MMR ${mmr}
+          <span class="rank-tooltip" style="border-color:${rank.border};color:${rank.color};">
+            <span class="rank-icon">${rank.icon}</span>
+            <span class="rank-name" style="color:${rank.color};">${rank.name}</span>
+            ${rank.division ? `<span class="rank-division">${rank.division} ДИВИЗИОН</span>` : ''}
+            <span class="rank-range">${rank.rangeStr}</span>
+          </span>
+        </span>`;
+    }
 
     let buildHtml = '';
     if(activeAdj.length === 2) {
