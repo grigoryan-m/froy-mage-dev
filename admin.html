@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Администратор — Фройский Маг</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#080812;--panel:#0e0e1f;--panel2:#131328;--panel3:#1a1a35;--accent:#7b5ea7;--accent2:#a67fd1;--gold:#c9a84c;--gold-l:#e8c96e;--gold-d:#8a6a20;--text:#e8e0f0;--text-dim:#7a6f90;--text-mid:#b0a0c8;--barrier:#5b8dee;--life:#e05c5c;--line:#2a1f45;--green:#4cbb8a;--orange:#e8934c;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Crimson Pro',Georgia,serif;min-height:100vh;padding:24px 16px 60px;background-image:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(123,94,167,.09) 0%,transparent 70%),radial-gradient(ellipse 40% 40% at 20% 80%,rgba(91,141,238,.05) 0%,transparent 60%);}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background-image:radial-gradient(1px 1px at 10% 15%,rgba(255,255,255,.18) 0%,transparent 100%),radial-gradient(1px 1px at 25% 40%,rgba(255,255,255,.12) 0%,transparent 100%),radial-gradient(1px 1px at 40% 8%,rgba(255,255,255,.15) 0%,transparent 100%),radial-gradient(1px 1px at 85% 40%,rgba(255,255,255,.10) 0%,transparent 100%);}
+.sheet{position:relative;max-width:960px;margin:0 auto;z-index:1;}
+.header{text-align:center;padding:28px 20px 20px;border:1px solid var(--accent);border-radius:10px;background:var(--panel);margin-bottom:24px;position:relative;overflow:hidden;}
+.header::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 80% at 50% 50%,rgba(123,94,167,.12) 0%,transparent 70%);}
+.header-deco{position:absolute;top:14px;left:50%;transform:translateX(-50%);width:200px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);}
+.header h1{font-family:'Cinzel',serif;font-size:22px;font-weight:700;letter-spacing:6px;color:var(--gold-l);text-shadow:0 0 30px rgba(201,168,76,.4);position:relative;}
+.header-sub{font-size:12px;color:var(--accent2);letter-spacing:3px;margin-top:6px;font-style:italic;position:relative;}
+.back-link{position:absolute;left:16px;top:50%;transform:translateY(-50%);font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;color:var(--text-dim);text-decoration:none;border:1px solid var(--line);padding:6px 12px;border-radius:5px;transition:all .2s;z-index:1;}
+.back-link:hover{color:var(--gold);border-color:var(--gold-d);}
+.live-badge{display:inline-flex;align-items:center;gap:6px;font-family:'Cinzel',serif;font-size:8px;letter-spacing:2px;color:var(--green);position:absolute;right:16px;top:50%;transform:translateY(-50%);border:1px solid rgba(76,187,138,.3);padding:5px 12px;border-radius:20px;background:rgba(76,187,138,.06);transition:all .3s;}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:live-pulse 1.5s ease-in-out infinite;}
+.live-badge.offline{color:var(--text-dim);border-color:rgba(122,111,144,.3);background:rgba(122,111,144,.05);}
+.live-badge.offline .live-dot{background:var(--text-dim);animation:none;}
+@keyframes live-pulse{0%,100%{opacity:.5;transform:scale(1);}50%{opacity:1;transform:scale(1.3);}}
+.section-title{font-family:'Cinzel',serif;font-size:10px;letter-spacing:3px;color:var(--gold-l);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.section-title::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--gold-d),transparent);}
+.stats-bar{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;}
+.stat-chip{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 16px;flex:1;min-width:130px;}
+.stat-chip-label{font-family:'Cinzel',serif;font-size:7px;letter-spacing:2px;color:var(--text-dim);margin-bottom:4px;}
+.stat-chip-val{font-family:'Cinzel',serif;font-size:18px;font-weight:700;color:var(--gold-l);}
+.arena-card{background:var(--panel);border:1px solid var(--line);border-radius:12px;margin-bottom:16px;overflow:hidden;transition:border-color .3s;}
+.arena-card.status-waiting{border-color:rgba(201,168,76,.4);}
+.arena-card.status-fight{border-color:rgba(224,92,92,.45);}
+.arena-card.status-done{border-color:rgba(122,111,144,.25);opacity:.8;}
+.arena-card-header{display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line);background:linear-gradient(135deg,rgba(123,94,167,.05),transparent);flex-wrap:wrap;gap:8px;}
+.arena-path{font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;color:var(--text-mid);flex:1;}
+.status-pill{font-family:'Cinzel',serif;font-size:8px;letter-spacing:2px;padding:4px 12px;border-radius:20px;border:1px solid;flex-shrink:0;display:inline-flex;align-items:center;gap:6px;}
+.status-pill.waiting{color:var(--gold);border-color:rgba(201,168,76,.4);background:rgba(201,168,76,.08);}
+.status-pill.fight{color:var(--life);border-color:rgba(224,92,92,.4);background:rgba(224,92,92,.08);}
+.status-pill.done{color:var(--text-dim);border-color:rgba(122,111,144,.3);background:rgba(122,111,144,.05);}
+.status-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;}
+.status-dot.waiting{background:var(--gold);animation:live-pulse 2s ease-in-out infinite;}
+.status-dot.fight{background:var(--life);animation:fight-pulse 1s ease-in-out infinite;}
+.status-dot.done{background:var(--text-dim);}
+@keyframes fight-pulse{0%,100%{opacity:.5;}50%{opacity:1;}}
+.fighters-grid{display:grid;grid-template-columns:1fr 44px 1fr;align-items:center;padding:16px 18px;}
+.fighter-mini{background:var(--panel2);border-radius:8px;padding:12px 14px;border:1px solid var(--line);transition:border-color .3s,opacity .3s;}
+.fighter-mini.winner-hl{border-color:rgba(76,187,138,.5);background:rgba(76,187,138,.05);}
+.fighter-mini.loser-dim{opacity:.5;}
+.fighter-mini.empty-slot{border-style:dashed;display:flex;align-items:center;justify-content:center;min-height:88px;font-size:11px;color:var(--text-dim);font-style:italic;}
+.fm-name{font-family:'Cinzel',serif;font-size:12px;color:var(--gold-l);margin-bottom:2px;}
+.fm-player{font-size:10px;color:var(--text-dim);font-style:italic;margin-bottom:8px;}
+.fm-hp{display:flex;flex-direction:column;gap:5px;}
+.fm-bar-row{display:flex;align-items:center;gap:7px;}
+.fm-lbl{font-family:'Cinzel',serif;font-size:7px;width:14px;flex-shrink:0;}
+.fm-lbl.b{color:var(--barrier);}.fm-lbl.l{color:var(--life);}
+.fm-bg{flex:1;height:7px;background:rgba(0,0,0,.4);border-radius:3px;overflow:hidden;}
+.fm-bar{height:100%;border-radius:3px;transition:width .4s;}
+.fm-bar.b{background:linear-gradient(90deg,#3a6fd8,var(--barrier));}
+.fm-bar.l{background:linear-gradient(90deg,#c0302a,var(--life));}
+.fm-num{font-family:'Cinzel',serif;font-size:8px;width:50px;text-align:right;flex-shrink:0;}
+.fm-num.b{color:var(--barrier);}.fm-num.l{color:var(--life);}
+.fm-build{margin-top:7px;display:flex;flex-wrap:wrap;gap:3px;}
+.fm-mmr{margin-top:6px;font-family:'Cinzel',serif;font-size:8px;color:var(--gold);opacity:.7;}
+.vs-mini{font-family:'Cinzel',serif;font-size:14px;font-weight:700;color:var(--text-dim);text-align:center;letter-spacing:2px;}
+.card-footer{padding:10px 18px 14px;border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:10px;background:rgba(0,0,0,.12);flex-wrap:wrap;}
+.card-meta{font-size:10px;color:var(--text-dim);font-style:italic;}
+.card-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.abtn{font-family:'Cinzel',serif;font-size:8px;letter-spacing:1.5px;padding:6px 14px;border-radius:5px;cursor:pointer;transition:all .2s;border:1px solid;background:none;text-decoration:none;display:inline-flex;align-items:center;gap:4px;}
+.abtn-cancel{border-color:rgba(224,92,92,.4);color:var(--life);}
+.abtn-cancel:hover{background:rgba(224,92,92,.15);border-color:var(--life);}
+.abtn-declare{border-color:rgba(76,187,138,.35);color:var(--green);}
+.abtn-declare:hover{background:rgba(76,187,138,.12);border-color:var(--green);}
+.abtn-clear{border-color:var(--line);color:var(--text-dim);}
+.abtn-clear:hover{border-color:var(--orange);color:var(--orange);}
+.abtn-open{border-color:rgba(123,94,167,.4);color:var(--accent2);}
+.abtn-open:hover{background:rgba(123,94,167,.15);border-color:var(--accent2);}
+.empty-state{text-align:center;padding:50px 20px;background:var(--panel);border:1px solid var(--line);border-radius:12px;}
+.empty-icon{font-size:36px;margin-bottom:14px;opacity:.3;}
+.empty-text{font-size:14px;color:var(--text-dim);font-style:italic;}
+#confirm-overlay{display:none;position:fixed;inset:0;z-index:200;background:rgba(4,4,18,.87);backdrop-filter:blur(5px);align-items:center;justify-content:center;}
+#confirm-overlay.show{display:flex;}
+/* ── ITEM TRANSFER PANEL ── */
+.transfer-panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px;margin-top:24px;}
+.transfer-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+@media(max-width:580px){.transfer-grid{grid-template-columns:1fr;}}
+.tf-group{display:flex;flex-direction:column;gap:6px;}
+.tf-label{font-family:'Cinzel',serif;font-size:7.5px;letter-spacing:2px;color:var(--text-dim);}
+.tf-input{background:var(--panel2);border:1px solid var(--line);border-radius:6px;
+  color:var(--text);font-family:'Crimson Pro',serif;font-size:13px;padding:8px 12px;
+  outline:none;transition:border-color .2s;width:100%;}
+.tf-input:focus{border-color:var(--accent2);}
+.tf-select{background:var(--panel2);border:1px solid var(--line);border-radius:6px;
+  color:var(--text);font-family:'Cinzel',serif;font-size:11px;letter-spacing:.5px;
+  padding:8px 12px;outline:none;transition:border-color .2s;width:100%;cursor:pointer;}
+.tf-select:focus{border-color:var(--accent2);}
+/* rarity colour tinting on select option — best-effort */
+.tf-rarity-common{color:var(--text);}
+.tf-rarity-rare{color:#5b8dee;}
+.tf-rarity-unique{color:#9b7fe8;}
+.tf-rarity-legendary{color:var(--gold-l);}
+.tf-send-btn{width:100%;margin-top:14px;font-family:'Cinzel',serif;font-size:9px;letter-spacing:2.5px;
+  padding:12px;border-radius:7px;border:1px solid rgba(76,187,138,.4);color:var(--green);
+  background:rgba(76,187,138,.07);cursor:pointer;transition:all .2s;}
+.tf-send-btn:hover{background:rgba(76,187,138,.16);border-color:var(--green);}
+.tf-send-btn:disabled{opacity:.35;cursor:not-allowed;}
+.tf-party-empty{font-size:12px;color:var(--text-dim);font-style:italic;text-align:center;padding:14px 0;}
+/* rarity preview badge next to name */
+.rarity-preview{display:inline-block;font-family:'Cinzel',serif;font-size:8px;letter-spacing:1px;
+  padding:2px 8px;border-radius:10px;border:1px solid transparent;margin-top:4px;transition:all .2s;}
+.rarity-preview.common   {color:var(--text-dim);border-color:var(--line);background:transparent;}
+.rarity-preview.rare     {color:#5b8dee;border-color:#5b8dee44;background:rgba(91,141,238,.07);}
+.rarity-preview.unique   {color:#9b7fe8;border-color:#9b7fe844;background:rgba(155,127,232,.07);}
+.rarity-preview.legendary{color:var(--gold-l);border-color:var(--gold-d);background:rgba(201,168,76,.08);}
+.tf-sheets-status{font-size:11px;margin-top:6px;min-height:16px;font-style:italic;color:var(--text-dim);}
+.tf-sheets-status.ok{color:var(--green);}
+.tf-sheets-status.err{color:var(--life);}
+.confirm-modal{background:var(--panel);border:1px solid rgba(224,92,92,.35);border-radius:14px;padding:32px 36px;max-width:400px;width:90%;text-align:center;box-shadow:0 16px 60px rgba(0,0,0,.8);animation:min .3s cubic-bezier(.34,1.56,.64,1);}
+@keyframes min{from{opacity:0;transform:scale(.88);}to{opacity:1;transform:scale(1);}}
+.confirm-icon{font-size:36px;margin-bottom:14px;}
+.confirm-title{font-family:'Cinzel',serif;font-size:13px;letter-spacing:3px;color:var(--life);margin-bottom:8px;}
+.confirm-body{font-size:13px;color:var(--text-dim);line-height:1.65;margin-bottom:22px;}
+.confirm-actions{display:flex;gap:10px;justify-content:center;}
+.confirm-btn{font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;padding:10px 24px;border-radius:6px;cursor:pointer;transition:all .2s;border:1px solid;}
+.cyes{border-color:var(--life);color:var(--life);background:rgba(224,92,92,.1);}
+.cyes:hover{background:rgba(224,92,92,.25);}
+.cno{border-color:var(--line);color:var(--text-dim);background:none;}
+.cno:hover{border-color:var(--accent2);color:var(--accent2);}
+.log-panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;margin-top:24px;}
+.log-list{max-height:200px;overflow-y:auto;display:flex;flex-direction:column;gap:4px;margin-top:10px;}
+.log-entry{font-size:11px;padding:5px 8px;border-radius:4px;border-left:2px solid var(--line);display:flex;gap:10px;align-items:flex-start;color:var(--text-dim);}
+.log-entry.ok{border-color:var(--green);color:var(--text-mid);}
+.log-entry.warn{border-color:var(--orange);color:var(--orange);}
+.log-entry.err{border-color:var(--life);color:var(--life);}
+.log-time{font-family:monospace;font-size:10px;color:var(--text-dim);flex-shrink:0;margin-top:1px;}
+.log-empty{font-size:12px;color:var(--text-dim);font-style:italic;padding:8px 0;text-align:center;}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--panel3);border:1px solid var(--accent);border-radius:8px;padding:10px 22px;font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;color:var(--gold-l);opacity:0;transition:all .3s;pointer-events:none;z-index:999;}
+@media(max-width:580px){.fighters-grid{grid-template-columns:1fr;gap:10px;}.vs-mini{display:none;}.stats-bar{flex-direction:column;}.card-footer{flex-direction:column;align-items:flex-start;}}
+</style>
+</head>
+<body>
+<div class="sheet">
+
+<div class="header">
+  <a href="index.html" class="back-link">← Меню</a>
+  <div class="header-deco"></div>
+  <h1>АДМИНИСТРАТОР</h1>
+  <div class="header-sub">Управление ареной &nbsp;•&nbsp; Фройский Маг</div>
+  <div class="live-badge offline" id="live-badge"><div class="live-dot"></div><span id="live-text">OFFLINE</span></div>
+</div>
+
+<div class="stats-bar">
+  <div class="stat-chip"><div class="stat-chip-label">СТАТУС АРЕНЫ</div><div class="stat-chip-val" id="stat-status">—</div></div>
+  <div class="stat-chip"><div class="stat-chip-label">БОЙЦОВ</div><div class="stat-chip-val" id="stat-fighters">—</div></div>
+  <div class="stat-chip"><div class="stat-chip-label">ОБНОВЛЕНО</div><div class="stat-chip-val" id="stat-updated" style="font-size:13px;padding-top:3px;">—</div></div>
+</div>
+
+<div class="section-title">ТЕКУЩАЯ АРЕНА</div>
+<div id="arena-container"><div class="empty-state"><div class="empty-icon">⚔</div><div class="empty-text">Подключение…</div></div></div>
+
+<div class="log-panel">
+  <div class="section-title">ЖУРНАЛ ДЕЙСТВИЙ</div>
+  <div class="log-list" id="log-list"><div class="log-empty">Действий пока не было</div></div>
+</div>
+
+<!-- ── ITEM TRANSFER ── -->
+<div class="transfer-panel">
+  <div class="section-title">ПЕРЕДАТЬ ПРЕДМЕТ ИГРОКУ</div>
+
+  <!-- Party loading state -->
+  <div id="tf-party-load" class="tf-party-empty">⟳ Загрузка участников пати…</div>
+
+  <!-- Form (shown once party loaded) -->
+  <div id="tf-form" style="display:none;">
+    <div class="transfer-grid">
+
+      <div class="tf-group">
+        <label class="tf-label">ПОЛУЧАТЕЛЬ</label>
+        <select class="tf-select" id="tf-target">
+          <option value="">— выберите персонажа —</option>
+        </select>
+      </div>
+
+      <div class="tf-group">
+        <label class="tf-label">РЕДКОСТЬ</label>
+        <select class="tf-select" id="tf-rarity" onchange="onRarityChange()">
+          <option value="common">Обычный</option>
+          <option value="rare">Редкий</option>
+          <option value="unique">Уникальный</option>
+          <option value="legendary">Легендарный</option>
+        </select>
+      </div>
+
+      <div class="tf-group">
+        <label class="tf-label">НАЗВАНИЕ ПРЕДМЕТА</label>
+        <input class="tf-input" id="tf-name" type="text" placeholder="Кольцо Мага…" oninput="onRarityChange()">
+        <span class="rarity-preview common" id="tf-rarity-badge">Обычный</span>
+      </div>
+
+      <div class="tf-group">
+        <label class="tf-label">ОПИСАНИЕ (необязательно)</label>
+        <input class="tf-input" id="tf-desc" type="text" placeholder="Увеличивает мощь заклинаний…">
+      </div>
+
+    </div>
+
+    <div class="tf-sheets-status" id="tf-sheets-status"></div>
+    <button class="tf-send-btn" id="tf-send-btn" onclick="sendItem()">✦ ПЕРЕДАТЬ ПРЕДМЕТ</button>
+  </div>
+</div>
+
+</div>
+
+<div id="confirm-overlay">
+  <div class="confirm-modal">
+    <div class="confirm-icon">⚠</div>
+    <div class="confirm-title" id="ctitle">ПОДТВЕРДИТЕ</div>
+    <div class="confirm-body" id="cbody">Вы уверены?</div>
+    <div class="confirm-actions">
+      <button class="confirm-btn cyes" id="cyes">Да, выполнить</button>
+      <button class="confirm-btn cno" onclick="closeConfirm()">Отмена</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="config.js"></script>
+<script src="sheets.js"></script>
+<script>
+const FB=(typeof FIREBASE_CONFIG!=='undefined'&&FIREBASE_CONFIG?.databaseURL)?FIREBASE_CONFIG.databaseURL:null;
+const ARENA_PATH='/arena/current';
+const POLL_MS=2000;
+const ADJ_COLORS={natisk:'#c9a84c',obman:'#e8934c',pokoj:'#9b7fe8',istsel:'#7ecba1',gospod:'#e05c5c',stoikost:'#6ab0f5'};
+const ADJ_NAMES={natisk:'Натиск',obman:'Обман',pokoj:'Покой',istsel:'Исцеление',gospod:'Господство',stoikost:'Стойкость'};
+
+let arenaEs=null,pollTimer=null,lastState=null,confirmCb=null;
+
+const $=id=>document.getElementById(id);
+const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+function setLive(on){const b=$('live-badge'),tx=$('live-text');if(on){b.classList.remove('offline');tx.textContent='LIVE';}else{b.classList.add('offline');tx.textContent='OFFLINE';}}
+
+function toast(msg,dur=3000){const t=$('toast');t.textContent=msg;t.style.opacity='1';t.style.transform='translateX(-50%) translateY(0)';clearTimeout(t._t);t._t=setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(-50%) translateY(20px)';},dur);}
+
+function addLog(msg,type='ok'){
+  const list=$('log-list');
+  const empty=list.querySelector('.log-empty');if(empty)empty.remove();
+  const time=new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const el=document.createElement('div');el.className='log-entry '+type;
+  el.innerHTML='<span class="log-time">'+time+'</span><span>'+esc(msg)+'</span>';
+  list.prepend(el);
+  [...list.querySelectorAll('.log-entry')].slice(60).forEach(e=>e.remove());
+}
+
+function openConfirm(title,body,onYes){$('ctitle').textContent=title;$('cbody').textContent=body;confirmCb=onYes;$('confirm-overlay').classList.add('show');}
+function closeConfirm(){$('confirm-overlay').classList.remove('show');confirmCb=null;}
+$('cyes').onclick=()=>{closeConfirm();if(confirmCb)confirmCb();};
+
+async function fbFetch(p){const r=await fetch(FB+p+'.json');if(!r.ok)throw new Error(r.status);return r.json();}
+async function fbPatch(p,d){const r=await fetch(FB+p+'.json',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)});if(!r.ok)throw new Error(r.status);return r.json();}
+async function fbDelete(p){const r=await fetch(FB+p+'.json',{method:'DELETE'});if(!r.ok)throw new Error(r.status);}
+
+async function cancelFight(){
+  const s=lastState;if(!s||s.status==='done')return;
+  const a=s.fighters?.a?.charName||'—',b=s.fighters?.b?.charName||'—';
+  openConfirm('ОТМЕНИТЬ БОЙ','Завершить бой «'+a+'» vs «'+b+'» без победителя? ММР не изменится. Используй при софтлоке.',async()=>{
+    try{await fbPatch(ARENA_PATH,{status:'done',winner:null,mmrDelta:{a:0,b:0}});addLog('Бой отменён: '+a+' vs '+b,'warn');toast('Бой отменён');}
+    catch(e){addLog('Ошибка отмены: '+e.message,'err');toast('Ошибка: '+e.message);}
+  });
+}
+
+async function declareWinner(side){
+  const s=lastState;if(!s||s.status!=='fight')return;
+  const win=s.fighters?.[side],lose=s.fighters?.[side==='a'?'b':'a'];if(!win)return;
+  const wn=win.charName||'Fighter '+side.toUpperCase(),ln=lose?.charName||'—';
+  const W=25,L=-20;
+  openConfirm('ПОБЕДИТЕЛЬ ВРУЧНУЮ','Засчитать победу «'+wn+'» над «'+ln+'»? ММР: '+wn+' +'+W+', '+ln+' '+L+'.',async()=>{
+    try{
+      const delta={a:side==='a'?W:L,b:side==='b'?W:L};
+      await fbPatch(ARENA_PATH,{status:'done',winner:side,mmrDelta:delta});
+      addLog('Победитель вручную: '+wn+' над '+ln,'ok');toast('Победа засчитана: '+wn);
+    }catch(e){addLog('Ошибка: '+e.message,'err');toast('Ошибка: '+e.message);}
+  });
+}
+
+async function clearArena(){
+  openConfirm('СБРОСИТЬ АРЕНУ','Полностью удалить текущую арену из базы данных? Следующий игрок создаст её заново.',async()=>{
+    try{await fbDelete(ARENA_PATH);addLog('Арена полностью сброшена','warn');toast('Арена сброшена');}
+    catch(e){addLog('Ошибка сброса: '+e.message,'err');toast('Ошибка: '+e.message);}
+  });
+}
+
+function render(state){
+  lastState=state;
+  const now=new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  $('stat-updated').textContent=now;
+  if(!state){$('stat-status').textContent='ПУСТО';$('stat-fighters').textContent='0';renderEmpty();return;}
+  const status=state.status||'empty',fighters=state.fighters||{};
+  const fc=[fighters.a,fighters.b].filter(Boolean).length;
+  const sl={waiting:'ОЖИДАНИЕ',fight:'БОЙ',done:'ЗАВЕРШЁН'};
+  $('stat-status').textContent=sl[status]||status.toUpperCase();
+  $('stat-fighters').textContent=String(fc);
+  const c=$('arena-container');c.innerHTML='';
+  const card=document.createElement('div');card.className='arena-card status-'+status;
+  card.innerHTML=buildCard(state,status,fighters);c.appendChild(card);
+}
+
+function buildCard(state,status,fighters){
+  const sl={waiting:'ОЖИДАНИЕ',fight:'БОЙ ИДЁТ',done:'ЗАВЕРШЁН'};
+  const pill='<span class="status-pill '+status+'"><span class="status-dot '+status+'"></span>'+esc(sl[status]||status)+'</span>';
+  let wb='';
+  if(status==='done'){
+    if(state.winner){const wn=esc(fighters[state.winner]?.charName||'Победитель');wb='<span style="font-family:\'Cinzel\',serif;font-size:9px;letter-spacing:1.5px;color:var(--green);border:1px solid rgba(76,187,138,.3);padding:3px 10px;border-radius:10px;background:rgba(76,187,138,.06);">🏆 '+wn+'</span>';}
+    else if(state.winner===null){wb='<span style="font-family:\'Cinzel\',serif;font-size:9px;letter-spacing:1.5px;color:var(--orange);border:1px solid rgba(232,147,76,.3);padding:3px 10px;border-radius:10px;background:rgba(232,147,76,.06);">⚠ Отменён</span>';}
+  }
+  const header='<div class="arena-card-header"><span class="arena-path">⚔ arena / current</span>'+wb+pill+'</div>';
+  const fA=buildFighter(fighters.a,'a',state),fB=buildFighter(fighters.b,'b',state);
+  const grid='<div class="fighters-grid">'+fA+'<div class="vs-mini">VS</div>'+fB+'</div>';
+  const isFight=status==='fight',isActive=status==='waiting'||status==='fight',canDecl=isFight&&fighters.a&&fighters.b;
+  let acts='';
+  if(canDecl){
+    const nA=esc(fighters.a?.charName||'A'),nB=esc(fighters.b?.charName||'B');
+    acts+='<button class="abtn abtn-declare" onclick="declareWinner(\'a\')">🏆 '+nA+'</button>';
+    acts+='<button class="abtn abtn-declare" onclick="declareWinner(\'b\')">🏆 '+nB+'</button>';
+  }
+  if(isActive) acts+='<button class="abtn abtn-cancel" onclick="cancelFight()">✕ Отменить бой</button>';
+  acts+='<button class="abtn abtn-clear" onclick="clearArena()">🗑 Сбросить</button>';
+  acts+='<a class="abtn abtn-open" href="arena.html" target="_blank">→ Арена</a>';
+  const mt={waiting:'Ожидание второго бойца…',fight:'Бой в процессе',done:state.winner?'Победитель: '+esc(fighters[state.winner]?.charName||'—'):'Бой завершён без победителя'}[status]||'';
+  const footer='<div class="card-footer"><div class="card-meta">'+mt+'</div><div class="card-actions">'+acts+'</div></div>';
+  return header+grid+footer;
+}
+
+function buildFighter(f,side,state){
+  if(!f)return '<div class="fighter-mini empty-slot">Слот '+side.toUpperCase()+' свободен</div>';
+  const bMax=f.barrierMax||0,bCur=f.barrierCur??0,lMax=f.lifeMax||0,lCur=f.lifeCur??0;
+  const bP=bMax>0?Math.max(0,Math.min(100,bCur/bMax*100)):0;
+  const lP=lMax>0?Math.max(0,Math.min(100,lCur/lMax*100)):0;
+  const adjs=f.adjActive||[];
+  const tags=adjs.map(id=>{const c=ADJ_COLORS[id]||'#c9a84c';return '<span style="font-family:\'Cinzel\',serif;font-size:7px;padding:1px 5px;border-radius:6px;border:1px solid '+c+'44;color:'+c+';background:'+c+'0d;">'+esc(ADJ_NAMES[id]||id)+'</span>';}).join('');
+  let cls='fighter-mini';
+  if(state.status==='done'&&state.winner) cls+=state.winner===side?' winner-hl':' loser-dim';
+  return '<div class="'+cls+'">'
+    +'<div class="fm-name">'+esc(f.charName||'Безымянный')+'</div>'
+    +'<div class="fm-player">'+esc(f.playerName||'—')+'</div>'
+    +'<div class="fm-hp">'
+      +'<div class="fm-bar-row"><span class="fm-lbl b">⬡</span><div class="fm-bg"><div class="fm-bar b" style="width:'+bP+'%"></div></div><span class="fm-num b">'+bCur+' / '+bMax+'</span></div>'
+      +'<div class="fm-bar-row"><span class="fm-lbl l">♥</span><div class="fm-bg"><div class="fm-bar l" style="width:'+lP+'%"></div></div><span class="fm-num l">'+lCur+' / '+lMax+'</span></div>'
+    +'</div>'
+    +(tags?'<div class="fm-build">'+tags+'</div>':'')
+    +(f.mmr?'<div class="fm-mmr">ММР '+f.mmr+'</div>':'')
+    +'</div>';
+}
+
+function renderEmpty(){
+  $('arena-container').innerHTML='<div class="empty-state"><div class="empty-icon">⚔</div><div class="empty-text">Арена свободна — нет активных боёв</div></div>'
+    +'<div style="display:flex;justify-content:center;margin-top:12px;gap:8px;">'
+    +'<button class="abtn abtn-clear" style="opacity:.55;" onclick="clearArena()">🗑 Принудительный сброс</button>'
+    +'<a class="abtn abtn-open" href="arena.html" target="_blank">→ Открыть арену</a>'
+    +'</div>';
+}
+
+function startSync(){
+  stopSync();if(!FB)return;
+  arenaEs=new EventSource(FB+ARENA_PATH+'.json');
+  arenaEs.addEventListener('put',e=>{try{const m=JSON.parse(e.data);setLive(true);if(m.path==='/')render(m.data);else fetchAndRender();}catch{}});
+  arenaEs.addEventListener('patch',()=>fetchAndRender());
+  arenaEs.onerror=()=>setLive(false);
+  pollTimer=setInterval(fetchAndRender,POLL_MS);
+  fetchAndRender();
+}
+function stopSync(){if(arenaEs){arenaEs.close();arenaEs=null;}if(pollTimer){clearInterval(pollTimer);pollTimer=null;}}
+
+async function fetchAndRender(){
+  if(!FB)return;
+  try{const d=await fbFetch(ARENA_PATH);setLive(true);render(d);}
+  catch{setLive(false);}
+}
+
+// ── ITEM TRANSFER ─────────────────────────────────────────────────────────
+const RARITY_LABELS = { common:'Обычный', rare:'Редкий', unique:'Уникальный', legendary:'Легендарный' };
+const RARITY_COLORS = { common:'var(--text-dim)', rare:'#5b8dee', unique:'#9b7fe8', legendary:'var(--gold-l)' };
+
+// Load party members from Firebase /party → /chars/{uuid}
+async function loadParty() {
+  if (!FB) { $('tf-party-load').textContent = 'Firebase не настроен.'; return; }
+  try {
+    const partyData = await fbFetch('/party');
+    if (!partyData || !Object.keys(partyData).length) {
+      $('tf-party-load').textContent = 'Пати пусто. Добавьте UUID персонажей в /party.';
+      return;
+    }
+
+    const uuids = Object.keys(partyData).filter(k => partyData[k] === true);
+    const select = $('tf-target');
+    select.innerHTML = '<option value="">— выберите персонажа —</option>';
+
+    const members = await Promise.all(uuids.map(async uuid => {
+      try {
+        const charData = await fbFetch(`/chars/${uuid}`);
+        return { uuid, name: charData?.charName || uuid };
+      } catch { return { uuid, name: uuid }; }
+    }));
+
+    members.sort((a, b) => a.name.localeCompare(b.name));
+    members.forEach(m => {
+      const opt = document.createElement('option');
+      opt.value = m.uuid;
+      opt.textContent = m.name;
+      select.appendChild(opt);
+    });
+
+    $('tf-party-load').style.display = 'none';
+    $('tf-form').style.display = '';
+
+    addLog(`Пати загружена: ${members.length} игрок(ов)`, 'ok');
+  } catch(e) {
+    $('tf-party-load').textContent = 'Ошибка загрузки пати: ' + e.message;
+    addLog('Ошибка загрузки пати: ' + e.message, 'err');
+  }
+}
+
+// Update rarity badge preview as user types/changes rarity
+function onRarityChange() {
+  const rarity  = $('tf-rarity').value;
+  const name    = $('tf-name').value.trim();
+  const badge   = $('tf-rarity-badge');
+
+  badge.textContent = RARITY_LABELS[rarity] || rarity;
+  badge.className   = 'rarity-preview ' + rarity;
+
+  // Tint name input border
+  const colors = { rare:'#5b8dee', unique:'#9b7fe8', legendary:RARITY_COLORS.legendary };
+  $('tf-name').style.borderColor = rarity !== 'common' ? (colors[rarity] || '') : '';
+
+  // Clear sheets status when form changes
+  const ss = $('tf-sheets-status');
+  if (ss) { ss.textContent = ''; ss.className = 'tf-sheets-status'; }
+}
+
+// Main: send item to player
+async function sendItem() {
+  const uuid   = $('tf-target').value;
+  const name   = $('tf-name').value.trim();
+  const desc   = $('tf-desc').value.trim();
+  const rarity = $('tf-rarity').value;
+
+  if (!uuid) { toast('Выберите получателя'); return; }
+  if (!name) { toast('Введите название предмета'); return; }
+
+  const btn = $('tf-send-btn');
+  btn.disabled = true;
+  btn.textContent = '⟳ Отправляю…';
+
+  const sheetsStatus = $('tf-sheets-status');
+  sheetsStatus.textContent = '';
+
+  try {
+    // 1. Write to Firebase /logs — confirmed:true so character.html picks it up immediately
+    const pushKey = 'dm_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+    const payload = desc ? `${name}|${desc}` : name;
+
+    const logEntry = {
+      uuid,
+      type:      'item',
+      payload,
+      confirmed: true,
+      sentAt:    Date.now(),
+    };
+
+    const r = await fetch(`${FB}/logs/${pushKey}.json`, {
+      method:  'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify(logEntry),
+    });
+    if (!r.ok) throw new Error('Firebase: ' + r.status);
+
+    // Get char name for log
+    let charName = uuid;
+    try { const c = await fbFetch(`/chars/${uuid}`); charName = c?.charName || uuid; } catch {}
+
+    addLog(`Передан «${name}» [${RARITY_LABELS[rarity]}] → ${charName}`, 'ok');
+    toast(`✓ Передано: ${name} → ${charName}`);
+
+    // 2. If rarity != common → add to equipment sheet (if not already there)
+    if (rarity !== 'common') {
+      await addToEquipmentSheet(name, rarity, desc);
+    }
+
+    // Reset form
+    $('tf-name').value = '';
+    $('tf-desc').value = '';
+    $('tf-rarity').value = 'common';
+    onRarityChange();
+
+  } catch(e) {
+    addLog('Ошибка передачи: ' + e.message, 'err');
+    toast('Ошибка: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '✦ ПЕРЕДАТЬ ПРЕДМЕТ';
+  }
+}
+
+// Add item to Google Sheets "equipment" if it doesn't exist yet
+async function addToEquipmentSheet(name, rarity, desc) {
+  const sheetsStatus = $('tf-sheets-status');
+  sheetsStatus.textContent = '⟳ Проверяю таблицу снаряжения…';
+  sheetsStatus.className = 'tf-sheets-status';
+
+  const cfg = typeof SHEETS_CONFIG !== 'undefined' ? SHEETS_CONFIG : null;
+  if (!cfg || !cfg.apiKey || cfg.apiKey === 'ВАШ_API_КЛЮЧ_ЗДЕСЬ' || !cfg.spreadsheetId) {
+    sheetsStatus.textContent = '⚠ Google Sheets не настроен — предмет не добавлен в таблицу.';
+    sheetsStatus.className = 'tf-sheets-status';
+    addLog('Sheets не настроен — «' + name + '» не добавлен в equipment', 'warn');
+    return;
+  }
+
+  const BASE   = `https://sheets.googleapis.com/v4/spreadsheets/${cfg.spreadsheetId}`;
+  const KEY    = `?key=${cfg.apiKey}`;
+  const SHEET  = 'equipment';
+
+  try {
+    // Read existing rows to check for duplicate
+    const readRes  = await fetch(`${BASE}/values/${encodeURIComponent(SHEET)}!A:A${KEY}`);
+    if (!readRes.ok) throw new Error('Чтение: ' + readRes.status);
+    const readData = await readRes.json();
+    const rows     = readData.values || [];
+
+    const nameLower = name.toLowerCase().trim();
+    const exists    = rows.some((r, i) => i > 0 && (r[0] || '').toLowerCase().trim() === nameLower);
+
+    if (exists) {
+      sheetsStatus.textContent = `✓ «${name}» уже есть в таблице снаряжения.`;
+      sheetsStatus.className = 'tf-sheets-status ok';
+      addLog(`«${name}» уже есть в equipment — пропущено`, 'ok');
+      return;
+    }
+
+    // Append new row: name | rarity | description
+    const appendRes = await fetch(
+      `${BASE}/values/${encodeURIComponent(SHEET)}!A:C:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS${KEY.slice(1) ? '&' + KEY.slice(1) : ''}`.replace('?key=', '?valueInputOption=RAW&insertDataOption=INSERT_ROWS&key='),
+      {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ values: [[name, rarity, desc || '']] }),
+      }
+    );
+
+    // Note: appending requires OAuth, not just API key.
+    // Since we only have a read-only API key here, we detect the 401/403 and guide the DM.
+    if (appendRes.status === 401 || appendRes.status === 403) {
+      sheetsStatus.innerHTML = `⚠ Нет прав на запись в таблицу. Добавьте вручную:<br>
+        <code style="font-size:10px;color:var(--gold);margin-top:4px;display:block;">
+          ${name} | ${rarity} | ${desc || ''}
+        </code>`;
+      sheetsStatus.className = 'tf-sheets-status';
+      addLog(`Нет OAuth для записи в Sheets — добавьте «${name}|${rarity}|${desc||''}» вручную`, 'warn');
+      return;
+    }
+
+    if (!appendRes.ok) throw new Error('Запись: ' + appendRes.status);
+
+    sheetsStatus.textContent = `✓ «${name}» [${RARITY_LABELS[rarity]}] добавлен в таблицу снаряжения.`;
+    sheetsStatus.className = 'tf-sheets-status ok';
+    addLog(`«${name}» добавлен в equipment [${rarity}]`, 'ok');
+
+  } catch(e) {
+    sheetsStatus.textContent = '✗ Ошибка Sheets: ' + e.message;
+    sheetsStatus.className = 'tf-sheets-status err';
+    addLog('Ошибка Sheets: ' + e.message, 'err');
+  }
+}
+
+// Load party on page init
+(function(){
+  if(!FB){
+    $('arena-container').innerHTML='<div class="empty-state"><div class="empty-icon">⚠</div><div class="empty-text">Firebase не настроен — проверьте config.js</div></div>';
+    addLog('Firebase не найден','err');return;
+  }
+  addLog('Подключение к Firebase…','ok');
+  startSync();
+  loadParty();
+})();
+</script>
+</body>
+</html>

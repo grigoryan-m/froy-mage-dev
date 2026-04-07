@@ -726,18 +726,18 @@ const EVENT_ICONS = {
     </div>`,
     iconAnchor: [5, 4],
   }),
-  bank: (name) => L.divIcon({
-    className: 'marker',
-    html: `<div class="marker-inner">
-      <div class="marker-icon" style="background:linear-gradient(135deg,#1a1500,#2e2400);border-color:#c9a84c;box-shadow:0 0 12px rgba(201,168,76,.45);">🏛</div>
-      <div class="marker-label" style="color:#e8c96e;">${name}</div>
-    </div>`,
-    iconAnchor: [5, 4],
-  }),
   shop: (name) => L.divIcon({
     className: 'marker',
     html: `<div class="marker-inner">
       <div class="marker-icon">🛒</div>
+      <div class="marker-label">${name}</div>
+    </div>`,
+    iconAnchor: [5, 4],
+  }),
+  bank: (name) => L.divIcon({
+    className: 'marker',
+    html: `<div class="marker-inner">
+      <div class="marker-icon">💵</div>
       <div class="marker-label">${name}</div>
     </div>`,
     iconAnchor: [5, 4],
@@ -757,14 +757,8 @@ const EVENT_POPUP_BUILDERS = {
     <a class="popup-city-link" href="arena.html?arena=${encodeURIComponent(ev.name)}" target="_blank"
        style="color:#e05c5c;margin-top:6px;display:block;">↗ Войти на арену</a>
   `,
-  bank: (ev) => `
-    <div class="popup-city-name" style="color:#e8c96e;">🏛 ${ev.name}</div>
-    ${ev.description ? `<div class="popup-city-desc">${ev.description}</div>` : ''}
-    <a class="popup-city-link" href="bank.html?bank_name=${encodeURIComponent(ev.name)}" target="_blank"
-       style="color:#c9a84c;margin-top:6px;display:block;">↗ Войти в банк</a>
-  `,
   shop: (ev) => `
-    <div class="popup-city-name" style="color:#c9b8f0;">🛒 ${ev.name}</div>
+    <div class="popup-city-name" style="color:#c9b8f0;">🎰 ${ev.name}</div>
     ${ev.description ? `<div class="popup-city-desc">${ev.description}</div>` : ''}
   `,
 };

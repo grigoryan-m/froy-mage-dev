@@ -167,6 +167,83 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   .filter-bar{gap:6px;}
   .stats-line{width:100%;margin-left:0;margin-top:4px;}
 }
+
+/* ══════════════════════════════════════════════════════════
+   MEDALS SECTION
+   ══════════════════════════════════════════════════════════ */
+.medals-section{margin-bottom:36px;}
+.medals-header{font-family:'Cinzel',serif;font-size:10px;letter-spacing:4px;color:var(--gold-l);
+  margin-bottom:6px;display:flex;align-items:center;gap:10px;}
+.medals-header::before{content:'✦';font-size:12px;color:var(--gold);}
+.medals-header::after{content:'';flex:1;height:1px;
+  background:linear-gradient(90deg,var(--gold-d),transparent);}
+.medals-sub{font-size:11px;color:var(--text-dim);font-style:italic;margin-bottom:22px;
+  letter-spacing:.5px;padding-left:2px;}
+
+/* row of medals */
+.medals-row{display:flex;gap:28px;flex-wrap:wrap;align-items:flex-start;padding:10px 4px;}
+
+/* individual medal wrapper */
+.medal-wrap{position:relative;display:flex;flex-direction:column;align-items:center;gap:8px;
+  cursor:pointer;}
+
+/* the SVG medal itself */
+.medal-svg-wrap{
+  width:80px;height:100px;
+  filter:drop-shadow(0 4px 12px rgba(0,0,0,.5));
+  transition:transform .25s cubic-bezier(.34,1.56,.64,1),filter .25s;
+  transform-origin:50% 50%;
+}
+.medal-wrap:hover .medal-svg-wrap{
+  transform:scale(1.12) translateY(-4px);
+  filter:drop-shadow(0 8px 24px rgba(0,0,0,.6)) drop-shadow(0 0 12px var(--medal-glow,rgba(201,168,76,.4)));
+}
+/* swinging animation on hover */
+@keyframes medal-swing{
+  0%,100%{transform:scale(1.12) translateY(-4px) rotate(0deg);}
+  25%{transform:scale(1.12) translateY(-4px) rotate(-4deg);}
+  75%{transform:scale(1.12) translateY(-4px) rotate(4deg);}
+}
+.medal-wrap:hover .medal-svg-wrap{animation:medal-swing .8s ease-in-out infinite;}
+
+.medal-name{font-family:'Cinzel',serif;font-size:8px;letter-spacing:1px;color:var(--text-dim);
+  text-align:center;max-width:88px;line-height:1.3;transition:color .2s;}
+.medal-wrap:hover .medal-name{color:var(--gold-l);}
+
+/* TOOLTIP */
+.medal-tooltip{
+  position:absolute;bottom:calc(100% + 14px);left:50%;transform:translateX(-50%);
+  background:rgba(10,8,25,.97);border:1px solid var(--gold-d);border-radius:10px;
+  padding:14px 16px;width:240px;pointer-events:none;
+  opacity:0;transform:translateX(-50%) translateY(6px);
+  transition:opacity .2s,transform .2s;z-index:100;
+  box-shadow:0 8px 32px rgba(0,0,0,.7);
+}
+.medal-wrap:hover .medal-tooltip{
+  opacity:1;transform:translateX(-50%) translateY(0);
+}
+/* tooltip arrow */
+.medal-tooltip::after{
+  content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);
+  border:6px solid transparent;border-top-color:var(--gold-d);
+}
+.tt-title{font-family:'Cinzel',serif;font-size:11px;font-weight:700;color:var(--gold-l);
+  margin-bottom:6px;letter-spacing:1px;}
+.tt-short{font-size:12px;color:var(--text-mid);line-height:1.5;margin-bottom:8px;}
+.tt-long{font-size:11px;color:var(--text-dim);line-height:1.55;font-style:italic;margin-bottom:10px;}
+.tt-meta{display:flex;gap:6px;flex-wrap:wrap;}
+.tt-date{font-family:'Cinzel',serif;font-size:8px;color:var(--gold);letter-spacing:1px;
+  padding:1px 8px;border:1px solid var(--gold-d);border-radius:8px;background:rgba(201,168,76,.07);}
+.tt-circle{font-family:'Cinzel',serif;font-size:8px;color:var(--accent2);letter-spacing:1px;
+  padding:1px 8px;border:1px solid rgba(166,127,209,.3);border-radius:8px;
+  background:rgba(166,127,209,.07);}
+.tt-parts{margin-top:8px;border-top:1px solid rgba(42,31,69,.8);padding-top:8px;}
+.tt-parts-label{font-family:'Cinzel',serif;font-size:7px;letter-spacing:2px;color:var(--text-dim);margin-bottom:5px;}
+.tt-parts-list{display:flex;flex-wrap:wrap;gap:4px;}
+.tt-part{font-family:'Cinzel',serif;font-size:8px;padding:1px 7px;border-radius:8px;
+  border:1px solid rgba(201,168,76,.2);color:var(--gold-l);background:rgba(201,168,76,.06);}
+/* empty medals state */
+.medals-empty{font-size:13px;color:var(--text-dim);font-style:italic;padding:20px 4px;}
 </style>
 </head>
 <body>
@@ -177,6 +254,13 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     <div class="header-deco"></div>
     <h1>ДОСТИЖЕНИЯ</h1>
     <div class="header-sub">Хроника подвигов &nbsp;•&nbsp; Том II</div>
+  </div>
+
+  <!-- ══ MEDALS SECTION ══ -->
+  <div class="medals-section" id="medals-section" style="display:none;">
+    <div class="medals-header">МЕДАЛИ</div>
+    <div class="medals-sub">Особые сюжетные награды за исключительные деяния</div>
+    <div class="medals-row" id="medals-row"></div>
   </div>
 
   <div class="filter-bar">
@@ -232,8 +316,9 @@ let currentFilter   = 'all';
 async function loadAchievements() {
   try {
     const rows = await sheetsGet('achievements');
-    allAchievements = rows.map(r => ({
+    const all = rows.map(r => ({
       type:         (r.type         || 'fun').trim().toLowerCase(),
+      medal_style:  (r.medal_style  || r['стиль'] || 'gold').trim().toLowerCase(),
       icon:         (r.icon         || '✦').trim(),
       name:          r.name         || '—',
       short:         r.short        || r['краткое']       || '',
@@ -242,9 +327,14 @@ async function loadAchievements() {
       circle:        r.circle       || r['круг']          || '',
       participants: (r.participants || r['участники']     || '').split(',').map(s=>s.trim()).filter(Boolean),
     })).filter(r => r.name && r.name !== '—');
+
+    allMedals       = all.filter(a => a.type === 'medal');
+    allAchievements = all.filter(a => a.type !== 'medal');
   } catch(e) {
+    allMedals       = DEMO_MEDALS;
     allAchievements = DEMO_ACHIEVEMENTS;
   }
+  renderMedals(allMedals);
   renderAll();
 }
 
@@ -385,6 +475,327 @@ const DEMO_ACHIEVEMENTS = [
     participants:['Аргус','Вейн','Кирра'],
   },
 ];
+
+// ── MEDALS ────────────────────────────────────────────────────────────────
+// Sheets format — лист "achievements", type = "medal"
+// Extra field: medal_style — gold | silver | arcane | blood | void | emerald
+// (determines visual design of the medal SVG)
+
+// Each style is a fully hand-drawn SVG medal
+const MEDAL_SVGS = {
+
+  gold: (id) => `
+    <svg viewBox="0 0 80 100" xmlns="http://www.w3.org/2000/svg" style="--medal-glow:rgba(201,168,76,.5)">
+      <defs>
+        <radialGradient id="mg${id}" cx="40%" cy="35%" r="60%">
+          <stop offset="0%" stop-color="#f5dc6e"/>
+          <stop offset="45%" stop-color="#c9a84c"/>
+          <stop offset="100%" stop-color="#7a5a18"/>
+        </radialGradient>
+        <radialGradient id="mc${id}" cx="38%" cy="32%" r="55%">
+          <stop offset="0%" stop-color="#ffe98a"/>
+          <stop offset="60%" stop-color="#c9a84c"/>
+          <stop offset="100%" stop-color="#8a6a20"/>
+        </radialGradient>
+        <filter id="mgl${id}"><feGaussianBlur stdDeviation="1.5" result="blur"/>
+          <feComposite in="SourceGraphic" in2="blur" operator="over"/></filter>
+      </defs>
+      <!-- ribbon -->
+      <rect x="33" y="0" width="6" height="22" rx="2" fill="#c9a84c" opacity=".9"/>
+      <rect x="38" y="0" width="6" height="22" rx="2" fill="#8a6a20" opacity=".85"/>
+      <!-- ribbon bow -->
+      <ellipse cx="38" cy="22" rx="10" ry="5" fill="#c9a84c"/>
+      <ellipse cx="38" cy="22" rx="7" ry="3.2" fill="#e8c96e" opacity=".6"/>
+      <!-- outer ring -->
+      <circle cx="40" cy="62" r="34" fill="url(#mg${id})" stroke="#e8c96e" stroke-width="1.5"/>
+      <!-- rim detail -->
+      ${Array.from({length:24},(_,i)=>{const a=i/24*Math.PI*2;const x1=40+30*Math.cos(a),y1=62+30*Math.sin(a),x2=40+33*Math.cos(a),y2=62+33*Math.sin(a);return `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="#e8c96e" stroke-width="1.2" opacity=".6"/>`;}).join('')}
+      <!-- inner circle -->
+      <circle cx="40" cy="62" r="24" fill="url(#mc${id})" stroke="#f5dc6e" stroke-width=".8"/>
+      <!-- star -->
+      <polygon points="40,44 42.9,52.6 52,52.6 44.5,58.1 47.5,66.7 40,61.2 32.5,66.7 35.5,58.1 28,52.6 37.1,52.6"
+        fill="#fff8d0" stroke="#c9a84c" stroke-width=".5" opacity=".95" filter="url(#mgl${id})"/>
+      <!-- shine -->
+      <ellipse cx="32" cy="50" rx="6" ry="4" fill="white" opacity=".18" transform="rotate(-30,32,50)"/>
+    </svg>`,
+
+  silver: (id) => `
+    <svg viewBox="0 0 80 100" xmlns="http://www.w3.org/2000/svg" style="--medal-glow:rgba(180,190,220,.45)">
+      <defs>
+        <radialGradient id="sg${id}" cx="38%" cy="32%" r="65%">
+          <stop offset="0%" stop-color="#e8edf8"/>
+          <stop offset="50%" stop-color="#9aa8c8"/>
+          <stop offset="100%" stop-color="#3a4560"/>
+        </radialGradient>
+        <radialGradient id="sc${id}" cx="36%" cy="30%" r="58%">
+          <stop offset="0%" stop-color="#f0f4ff"/>
+          <stop offset="55%" stop-color="#8a98be"/>
+          <stop offset="100%" stop-color="#4a5578"/>
+        </radialGradient>
+      </defs>
+      <!-- ribbon pair -->
+      <polygon points="34,0 38,0 40,24 36,22" fill="#7a88a8"/>
+      <polygon points="38,0 43,0 43,22 40,24" fill="#9aa8c8"/>
+      <!-- clasp -->
+      <rect x="32" y="19" width="16" height="8" rx="3" fill="#8a98be" stroke="#b0bcd8" stroke-width=".8"/>
+      <rect x="35" y="21" width="10" height="4" rx="1.5" fill="#c8d4f0" opacity=".7"/>
+      <!-- shield shape instead of circle -->
+      <path d="M40 30 L72 44 L72 72 Q72 90 40 96 Q8 90 8 72 L8 44 Z"
+        fill="url(#sg${id})" stroke="#c0cce8" stroke-width="1.5"/>
+      <!-- inner shield -->
+      <path d="M40 38 L64 50 L64 70 Q64 84 40 89 Q16 84 16 70 L16 50 Z"
+        fill="url(#sc${id})" stroke="#e0e8ff" stroke-width=".7" opacity=".9"/>
+      <!-- cross emblem -->
+      <rect x="36.5" y="50" width="7" height="22" rx="2" fill="#e8eeff" opacity=".9"/>
+      <rect x="28" y="58" width="24" height="6" rx="2" fill="#e8eeff" opacity=".9"/>
+      <!-- shine -->
+      <ellipse cx="28" cy="52" rx="5" ry="7" fill="white" opacity=".15" transform="rotate(-20,28,52)"/>
+    </svg>`,
+
+  arcane: (id) => `
+    <svg viewBox="0 0 80 100" xmlns="http://www.w3.org/2000/svg" style="--medal-glow:rgba(155,127,232,.5)">
+      <defs>
+        <radialGradient id="ag${id}" cx="40%" cy="35%" r="60%">
+          <stop offset="0%" stop-color="#c8a8f8"/>
+          <stop offset="50%" stop-color="#7b5ea7"/>
+          <stop offset="100%" stop-color="#2a1a4a"/>
+        </radialGradient>
+        <radialGradient id="ac${id}" cx="38%" cy="32%" r="55%">
+          <stop offset="0%" stop-color="#e0c8ff"/>
+          <stop offset="60%" stop-color="#9b7fe8"/>
+          <stop offset="100%" stop-color="#3a2060"/>
+        </radialGradient>
+      </defs>
+      <!-- arcane ribbon chains -->
+      <line x1="32" y1="0" x2="36" y2="24" stroke="#9b7fe8" stroke-width="2.5" stroke-dasharray="3,2"/>
+      <line x1="44" y1="0" x2="40" y2="24" stroke="#7b5ea7" stroke-width="2.5" stroke-dasharray="3,2"/>
+      <!-- gem at top -->
+      <polygon points="38,18 40,10 42,18 38,18" fill="#c8a8f8"/>
+      <polygon points="38,18 42,18 40,26" fill="#7b5ea7"/>
+      <!-- hexagon base -->
+      <polygon points="40,28 65,42 65,70 40,84 15,70 15,42"
+        fill="url(#ag${id})" stroke="#c0a0f8" stroke-width="1.8"/>
+      <!-- inner hex -->
+      <polygon points="40,35 60,47 60,67 40,79 20,67 20,47"
+        fill="url(#ac${id})" stroke="#e0c8ff" stroke-width=".8" opacity=".9"/>
+      <!-- rune symbol — eye of magic -->
+      <ellipse cx="40" cy="57" rx="12" ry="8" fill="none" stroke="#e0c8ff" stroke-width="1.2"/>
+      <circle cx="40" cy="57" r="4" fill="#f0e0ff" opacity=".9"/>
+      <circle cx="40" cy="57" r="2" fill="#2a1a4a"/>
+      <!-- sparkles -->
+      <line x1="40" y1="42" x2="40" y2="46" stroke="#c8a8f8" stroke-width="1.5"/>
+      <line x1="40" y1="68" x2="40" y2="72" stroke="#c8a8f8" stroke-width="1.5"/>
+      <line x1="25" y1="57" x2="29" y2="57" stroke="#c8a8f8" stroke-width="1.5"/>
+      <line x1="51" y1="57" x2="55" y2="57" stroke="#c8a8f8" stroke-width="1.5"/>
+      <!-- shine -->
+      <ellipse cx="30" cy="44" rx="5" ry="4" fill="white" opacity=".13" transform="rotate(-25,30,44)"/>
+    </svg>`,
+
+  blood: (id) => `
+    <svg viewBox="0 0 80 100" xmlns="http://www.w3.org/2000/svg" style="--medal-glow:rgba(224,92,92,.45)">
+      <defs>
+        <radialGradient id="bg${id}" cx="38%" cy="32%" r="65%">
+          <stop offset="0%" stop-color="#f08080"/>
+          <stop offset="48%" stop-color="#c0302a"/>
+          <stop offset="100%" stop-color="#4a0a08"/>
+        </radialGradient>
+        <radialGradient id="bc${id}" cx="36%" cy="30%" r="58%">
+          <stop offset="0%" stop-color="#ffa0a0"/>
+          <stop offset="55%" stop-color="#c0392b"/>
+          <stop offset="100%" stop-color="#600a08"/>
+        </radialGradient>
+      </defs>
+      <!-- dark ribbon -->
+      <rect x="34" y="0" width="5" height="24" rx="2" fill="#6a0a08"/>
+      <rect x="39" y="0" width="5" height="24" rx="2" fill="#4a0808"/>
+      <!-- sword crossing ribbon -->
+      <line x1="30" y1="4" x2="50" y2="20" stroke="#c0302a" stroke-width="2.5"/>
+      <line x1="50" y1="4" x2="30" y2="20" stroke="#8a1818" stroke-width="2.5"/>
+      <!-- main circle -->
+      <circle cx="40" cy="64" r="32" fill="url(#bg${id})" stroke="#f06060" stroke-width="1.8"/>
+      <!-- serrated edge -->
+      ${Array.from({length:16},(_,i)=>{const a=i/16*Math.PI*2;const r1=30,r2=33;const x1=40+r1*Math.cos(a),y1=64+r1*Math.sin(a),x2=40+r2*Math.cos(a+Math.PI/16),y2=64+r2*Math.sin(a+Math.PI/16);return `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="#f06060" stroke-width="2" opacity=".5"/>`;}).join('')}
+      <!-- inner -->
+      <circle cx="40" cy="64" r="22" fill="url(#bc${id})" stroke="#ffa0a0" stroke-width=".8"/>
+      <!-- crossed swords emblem -->
+      <line x1="30" y1="54" x2="50" y2="74" stroke="#ffe0e0" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="50" y1="54" x2="30" y2="74" stroke="#ffe0e0" stroke-width="2.5" stroke-linecap="round"/>
+      <circle cx="40" cy="64" r="4" fill="#ffe0e0" opacity=".9"/>
+      <!-- shine -->
+      <ellipse cx="30" cy="52" rx="6" ry="4" fill="white" opacity=".14" transform="rotate(-30,30,52)"/>
+    </svg>`,
+
+  void: (id) => `
+    <svg viewBox="0 0 80 100" xmlns="http://www.w3.org/2000/svg" style="--medal-glow:rgba(100,80,180,.5)">
+      <defs>
+        <radialGradient id="vg${id}" cx="40%" cy="38%" r="65%">
+          <stop offset="0%" stop-color="#5040a0"/>
+          <stop offset="50%" stop-color="#18102a"/>
+          <stop offset="100%" stop-color="#080812"/>
+        </radialGradient>
+        <radialGradient id="vc${id}" cx="38%" cy="32%" r="55%">
+          <stop offset="0%" stop-color="#8060c0"/>
+          <stop offset="60%" stop-color="#281840"/>
+          <stop offset="100%" stop-color="#100818"/>
+        </radialGradient>
+      </defs>
+      <!-- void chains -->
+      ${Array.from({length:6},(_,i)=>{const y=i*4;return `<rect x="37" y="${y}" width="3" height="3" rx=".8" fill="#5040a0" opacity="${.4+i*.1}"/>`;}).join('')}
+      ${Array.from({length:6},(_,i)=>{const y=i*4;return `<rect x="41" y="${y}" width="3" height="3" rx=".8" fill="#281840" opacity="${.4+i*.1}"/>`;}).join('')}
+      <!-- dark pentagram ring -->
+      <circle cx="40" cy="64" r="33" fill="url(#vg${id})" stroke="#6040b0" stroke-width="1.5"/>
+      <!-- void stars around edge -->
+      ${Array.from({length:5},(_,i)=>{const a=i/5*Math.PI*2-Math.PI/2;const x=40+28*Math.cos(a),y=64+28*Math.sin(a);return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="2.5" fill="#a080e0" opacity=".8"/>`;}).join('')}
+      ${Array.from({length:5},(_,i)=>{const a=i/5*Math.PI*2-Math.PI/2;const a2=(i+1)/5*Math.PI*2-Math.PI/2;const x1=40+28*Math.cos(a),y1=64+28*Math.sin(a);const a3=(i+2)/5*Math.PI*2-Math.PI/2;const x2=40+28*Math.cos(a3),y2=64+28*Math.sin(a3);return `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="#6040b0" stroke-width=".8" opacity=".5"/>`;}).join('')}
+      <!-- inner -->
+      <circle cx="40" cy="64" r="20" fill="url(#vc${id})" stroke="#8060c0" stroke-width=".8"/>
+      <!-- void eye -->
+      <ellipse cx="40" cy="64" rx="10" ry="7" fill="none" stroke="#a080e0" stroke-width="1.2"/>
+      <ellipse cx="40" cy="64" rx="5" ry="5" fill="#200818"/>
+      <ellipse cx="40" cy="64" rx="3" ry="3" fill="#a080e0" opacity=".7"/>
+      <ellipse cx="40" cy="64" rx="1.5" ry="1.5" fill="#e0d0ff" opacity=".9"/>
+      <!-- glint -->
+      <ellipse cx="31" cy="52" rx="4" ry="3" fill="white" opacity=".1" transform="rotate(-20,31,52)"/>
+    </svg>`,
+
+  emerald: (id) => `
+    <svg viewBox="0 0 80 100" xmlns="http://www.w3.org/2000/svg" style="--medal-glow:rgba(76,187,138,.45)">
+      <defs>
+        <radialGradient id="eg${id}" cx="38%" cy="32%" r="65%">
+          <stop offset="0%" stop-color="#80e8b0"/>
+          <stop offset="50%" stop-color="#2a9060"/>
+          <stop offset="100%" stop-color="#0a3020"/>
+        </radialGradient>
+        <radialGradient id="ec${id}" cx="36%" cy="30%" r="58%">
+          <stop offset="0%" stop-color="#a0f8c8"/>
+          <stop offset="55%" stop-color="#38b878"/>
+          <stop offset="100%" stop-color="#104830"/>
+        </radialGradient>
+      </defs>
+      <!-- vine ribbon -->
+      <path d="M36 0 Q34 8 36 16 Q38 20 40 24" stroke="#2a9060" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <path d="M44 0 Q46 8 44 16 Q42 20 40 24" stroke="#1a6040" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <!-- leaves -->
+      <ellipse cx="32" cy="10" rx="5" ry="2.5" fill="#38b878" transform="rotate(-30,32,10)" opacity=".9"/>
+      <ellipse cx="48" cy="14" rx="5" ry="2.5" fill="#2a9060" transform="rotate(30,48,14)" opacity=".8"/>
+      <!-- gem facets at top -->
+      <polygon points="40,22 36,28 40,27 44,28" fill="#80e8b0" opacity=".9"/>
+      <!-- main octagon -->
+      <polygon points="40,30 58,38 66,56 62,74 50,82 30,82 18,74 14,56 22,38"
+        fill="url(#eg${id})" stroke="#80e8b0" stroke-width="1.8"/>
+      <!-- inner -->
+      <polygon points="40,37 55,43 62,58 58,70 47,77 33,77 22,70 18,58 25,43"
+        fill="url(#ec${id})" stroke="#a0f8c8" stroke-width=".8" opacity=".9"/>
+      <!-- tree of life -->
+      <line x1="40" y1="72" x2="40" y2="48" stroke="#c0ffe0" stroke-width="1.5" stroke-linecap="round"/>
+      <line x1="40" y1="60" x2="34" y2="54" stroke="#c0ffe0" stroke-width="1.2" stroke-linecap="round"/>
+      <line x1="40" y1="56" x2="46" y2="50" stroke="#c0ffe0" stroke-width="1.2" stroke-linecap="round"/>
+      <line x1="40" y1="65" x2="33" y2="60" stroke="#c0ffe0" stroke-width="1" stroke-linecap="round"/>
+      <line x1="40" y1="63" x2="47" y2="57" stroke="#c0ffe0" stroke-width="1" stroke-linecap="round"/>
+      <!-- root -->
+      <path d="M37 72 Q34 76 31 75" stroke="#c0ffe0" stroke-width="1" fill="none" stroke-linecap="round"/>
+      <path d="M43 72 Q46 76 49 75" stroke="#c0ffe0" stroke-width="1" fill="none" stroke-linecap="round"/>
+      <!-- shine -->
+      <ellipse cx="27" cy="44" rx="5" ry="4" fill="white" opacity=".14" transform="rotate(-25,27,44)"/>
+    </svg>`,
+};
+
+// Fallback for unknown styles
+const MEDAL_DEFAULT = (id) => MEDAL_SVGS.gold(id);
+
+// Demo medals data
+const DEMO_MEDALS = [
+  {
+    type:'medal', medal_style:'gold',
+    name:'Хранитель Пламени',
+    short:'Спас мир в последний момент.',
+    long:'Когда Нижний Элдрос горел, а все остальные отступили — отряд остался. Это не забудут.',
+    cell:'AAE0', circle:'II',
+    participants:['Аргус','Вейн','Кирра'],
+  },
+  {
+    type:'medal', medal_style:'arcane',
+    name:'Адепт Фройской Магии',
+    short:'Постигнуто сокровенное знание.',
+    long:'Все пять элементов освоены до предела. Маг достиг вершины, которую большинство считало легендой.',
+    cell:'AAF2', circle:'II',
+    participants:['Кирра'],
+  },
+  {
+    type:'medal', medal_style:'blood',
+    name:'Несломленный',
+    short:'Выжил там, где не должен был.',
+    long:'Три боя подряд, без отдыха, без маны. Барьер рухнул, но воля — нет.',
+    cell:'AAH4', circle:'III',
+    participants:['Аргус'],
+  },
+  {
+    type:'medal', medal_style:'void',
+    name:'За Пределами Круга',
+    short:'Прикоснулся к тому, чему нет названия.',
+    long:'Некоторые вещи нельзя увидеть дважды. Некоторые нельзя забыть. Он видел.',
+    cell:'AAJ1', circle:'III',
+    participants:['Вейн'],
+  },
+  {
+    type:'medal', medal_style:'emerald',
+    name:'Садовник Судьбы',
+    short:'Вернул жизнь туда, где её не было.',
+    long:'Вырастить что-то в мёртвой земле — это поступок. Запомнить зачем — это мудрость.',
+    cell:'AAK7', circle:'III',
+    participants:['Кирра','Вейн'],
+  },
+];
+
+let allMedals = [];
+
+function renderMedals(medals) {
+  const section = document.getElementById('medals-section');
+  const row     = document.getElementById('medals-row');
+  row.innerHTML = '';
+
+  if (!medals.length) {
+    row.innerHTML = '<div class="medals-empty">Медалей пока нет.</div>';
+    section.style.display = '';
+    return;
+  }
+
+  section.style.display = '';
+
+  medals.forEach((m, i) => {
+    const style    = (m.medal_style || 'gold').toLowerCase();
+    const svgFn    = MEDAL_SVGS[style] || MEDAL_DEFAULT;
+    const uniqueId = 'm' + i;
+
+    const partHtml = m.participants?.length
+      ? `<div class="tt-parts">
+           <div class="tt-parts-label">УЧАСТНИКИ</div>
+           <div class="tt-parts-list">${m.participants.map(p=>`<span class="tt-part">${p}</span>`).join('')}</div>
+         </div>`
+      : '';
+
+    const metaHtml = (m.cell || m.circle)
+      ? `<div class="tt-meta">
+           ${m.cell   ? `<span class="tt-date">${m.cell}</span>`          : ''}
+           ${m.circle ? `<span class="tt-circle">Круг ${m.circle}</span>` : ''}
+         </div>`
+      : '';
+
+    const wrap = document.createElement('div');
+    wrap.className = 'medal-wrap';
+    wrap.innerHTML = `
+      <div class="medal-svg-wrap">${svgFn(uniqueId)}</div>
+      <div class="medal-name">${m.name}</div>
+      <div class="medal-tooltip">
+        <div class="tt-title">${m.name}</div>
+        <div class="tt-short">${m.short || ''}</div>
+        ${m.long ? `<div class="tt-long">${m.long}</div>` : ''}
+        ${metaHtml}
+        ${partHtml}
+      </div>`;
+    row.appendChild(wrap);
+  });
+}
 
 loadAchievements();
 </script>

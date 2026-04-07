@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Банк — Фройские Маги</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#080812;--panel:#0e0e1f;--panel2:#131328;--panel3:#1a1a35;
+  --accent:#7b5ea7;--accent2:#a67fd1;
+  --gold:#c9a84c;--gold-l:#e8c96e;--gold-d:#8a6a20;
+  --text:#e8e0f0;--text-dim:#7a6f90;--text-mid:#b0a0c8;
+  --life:#e05c5c;--line:#2a1f45;
+  --bank:#c9a84c;--bank2:#e8c96e;--bank-d:#8a6a20;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  background:var(--bg);color:var(--text);font-family:'Crimson Pro',Georgia,serif;
+  min-height:100vh;padding:24px 16px 80px;
+  background-image:
+    radial-gradient(ellipse 80% 55% at 50% 0%,rgba(201,168,76,.07) 0%,transparent 65%),
+    radial-gradient(1px 1px at 12% 18%,rgba(255,240,180,.14) 0%,transparent 100%),
+    radial-gradient(1px 1px at 85% 10%,rgba(255,240,180,.10) 0%,transparent 100%),
+    radial-gradient(1px 1px at 5%  78%,rgba(255,240,180,.08) 0%,transparent 100%),
+    radial-gradient(1px 1px at 92% 72%,rgba(255,240,180,.11) 0%,transparent 100%);
+}
+.wrap{max-width:860px;margin:0 auto;position:relative;z-index:1;}
+
+/* HEADER */
+.header{text-align:center;padding:26px 20px 20px;border:1px solid rgba(201,168,76,.3);
+  border-radius:12px;background:var(--panel);margin-bottom:22px;position:relative;overflow:hidden;}
+.header::before{content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 55% 70% at 50% 50%,rgba(201,168,76,.08) 0%,transparent 70%);}
+.hd-deco{position:absolute;top:12px;left:50%;transform:translateX(-50%);width:200px;height:1px;
+  background:linear-gradient(90deg,transparent,var(--gold),transparent);}
+.bank-title{font-family:'Cinzel',serif;font-size:clamp(16px,4.5vw,24px);font-weight:700;
+  letter-spacing:5px;color:var(--gold-l);text-shadow:0 0 28px rgba(201,168,76,.4);position:relative;}
+.bank-desc{font-size:12px;color:var(--text-dim);font-style:italic;margin-top:5px;position:relative;}
+.back-link{position:absolute;left:12px;top:50%;transform:translateY(-50%);
+  font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;color:var(--text-dim);
+  text-decoration:none;border:1px solid var(--line);padding:6px 12px;border-radius:5px;
+  transition:all .2s;z-index:1;}
+.back-link:hover{color:var(--gold);border-color:var(--gold-d);}
+
+/* INFO STRIP */
+.info-strip{display:flex;gap:10px;margin-bottom:22px;flex-wrap:wrap;}
+.info-chip{background:var(--panel);border:1px solid var(--line);border-radius:8px;
+  padding:10px 16px;flex:1;min-width:140px;}
+.info-chip-label{font-family:'Cinzel',serif;font-size:7px;letter-spacing:2px;color:var(--text-dim);margin-bottom:4px;}
+.info-chip-val{font-family:'Cinzel',serif;font-size:16px;font-weight:700;color:var(--gold-l);}
+
+/* SECURITY BAR (EVE style) */
+.sec-bar-wrap{display:flex;gap:3px;margin-top:6px;}
+.sec-pip{height:7px;flex:1;border-radius:2px;background:rgba(42,31,69,.6);transition:background .3s;}
+
+/* LAYOUT */
+.layout{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+@media(max-width:640px){.layout{grid-template-columns:1fr;}}
+
+/* PANELS */
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;}
+.panel-title{font-family:'Cinzel',serif;font-size:9px;letter-spacing:3px;color:var(--gold);
+  margin-bottom:14px;display:flex;align-items:center;gap:7px;}
+.panel-title::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--gold-d),transparent);}
+
+/* CHAR SELECT */
+.char-list{display:flex;flex-direction:column;gap:7px;}
+.char-row{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:8px;
+  background:var(--panel2);border:1px solid var(--line);cursor:pointer;transition:all .2s;}
+.char-row:hover{border-color:var(--gold-d);}
+.char-row.active{border-color:var(--gold);background:rgba(201,168,76,.07);}
+.char-row-name{font-family:'Cinzel',serif;font-size:11px;color:var(--text);flex:1;}
+.char-row-hint{font-size:10px;color:var(--text-dim);font-style:italic;}
+
+/* REAGENTS DISPLAY */
+.reag-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:16px;}
+.reag-cell{background:var(--panel2);border:1px solid var(--line);border-radius:7px;
+  padding:8px 4px;text-align:center;}
+.reag-icon{font-size:18px;line-height:1;margin-bottom:3px;}
+.reag-label{font-family:'Cinzel',serif;font-size:6.5px;letter-spacing:1px;color:var(--text-dim);margin-bottom:4px;}
+.reag-count{font-family:'Cinzel',serif;font-size:13px;font-weight:700;color:var(--text);}
+
+/* DEPOSIT / WITHDRAW FORM */
+.section-label{font-family:'Cinzel',serif;font-size:7.5px;letter-spacing:2px;color:var(--text-dim);margin-bottom:8px;}
+.reag-inputs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px;}
+.reag-input-wrap{display:flex;flex-direction:column;align-items:center;gap:4px;}
+.reag-input-icon{font-size:16px;}
+.reag-input{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:5px;
+  color:var(--text);font-family:'Cinzel',serif;font-size:13px;text-align:center;
+  padding:5px 2px;outline:none;transition:border-color .2s;}
+.reag-input:focus{border-color:var(--gold);}
+.reag-input::-webkit-inner-spin-button,.reag-input::-webkit-outer-spin-button{-webkit-appearance:none;}
+.reag-input[type=number]{-moz-appearance:textfield;}
+
+/* ITEMS LIST */
+.items-section{margin-top:14px;}
+.item-row{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:6px;
+  background:var(--panel2);border:1px solid var(--line);margin-bottom:5px;transition:border-color .2s;}
+.item-row:hover{border-color:var(--gold-d);}
+.item-name{font-family:'Cinzel',serif;font-size:10px;color:var(--text);flex:1;}
+.item-desc{font-size:10px;color:var(--text-dim);font-style:italic;}
+.item-withdraw-btn{font-family:'Cinzel',serif;font-size:7px;letter-spacing:1px;
+  padding:4px 10px;border-radius:5px;border:1px solid var(--line);color:var(--text-dim);
+  background:none;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.item-withdraw-btn:hover{border-color:var(--gold);color:var(--gold);}
+.item-deposit-btn{font-family:'Cinzel',serif;font-size:7px;letter-spacing:1px;
+  padding:4px 10px;border-radius:5px;border:1px solid var(--line);color:var(--text-dim);
+  background:none;cursor:pointer;transition:all .15s;white-space:nowrap;opacity:0;}
+.item-row:hover .item-deposit-btn{opacity:1;}
+.item-deposit-btn:hover{border-color:var(--gold-d);color:var(--gold);}
+
+/* ACTION BUTTONS */
+.action-row{display:flex;gap:8px;}
+.btn{font-family:'Cinzel',serif;font-size:8px;letter-spacing:2px;padding:10px 18px;
+  border-radius:7px;border:1px solid;cursor:pointer;transition:all .2s;flex:1;}
+.btn-deposit{border-color:rgba(201,168,76,.4);color:var(--gold);background:rgba(201,168,76,.08);}
+.btn-deposit:hover{background:rgba(201,168,76,.18);border-color:var(--gold);}
+.btn-deposit:disabled{opacity:.35;cursor:not-allowed;}
+.btn-withdraw{border-color:var(--line);color:var(--text-dim);background:none;}
+.btn-withdraw:hover{border-color:var(--gold-d);color:var(--text);}
+.btn-withdraw:disabled{opacity:.35;cursor:not-allowed;}
+
+/* FEE NOTICE */
+.fee-notice{margin-top:10px;font-size:11px;color:var(--text-dim);font-style:italic;
+  padding:8px 12px;border-radius:6px;border:1px solid rgba(201,168,76,.15);
+  background:rgba(201,168,76,.04);line-height:1.55;}
+.fee-notice strong{color:var(--gold);font-style:normal;}
+
+/* ROBBERY NOTICE */
+.robbery-notice{margin-top:8px;font-size:11px;color:var(--life);font-style:italic;
+  padding:8px 12px;border-radius:6px;border:1px solid rgba(224,92,92,.2);
+  background:rgba(224,92,92,.05);display:none;}
+.robbery-notice.visible{display:block;}
+
+/* VAULT DISPLAY (what's in bank for this char) */
+.vault-empty{font-size:12px;color:var(--text-dim);font-style:italic;
+  text-align:center;padding:20px 0;}
+.vault-reag-row{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;}
+.vault-reag-chip{display:flex;align-items:center;gap:5px;padding:5px 10px;
+  background:var(--panel2);border:1px solid var(--line);border-radius:20px;}
+.vault-reag-chip-icon{font-size:14px;}
+.vault-reag-chip-val{font-family:'Cinzel',serif;font-size:11px;color:var(--gold-l);}
+
+/* LOADING */
+.loading{text-align:center;padding:40px;font-family:'Cinzel',serif;font-size:10px;
+  letter-spacing:2px;color:var(--text-dim);}
+
+/* TOAST */
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:var(--panel3);border:1px solid var(--gold-d);border-radius:8px;padding:10px 24px;
+  font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;color:var(--gold-l);
+  opacity:0;transition:all .3s;pointer-events:none;z-index:999;}
+
+@media(max-width:640px){
+  .reag-grid,.reag-inputs{grid-template-columns:repeat(2,1fr);}
+  .info-strip{flex-direction:column;}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <a class="back-link" href="map.html">← Карта</a>
+    <div class="hd-deco"></div>
+    <div class="bank-title" id="bank-title">🏛 БАНК</div>
+    <div class="bank-desc" id="bank-desc">Загрузка...</div>
+  </div>
+
+  <!-- INFO STRIP -->
+  <div class="info-strip" id="info-strip" style="display:none">
+    <div class="info-chip">
+      <div class="info-chip-label">БЕЗОПАСНОСТЬ</div>
+      <div class="info-chip-val" id="ic-security">—</div>
+      <div class="sec-bar-wrap" id="sec-bar"></div>
+    </div>
+    <div class="info-chip">
+      <div class="info-chip-label">ПЛАТА ЗА ХРАНЕНИЕ</div>
+      <div class="info-chip-val" id="ic-fee">—</div>
+      <div style="font-size:10px;color:var(--text-dim);margin-top:2px;">% от реагентов при изъятии</div>
+    </div>
+    <div class="info-chip">
+      <div class="info-chip-label">ВЛАДЕЛЕЦ</div>
+      <div class="info-chip-val" style="font-size:13px;padding-top:3px;" id="ic-owner">—</div>
+    </div>
+  </div>
+
+  <div class="loading" id="main-loading">⟳ Загружаем банк...</div>
+
+  <div id="main-content" style="display:none">
+    <div class="layout">
+
+      <!-- LEFT: char select + vault -->
+      <div>
+        <div class="panel" style="margin-bottom:16px;">
+          <div class="panel-title">ПЕРСОНАЖ</div>
+          <div class="char-list" id="char-list">
+            <div class="vault-empty">Нет персонажей</div>
+          </div>
+        </div>
+
+        <!-- VAULT: what's stored -->
+        <div class="panel">
+          <div class="panel-title">МОЁ ХРАНИЛИЩЕ</div>
+          <div id="vault-content">
+            <div class="vault-empty">Выберите персонажа</div>
+          </div>
+          <div class="robbery-notice" id="robbery-notice">
+            ⚠ Из-за низкого уровня безопасности часть реагентов может быть украдена при изъятии.
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: deposit/withdraw form -->
+      <div class="panel">
+        <div class="panel-title">ОПЕРАЦИЯ</div>
+
+        <!-- REAGENTS section -->
+        <div class="section-label">РЕАГЕНТЫ — ВНЕСТИ / ИЗЪЯТЬ</div>
+        <div class="reag-inputs">
+          <div class="reag-input-wrap">
+            <div class="reag-input-icon">🔴</div>
+            <input class="reag-input" id="op-red"    type="number" min="0" value="0" placeholder="0">
+            <div style="font-family:'Cinzel',serif;font-size:6px;letter-spacing:.5px;color:var(--text-dim);">КРАСНЫЙ</div>
+          </div>
+          <div class="reag-input-wrap">
+            <div class="reag-input-icon">🔵</div>
+            <input class="reag-input" id="op-blue"   type="number" min="0" value="0" placeholder="0">
+            <div style="font-family:'Cinzel',serif;font-size:6px;letter-spacing:.5px;color:var(--text-dim);">СИНИЙ</div>
+          </div>
+          <div class="reag-input-wrap">
+            <div class="reag-input-icon">🟢</div>
+            <input class="reag-input" id="op-green"  type="number" min="0" value="0" placeholder="0">
+            <div style="font-family:'Cinzel',serif;font-size:6px;letter-spacing:.5px;color:var(--text-dim);">ЗЕЛЁНЫЙ</div>
+          </div>
+          <div class="reag-input-wrap">
+            <div class="reag-input-icon">🟡</div>
+            <input class="reag-input" id="op-yellow" type="number" min="0" value="0" placeholder="0">
+            <div style="font-family:'Cinzel',serif;font-size:6px;letter-spacing:.5px;color:var(--text-dim);">ЖЁЛТЫЙ</div>
+          </div>
+        </div>
+
+        <div class="action-row" style="margin-bottom:16px;">
+          <button class="btn btn-deposit"  id="btn-deposit"  onclick="doDeposit()"  disabled>↓ Внести реагенты</button>
+          <button class="btn btn-withdraw" id="btn-withdraw" onclick="doWithdraw()" disabled>↑ Изъять реагенты</button>
+        </div>
+
+        <!-- ITEMS section -->
+        <div class="section-label" style="margin-top:8px;">ПРЕДМЕТЫ — ОТПРАВИТЬ В БАНК</div>
+        <div class="items-section" id="inv-items">
+          <div class="vault-empty">Выберите персонажа</div>
+        </div>
+
+        <!-- Fee notice -->
+        <div class="fee-notice" id="fee-notice" style="display:none"></div>
+      </div>
+
+    </div>
+  </div><!-- /main-content -->
+
+</div>
+
+<div id="toast"></div>
+
+<script src="config.js"></script>
+<script src="sheets.js"></script>
+<script>
+// ═══════════════════════════════════════════════════════════════════════════
+// Google Sheets лист "banks":
+//   name        | title | description | owner | security | fee_percent
+//   Банк Гранита | БАНК ГРАНИТА | Надёжнее гор | Морвен | 85 | 10
+//
+//   security    — уровень безопасности 0–100 (%)
+//                 При изъятии: шанс потери = (100 - security) / 100
+//                 Потеря рассчитывается как % от суммы изъятия
+//   fee_percent — плата за хранение (% от изымаемых реагентов уходит банку)
+//
+// Google Sheets лист "map_events":
+//   type | name | lat | lng | description
+//   bank | Банк Гранита | 35.2 | 18.6 | Самый надёжный банк в регионе
+//
+// Firebase /bank/{bankName}/{charUUID}/ →
+//   reagents: { red, blue, green, yellow }
+//   items:    [ { name, desc } ]
+// ═══════════════════════════════════════════════════════════════════════════
+
+const FB        = FIREBASE_CONFIG.databaseURL;
+const bankName  = decodeURIComponent(new URLSearchParams(location.search).get('bank_name') || 'bank');
+const BANK_PATH = `bank/${encodeURIComponent(bankName)}`;
+
+const REAG_IDS  = ['red','blue','green','yellow'];
+const REAG_ICON = { red:'🔴', blue:'🔵', green:'🟢', yellow:'🟡' };
+const REAG_NAME = { red:'Красный', blue:'Синий', green:'Зелёный', yellow:'Жёлтый' };
+
+let bankData    = null;   // from sheets
+let selectedChar= null;   // { charName, charUUID, localKey, reagents, equipment }
+let vaultData   = null;   // { reagents, items } from Firebase for this char
+
+const esc = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+// ── Firebase helpers ───────────────────────────────────────────────────────
+const fbGet = async p => {
+  try { const r = await fetch(`${FB}/${p}.json`); return r.ok ? r.json() : null; }
+  catch { return null; }
+};
+const fbSet = async (p, v) => {
+  await fetch(`${FB}/${p}.json`, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(v) });
+};
+const fbPatch = async (p, v) => {
+  await fetch(`${FB}/${p}.json`, { method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify(v) });
+};
+
+// ── Toast ──────────────────────────────────────────────────────────────────
+function toast(msg, dur=3200) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.opacity = '1';
+  t.style.transform = 'translateX(-50%) translateY(0)';
+  clearTimeout(t._t);
+  t._t = setTimeout(() => {
+    t.style.opacity = '0';
+    t.style.transform = 'translateX(-50%) translateY(20px)';
+  }, dur);
+}
+
+// ── Security bar (EVE Online style) ───────────────────────────────────────
+function renderSecBar(security) {
+  const bar = document.getElementById('sec-bar');
+  bar.innerHTML = '';
+  const pips = 10;
+  const filled = Math.round(security / 100 * pips);
+  for (let i = 0; i < pips; i++) {
+    const pip = document.createElement('div');
+    pip.className = 'sec-pip';
+    if (i < filled) {
+      // colour gradient: red (0) → yellow (50) → green (100)
+      const t = i / (pips - 1);
+      let r, g, b;
+      if (t < 0.5) { r = 224; g = Math.round(92 + (187-92)*t*2); b = 92; }
+      else          { r = Math.round(224 + (76-224)*(t-.5)*2); g = 187; b = Math.round(92 + (138-92)*(t-.5)*2); }
+      pip.style.background = `rgb(${r},${g},${b})`;
+    }
+    bar.appendChild(pip);
+  }
+}
+
+// ── Load bank info from Sheets ─────────────────────────────────────────────
+async function loadBankInfo() {
+  document.getElementById('bank-title').textContent = '🏛 ' + bankName.toUpperCase();
+  try {
+    const rows = await sheetsGet('banks');
+    const row = rows.find(r => (r.name||'').trim().toLowerCase() === bankName.toLowerCase());
+    if (row) {
+      bankData = {
+        name:       row.name       || bankName,
+        title:      row.title      || bankName,
+        description:row.description|| '',
+        owner:      row.owner      || '—',
+        security:   parseFloat(row.security   || row['безопасность'] || 100),
+        fee:        parseFloat(row.fee_percent || row['плата']        || 0),
+      };
+    } else {
+      bankData = { name: bankName, title: bankName, description:'', owner:'—', security:100, fee:0 };
+    }
+  } catch {
+    bankData = { name: bankName, title: bankName, description:'', owner:'—', security:100, fee:0 };
+  }
+
+  document.getElementById('bank-title').textContent = '🏛 ' + bankData.title.toUpperCase();
+  document.getElementById('bank-desc').textContent  = bankData.description;
+  document.title = bankData.title + ' — Банк';
+  document.getElementById('ic-security').textContent = bankData.security + '%';
+  document.getElementById('ic-fee').textContent = bankData.fee + '%';
+  document.getElementById('ic-owner').textContent = bankData.owner;
+  renderSecBar(bankData.security);
+
+  // Show robbery notice if security < 70
+  const rn = document.getElementById('robbery-notice');
+  if (bankData.security < 70) rn.classList.add('visible');
+
+  // Show fee notice
+  const fn = document.getElementById('fee-notice');
+  if (bankData.fee > 0) {
+    fn.style.display = '';
+    fn.innerHTML = `При изъятии реагентов банк удерживает <strong>${bankData.fee}%</strong> как плату за хранение.`
+      + (bankData.security < 100 ? ` При низком уровне безопасности (${bankData.security}%) часть реагентов может быть украдена.` : '');
+  }
+
+  document.getElementById('info-strip').style.display = '';
+}
+
+// ── Load local characters ──────────────────────────────────────────────────
+function loadLocalChars() {
+  const chars = [];
+  try {
+    const idx = JSON.parse(localStorage.getItem('froyskyy_chars_index')) || [];
+    idx.forEach(e => {
+      try {
+        const s = JSON.parse(localStorage.getItem('froyskyy_char_' + e.id));
+        if (s && s.charUUID) chars.push({ ...s, localKey: 'froyskyy_char_' + e.id });
+      } catch {}
+    });
+  } catch {}
+  if (!chars.length) {
+    try {
+      const s = JSON.parse(localStorage.getItem('froyskyy_v4'));
+      if (s && s.charUUID) chars.push({ ...s, localKey: 'froyskyy_v4' });
+    } catch {}
+  }
+  return chars;
+}
+
+function buildCharList(chars) {
+  const list = document.getElementById('char-list');
+  list.innerHTML = '';
+  if (!chars.length) {
+    list.innerHTML = '<div class="vault-empty">Нет персонажей</div>';
+    return;
+  }
+  chars.forEach(ch => {
+    const row = document.createElement('div');
+    row.className = 'char-row';
+    row.innerHTML = `<div class="char-row-name">${esc(ch.charName||'—')}</div>`;
+    row.onclick = () => selectChar(ch, row);
+    list.appendChild(row);
+  });
+}
+
+async function selectChar(ch, rowEl) {
+  selectedChar = ch;
+  document.querySelectorAll('.char-row').forEach(r => r.classList.remove('active'));
+  rowEl.classList.add('active');
+
+  document.getElementById('btn-deposit').disabled  = false;
+  document.getElementById('btn-withdraw').disabled = false;
+
+  await refreshVault();
+  renderInventoryItems();
+}
+
+// ── Vault ──────────────────────────────────────────────────────────────────
+async function refreshVault() {
+  if (!selectedChar) return;
+  vaultData = await fbGet(`${BANK_PATH}/${selectedChar.charUUID}`) || { reagents:{}, items:[] };
+  renderVault();
+}
+
+function renderVault() {
+  const el = document.getElementById('vault-content');
+  if (!vaultData) { el.innerHTML = '<div class="vault-empty">Хранилище пусто</div>'; return; }
+
+  const reags = vaultData.reagents || {};
+  const items = vaultData.items    || [];
+  const hasReags = REAG_IDS.some(c => (reags[c]||0) > 0);
+  const hasItems = items.length > 0;
+
+  if (!hasReags && !hasItems) {
+    el.innerHTML = '<div class="vault-empty">Хранилище пусто</div>';
+    return;
+  }
+
+  el.innerHTML = '';
+
+  if (hasReags) {
+    const row = document.createElement('div');
+    row.className = 'vault-reag-row';
+    REAG_IDS.forEach(c => {
+      if (!(reags[c]||0)) return;
+      const chip = document.createElement('div');
+      chip.className = 'vault-reag-chip';
+      chip.innerHTML = `<span class="vault-reag-chip-icon">${REAG_ICON[c]}</span>
+        <span class="vault-reag-chip-val">×${reags[c]}</span>`;
+      row.appendChild(chip);
+    });
+    el.appendChild(row);
+  }
+
+  if (hasItems) {
+    const label = document.createElement('div');
+    label.className = 'section-label';
+    label.style.marginBottom = '6px';
+    label.textContent = 'ПРЕДМЕТЫ В ХРАНИЛИЩЕ';
+    el.appendChild(label);
+
+    items.forEach((item, i) => {
+      const row = document.createElement('div');
+      row.className = 'item-row';
+      row.innerHTML = `
+        <div style="flex:1;">
+          <div class="item-name">${esc(item.name)}</div>
+          ${item.desc ? `<div class="item-desc">${esc(item.desc)}</div>` : ''}
+        </div>
+        <button class="item-withdraw-btn" onclick="withdrawItem(${i})">↑ Забрать</button>`;
+      el.appendChild(row);
+    });
+  }
+}
+
+// ── Inventory items (from character save) ─────────────────────────────────
+function renderInventoryItems() {
+  const el = document.getElementById('inv-items');
+  if (!selectedChar) { el.innerHTML = '<div class="vault-empty">Выберите персонажа</div>'; return; }
+
+  const equip = (selectedChar.equipment || []).filter(e => e.name?.trim());
+  if (!equip.length) { el.innerHTML = '<div class="vault-empty">Инвентарь пуст</div>'; return; }
+
+  el.innerHTML = '';
+  equip.forEach((item, i) => {
+    const row = document.createElement('div');
+    row.className = 'item-row';
+    row.innerHTML = `
+      <div style="flex:1;">
+        <div class="item-name">${esc(item.name)}</div>
+        ${item.desc ? `<div class="item-desc">${esc(item.desc)}</div>` : ''}
+      </div>
+      <button class="item-deposit-btn" onclick="depositItem(${i})">↓ В банк</button>`;
+    el.appendChild(row);
+  });
+}
+
+// ── DEPOSIT reagents ───────────────────────────────────────────────────────
+async function doDeposit() {
+  if (!selectedChar) return;
+  const amounts = {};
+  let total = 0;
+  REAG_IDS.forEach(c => {
+    const v = parseInt(document.getElementById('op-' + c).value) || 0;
+    if (v > 0) { amounts[c] = v; total += v; }
+  });
+  if (!total) { toast('Введите количество реагентов для внесения'); return; }
+
+  // Check player has enough
+  const charReags = selectedChar.reagents || {};
+  for (const c of REAG_IDS) {
+    if ((amounts[c]||0) > (charReags[c]||0)) {
+      toast(`Недостаточно: ${REAG_NAME[c]} (есть ${charReags[c]||0}, нужно ${amounts[c]})`);
+      return;
+    }
+  }
+
+  // Deduct from player
+  const newCharReags = { ...charReags };
+  REAG_IDS.forEach(c => { if (amounts[c]) newCharReags[c] = (newCharReags[c]||0) - amounts[c]; });
+  saveCharReagents(newCharReags);
+
+  // Add to vault
+  const vaultReags = { ...(vaultData?.reagents || {}) };
+  REAG_IDS.forEach(c => { if (amounts[c]) vaultReags[c] = (vaultReags[c]||0) + amounts[c]; });
+  await fbPatch(`${BANK_PATH}/${selectedChar.charUUID}`, { reagents: vaultReags });
+
+  clearInputs();
+  await refreshVault();
+  toast(`✓ Внесено в банк`);
+}
+
+// ── WITHDRAW reagents (with fee + robbery) ─────────────────────────────────
+async function doWithdraw() {
+  if (!selectedChar || !vaultData) return;
+
+  const amounts = {};
+  let total = 0;
+  REAG_IDS.forEach(c => {
+    const v = parseInt(document.getElementById('op-' + c).value) || 0;
+    if (v > 0) { amounts[c] = v; total += v; }
+  });
+  if (!total) { toast('Введите количество реагентов для изъятия'); return; }
+
+  const vaultReags = vaultData.reagents || {};
+  for (const c of REAG_IDS) {
+    if ((amounts[c]||0) > (vaultReags[c]||0)) {
+      toast(`В хранилище недостаточно: ${REAG_NAME[c]} (есть ${vaultReags[c]||0})`);
+      return;
+    }
+  }
+
+  // Apply fee (% taken by bank)
+  const feeRate    = (bankData?.fee || 0) / 100;
+  const secRate    = (bankData?.security || 100) / 100;
+  const robberyRate = 1 - secRate; // chance of robbery = (100 - security)%
+
+  const delivered = {};
+  const afterFee  = {};
+  let   noticeLines = [];
+
+  REAG_IDS.forEach(c => {
+    if (!amounts[c]) return;
+    const raw      = amounts[c];
+    const fee      = Math.floor(raw * feeRate);
+    const robbery  = Math.floor((raw - fee) * robberyRate * Math.random()); // random robbery up to max
+    const got      = raw - fee - robbery;
+
+    afterFee[c]  = (vaultReags[c]||0) - raw; // deduct full from vault
+    delivered[c] = Math.max(0, got);
+
+    if (fee > 0 || robbery > 0) {
+      noticeLines.push(`${REAG_ICON[c]} ${raw}: −${fee} плата${robbery>0?`, −${robbery} ограблено`:''} → +${got}`);
+    }
+  });
+
+  // Deduct from vault
+  const newVaultReags = { ...vaultReags };
+  REAG_IDS.forEach(c => { if (afterFee[c] !== undefined) newVaultReags[c] = Math.max(0, afterFee[c]); });
+  await fbPatch(`${BANK_PATH}/${selectedChar.charUUID}`, { reagents: newVaultReags });
+
+  // Add to player
+  const charReags = { ...(selectedChar.reagents || {}) };
+  REAG_IDS.forEach(c => { if (delivered[c]) charReags[c] = (charReags[c]||0) + delivered[c]; });
+  saveCharReagents(charReags);
+
+  clearInputs();
+  await refreshVault();
+
+  if (noticeLines.length) {
+    toast('Изъято:\n' + noticeLines.join('\n'), 5000);
+  } else {
+    toast('✓ Реагенты получены');
+  }
+}
+
+// ── Deposit item from inventory ────────────────────────────────────────────
+async function depositItem(idx) {
+  if (!selectedChar) return;
+  const equip = [...(selectedChar.equipment || [])];
+  const item = equip[idx];
+  if (!item) return;
+
+  // Remove from inventory
+  equip.splice(idx, 1);
+  saveCharEquipment(equip);
+
+  // Add to vault
+  const vaultItems = [...(vaultData?.items || [])];
+  vaultItems.push({ name: item.name, desc: item.desc || '' });
+  await fbPatch(`${BANK_PATH}/${selectedChar.charUUID}`, { items: vaultItems });
+
+  await refreshVault();
+  renderInventoryItems();
+  toast(`✓ «${item.name}» отправлен в банк`);
+}
+
+// ── Withdraw item from vault ───────────────────────────────────────────────
+async function withdrawItem(idx) {
+  if (!selectedChar || !vaultData) return;
+  const items = [...(vaultData.items || [])];
+  const item = items[idx];
+  if (!item) return;
+
+  // Remove from vault
+  items.splice(idx, 1);
+  await fbPatch(`${BANK_PATH}/${selectedChar.charUUID}`, { items });
+
+  // Add to inventory
+  const equip = [...(selectedChar.equipment || [])];
+  equip.push({ name: item.name, desc: item.desc || '' });
+  saveCharEquipment(equip);
+
+  await refreshVault();
+  renderInventoryItems();
+  toast(`✓ «${item.name}» возвращён в инвентарь`);
+}
+
+// ── Save helpers ───────────────────────────────────────────────────────────
+function saveCharReagents(reagents) {
+  if (!selectedChar?.localKey) return;
+  try {
+    const s = JSON.parse(localStorage.getItem(selectedChar.localKey)) || {};
+    s.reagents = reagents;
+    localStorage.setItem(selectedChar.localKey, JSON.stringify(s));
+    selectedChar.reagents = reagents;
+  } catch {}
+}
+
+function saveCharEquipment(equipment) {
+  if (!selectedChar?.localKey) return;
+  try {
+    const s = JSON.parse(localStorage.getItem(selectedChar.localKey)) || {};
+    s.equipment = equipment;
+    localStorage.setItem(selectedChar.localKey, JSON.stringify(s));
+    selectedChar.equipment = equipment;
+  } catch {}
+}
+
+function clearInputs() {
+  REAG_IDS.forEach(c => { document.getElementById('op-' + c).value = 0; });
+}
+
+// ── INIT ───────────────────────────────────────────────────────────────────
+async function init() {
+  await loadBankInfo();
+  const chars = loadLocalChars();
+  buildCharList(chars);
+  document.getElementById('main-loading').style.display = 'none';
+  document.getElementById('main-content').style.display = '';
+}
+
+init();
+</script>
+</body>
+</html>
