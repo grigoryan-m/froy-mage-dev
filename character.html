@@ -469,23 +469,6 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;bac
   </div>
 </div>
 
-<!-- ── БИЛД ────────────────────────────────────────────────────────────────── -->
-<div class="build-panel" id="build-panel">
-  <div class="section-title" style="margin-bottom:10px;">БИЛД</div>
-  <div class="build-inner">
-    <div class="build-icon" id="build-icon">✦</div>
-    <div class="build-content">
-      <div class="build-top">
-        <span class="build-title" id="build-title">—</span>
-        <div class="build-branches" id="build-branches"></div>
-      </div>
-      <div id="build-ult-wrap">
-        <div class="build-placeholder" id="build-placeholder">Активируй две смежные ветки чтобы увидеть свой билд</div>
-      </div>
-    </div>
-  </div>
-</div>
-
 <div class="main-grid">
   <div class="magic-panel">
     <div class="panel-title">КРУГ МАГИИ</div>
@@ -566,7 +549,22 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;bac
     <button class="dice-clear-btn" onclick="clearDice()">Очистить пул</button>
   </div>
 </div>
-
+<!-- ── БИЛД ────────────────────────────────────────────────────────────────── -->
+<div class="build-panel" id="build-panel">
+  <div class="section-title" style="margin-bottom:10px;">БИЛД</div>
+  <div class="build-inner">
+    <div class="build-icon" id="build-icon">✦</div>
+    <div class="build-content">
+      <div class="build-top">
+        <span class="build-title" id="build-title">—</span>
+        <div class="build-branches" id="build-branches"></div>
+      </div>
+      <div id="build-ult-wrap">
+        <div class="build-placeholder" id="build-placeholder">Активируй две смежные ветки чтобы увидеть свой билд</div>
+      </div>
+    </div>
+  </div>
+</div>
 <!-- CLASS SKILLS -->
 <div class="skills-panel">
   <div class="section-title">КЛАССОВЫЕ УМЕНИЯ</div>
@@ -1519,7 +1517,12 @@ function renderAdjSkills(grid) {
   const byBranch = {};
   adjSkillsData.forEach(s => { (byBranch[s.branch] = byBranch[s.branch]||[]).push(s); });
 
-  Object.entries(byBranch).forEach(([branch, skills]) => {
+  const sortedBranches = Object.entries(byBranch).sort(([a],[b]) => {
+      const aActive = adjActive.has(a) ? 0 : 1;
+      const bActive = adjActive.has(b) ? 0 : 1;
+      return aActive - bActive;
+    });
+    sortedBranches.forEach(([branch, skills]) => {
     const isActive = adjActive.has(branch);
     const color = ADJ_COLORS[branch] || '#c9a84c';
     const adjDef = ADJ.find(a => a.id === branch);
