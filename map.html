@@ -113,10 +113,11 @@ body{background:var(--bg);color:var(--text);font-family:'Crimson Pro',Georgia,se
 /* Casino marker */
 .marker{background:none!important;border:none!important;box-shadow:none!important;}
 .marker-inner{
+  opacity: 0.3;
   display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;
   transition:transform .15s;
 }
-.marker-inner:hover{transform:scale(1.12);}
+.marker-inner:hover{transform:scale(1.12); opacity: 1;}
 .marker-icon{
   width:28px;height:28px;border-radius:50%;
   background:linear-gradient(135deg,#1a0a2e,#2d1055);
@@ -182,6 +183,7 @@ body{background:var(--bg);color:var(--text);font-family:'Crimson Pro',Georgia,se
   transform:translateY(16px);
   opacity:0;
   transition:transform .25s ease, opacity .25s ease;
+  pointer-events: none;
 }
 #state-info-panel.visible{transform:translateY(0);opacity:1;}
 .si-close{position:absolute;top:10px;right:12px;background:none;border:none;color:var(--text-dim);font-size:18px;cursor:pointer;line-height:1;padding:2px;transition:color .15s;}
@@ -407,7 +409,7 @@ const STATES = [
     name: 'Вельмир теней',
     marks: '✨',
     description: 'Когда братья были заточены, часть их вельмира просочилась в этот лес. Поговаривают, что шепот братьев все еще существует в этом лесу.',
-    population: '~0',
+    population: '~2 тыс',
     security: 0,
     color: '#fff',
     fontSize: 8,
@@ -429,6 +431,16 @@ const STATES = [
     description: 'Место добычи истинной магии, борьба с хаосом и создание реагентов.',
     population: '~10 тыс',
     security: -5,
+    color: '#D70040',
+    fontSize: 8,
+  },
+  {
+    lat: 497.562, lng: 275.963,
+    name: 'Логово Уробороса',
+    marks: '',
+    description: 'Не суйся, если не готов на вечные страдания и летальный исход.',
+    population: '~1',
+    security: -3,
     color: '#D70040',
     fontSize: 8,
   }
@@ -853,10 +865,12 @@ function openStatePanel(state) {
   document.getElementById('si-pop').textContent   = state.population  || '—';
   renderSecBar(state.security ?? 0);
   document.getElementById('state-info-panel').classList.add('visible');
+  document.getElementById('state-info-panel').style.pointerEvents = 'auto';
 }
 
 function closeStatePanel() {
   document.getElementById('state-info-panel').classList.remove('visible');
+  document.getElementById('state-info-panel').style.pointerEvents = 'none';
 }
 
 function initStates() {

@@ -81,6 +81,41 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;bac
 .empty-text{font-size:14px;color:var(--text-dim);font-style:italic;}
 #confirm-overlay{display:none;position:fixed;inset:0;z-index:200;background:rgba(4,4,18,.87);backdrop-filter:blur(5px);align-items:center;justify-content:center;}
 #confirm-overlay.show{display:flex;}
+/* ── ITEM TRANSFER PANEL ── */
+.transfer-panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px;margin-top:24px;}
+.transfer-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+@media(max-width:580px){.transfer-grid{grid-template-columns:1fr;}}
+.tf-group{display:flex;flex-direction:column;gap:6px;}
+.tf-label{font-family:'Cinzel',serif;font-size:7.5px;letter-spacing:2px;color:var(--text-dim);}
+.tf-input{background:var(--panel2);border:1px solid var(--line);border-radius:6px;
+  color:var(--text);font-family:'Crimson Pro',serif;font-size:13px;padding:8px 12px;
+  outline:none;transition:border-color .2s;width:100%;}
+.tf-input:focus{border-color:var(--accent2);}
+.tf-select{background:var(--panel2);border:1px solid var(--line);border-radius:6px;
+  color:var(--text);font-family:'Cinzel',serif;font-size:11px;letter-spacing:.5px;
+  padding:8px 12px;outline:none;transition:border-color .2s;width:100%;cursor:pointer;}
+.tf-select:focus{border-color:var(--accent2);}
+/* rarity colour tinting on select option — best-effort */
+.tf-rarity-common{color:var(--text);}
+.tf-rarity-rare{color:#5b8dee;}
+.tf-rarity-unique{color:#9b7fe8;}
+.tf-rarity-legendary{color:var(--gold-l);}
+.tf-send-btn{width:100%;margin-top:14px;font-family:'Cinzel',serif;font-size:9px;letter-spacing:2.5px;
+  padding:12px;border-radius:7px;border:1px solid rgba(76,187,138,.4);color:var(--green);
+  background:rgba(76,187,138,.07);cursor:pointer;transition:all .2s;}
+.tf-send-btn:hover{background:rgba(76,187,138,.16);border-color:var(--green);}
+.tf-send-btn:disabled{opacity:.35;cursor:not-allowed;}
+.tf-party-empty{font-size:12px;color:var(--text-dim);font-style:italic;text-align:center;padding:14px 0;}
+/* rarity preview badge next to name */
+.rarity-preview{display:inline-block;font-family:'Cinzel',serif;font-size:8px;letter-spacing:1px;
+  padding:2px 8px;border-radius:10px;border:1px solid transparent;margin-top:4px;transition:all .2s;}
+.rarity-preview.common   {color:var(--text-dim);border-color:var(--line);background:transparent;}
+.rarity-preview.rare     {color:#5b8dee;border-color:#5b8dee44;background:rgba(91,141,238,.07);}
+.rarity-preview.unique   {color:#9b7fe8;border-color:#9b7fe844;background:rgba(155,127,232,.07);}
+.rarity-preview.legendary{color:var(--gold-l);border-color:var(--gold-d);background:rgba(201,168,76,.08);}
+.tf-sheets-status{font-size:11px;margin-top:6px;min-height:16px;font-style:italic;color:var(--text-dim);}
+.tf-sheets-status.ok{color:var(--green);}
+.tf-sheets-status.err{color:var(--life);}
 .confirm-modal{background:var(--panel);border:1px solid rgba(224,92,92,.35);border-radius:14px;padding:32px 36px;max-width:400px;width:90%;text-align:center;box-shadow:0 16px 60px rgba(0,0,0,.8);animation:min .3s cubic-bezier(.34,1.56,.64,1);}
 @keyframes min{from{opacity:0;transform:scale(.88);}to{opacity:1;transform:scale(1);}}
 .confirm-icon{font-size:36px;margin-bottom:14px;}
@@ -102,31 +137,6 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;bac
 .log-empty{font-size:12px;color:var(--text-dim);font-style:italic;padding:8px 0;text-align:center;}
 #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--panel3);border:1px solid var(--accent);border-radius:8px;padding:10px 22px;font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;color:var(--gold-l);opacity:0;transition:all .3s;pointer-events:none;z-index:999;}
 @media(max-width:580px){.fighters-grid{grid-template-columns:1fr;gap:10px;}.vs-mini{display:none;}.stats-bar{flex-direction:column;}.card-footer{flex-direction:column;align-items:flex-start;}}
-/* ── BANKS ── */
-.banks-panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;margin-top:24px;}
-.bank-table-wrap{overflow-x:auto;margin-top:4px;}
-.bank-table{width:100%;border-collapse:collapse;font-size:12px;}
-.bank-table th{font-family:'Cinzel',serif;font-size:7.5px;letter-spacing:2px;color:var(--text-dim);
-  text-align:left;padding:6px 10px;border-bottom:1px solid var(--line);white-space:nowrap;}
-.bank-table td{padding:8px 10px;border-bottom:1px solid rgba(42,31,69,.5);vertical-align:top;color:var(--text-mid);}
-.bank-table tr:last-child td{border-bottom:none;}
-.bank-table tr:hover td{background:rgba(123,94,167,.05);}
-.btd-bank{font-family:'Cinzel',serif;font-size:10px;color:var(--gold);white-space:nowrap;}
-.btd-char{font-family:'Cinzel',serif;font-size:10px;color:var(--text);}
-.btd-reags{display:flex;gap:5px;flex-wrap:wrap;}
-.btd-reag{display:flex;align-items:center;gap:3px;font-family:'Cinzel',serif;font-size:9px;
-  padding:2px 7px;border-radius:10px;border:1px solid rgba(201,168,76,.2);color:var(--gold);
-  background:rgba(201,168,76,.06);}
-.btd-items{display:flex;flex-direction:column;gap:2px;}
-.btd-item{font-size:11px;color:var(--text-dim);}
-.btd-item::before{content:'· ';}
-.bank-empty{font-size:12px;color:var(--text-dim);font-style:italic;padding:16px 0;text-align:center;}
-.bank-reload-btn{font-family:'Cinzel',serif;font-size:7.5px;letter-spacing:1.5px;
-  padding:5px 14px;border-radius:5px;border:1px solid var(--line);color:var(--text-dim);
-  background:none;cursor:pointer;transition:all .2s;margin-left:auto;}
-.bank-reload-btn:hover{border-color:var(--gold-d);color:var(--gold);}
-.banks-header-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
-.banks-loading{font-size:11px;color:var(--text-dim);font-style:italic;padding:16px 0;text-align:center;}
 </style>
 </head>
 <body>
@@ -154,13 +164,50 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;bac
   <div class="log-list" id="log-list"><div class="log-empty">Действий пока не было</div></div>
 </div>
 
-<!-- ── BANKS ── -->
-<div class="banks-panel">
-  <div class="banks-header-row">
-    <div class="section-title" style="margin-bottom:0;flex:1;">БАНКИ</div>
-    <button class="bank-reload-btn" onclick="loadBanks()">⟳ Обновить</button>
+<!-- ── ITEM TRANSFER ── -->
+<div class="transfer-panel">
+  <div class="section-title">ПЕРЕДАТЬ ПРЕДМЕТ ИГРОКУ</div>
+
+  <!-- Party loading state -->
+  <div id="tf-party-load" class="tf-party-empty">⟳ Загрузка участников пати…</div>
+
+  <!-- Form (shown once party loaded) -->
+  <div id="tf-form" style="display:none;">
+    <div class="transfer-grid">
+
+      <div class="tf-group">
+        <label class="tf-label">ПОЛУЧАТЕЛЬ</label>
+        <select class="tf-select" id="tf-target">
+          <option value="">— выберите персонажа —</option>
+        </select>
+      </div>
+
+      <div class="tf-group">
+        <label class="tf-label">РЕДКОСТЬ</label>
+        <select class="tf-select" id="tf-rarity" onchange="onRarityChange()">
+          <option value="common">Обычный</option>
+          <option value="rare">Редкий</option>
+          <option value="unique">Уникальный</option>
+          <option value="legendary">Легендарный</option>
+        </select>
+      </div>
+
+      <div class="tf-group">
+        <label class="tf-label">НАЗВАНИЕ ПРЕДМЕТА</label>
+        <input class="tf-input" id="tf-name" type="text" placeholder="Кольцо Мага…" oninput="onRarityChange()">
+        <span class="rarity-preview common" id="tf-rarity-badge">Обычный</span>
+      </div>
+
+      <div class="tf-group">
+        <label class="tf-label">ОПИСАНИЕ (необязательно)</label>
+        <input class="tf-input" id="tf-desc" type="text" placeholder="Увеличивает мощь заклинаний…">
+      </div>
+
+    </div>
+
+    <div class="tf-sheets-status" id="tf-sheets-status"></div>
+    <button class="tf-send-btn" id="tf-send-btn" onclick="sendItem()">✦ ПЕРЕДАТЬ ПРЕДМЕТ</button>
   </div>
-  <div id="banks-body"><div class="banks-loading">⟳ Загрузка…</div></div>
 </div>
 
 </div>
@@ -180,6 +227,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;bac
 <div id="toast"></div>
 
 <script src="config.js"></script>
+<script src="sheets.js"></script>
 <script>
 const FB=(typeof FIREBASE_CONFIG!=='undefined'&&FIREBASE_CONFIG?.databaseURL)?FIREBASE_CONFIG.databaseURL:null;
 const ARENA_PATH='/arena/current';
@@ -331,91 +379,202 @@ async function fetchAndRender(){
   catch{setLive(false);}
 }
 
-// ── BANKS ────────────────────────────────────────────────────────────────
-const REAG_ICON_ADM = {red:'🔴',blue:'🔵',green:'🟢',yellow:'🟡'};
+// ── ITEM TRANSFER ─────────────────────────────────────────────────────────
+const RARITY_LABELS = { common:'Обычный', rare:'Редкий', unique:'Уникальный', legendary:'Легендарный' };
+const RARITY_COLORS = { common:'var(--text-dim)', rare:'#5b8dee', unique:'#9b7fe8', legendary:'var(--gold-l)' };
 
-async function loadBanks(){
-  if(!FB)return;
-  const body=$('banks-body');
-  body.innerHTML='<div class="banks-loading">⟳ Загрузка банков…</div>';
-  try{
-    // Get all bank data from Firebase /bank/
-    const allBanks=await fbFetch('/bank').catch(()=>null);
-    if(!allBanks||typeof allBanks!=='object'){
-      body.innerHTML='<div class="bank-empty">Нет данных о банках в Firebase</div>';
+// Load party members from Firebase /party → /chars/{uuid}
+async function loadParty() {
+  if (!FB) { $('tf-party-load').textContent = 'Firebase не настроен.'; return; }
+  try {
+    const partyData = await fbFetch('/party');
+    if (!partyData || !Object.keys(partyData).length) {
+      $('tf-party-load').textContent = 'Пати пусто. Добавьте UUID персонажей в /party.';
       return;
     }
 
-    // Collect all char names from /chars/ for display
-    const charNames={};
-    try{
-      const allChars=await fbFetch('/chars');
-      if(allChars) Object.entries(allChars).forEach(([uuid,c])=>{charNames[uuid]=c.charName||uuid;});
-    }catch{}
+    const uuids = Object.keys(partyData).filter(k => partyData[k] === true);
+    const select = $('tf-target');
+    select.innerHTML = '<option value="">— выберите персонажа —</option>';
 
-    // Build flat list: {bankName, charUuid, charName, reagents, items}
-    const rows=[];
-    Object.entries(allBanks).forEach(([bankKey,bankData])=>{
-      if(!bankData||typeof bankData!=='object')return;
-      Object.entries(bankData).forEach(([charUuid,store])=>{
-        if(!store||typeof store!=='object')return;
-        const reags=store.reagents||{};
-        const items=store.items||[];
-        const hasReags=Object.values(reags).some(v=>v>0);
-        const hasItems=items.length>0;
-        if(!hasReags&&!hasItems)return; // skip empty
-        rows.push({
-          bankName: decodeURIComponent(bankKey),
-          charUuid, charName: charNames[charUuid]||charUuid,
-          reagents: reags, items,
-        });
-      });
+    const members = await Promise.all(uuids.map(async uuid => {
+      try {
+        const charData = await fbFetch(`/chars/${uuid}`);
+        return { uuid, name: charData?.charName || uuid };
+      } catch { return { uuid, name: uuid }; }
+    }));
+
+    members.sort((a, b) => a.name.localeCompare(b.name));
+    members.forEach(m => {
+      const opt = document.createElement('option');
+      opt.value = m.uuid;
+      opt.textContent = m.name;
+      select.appendChild(opt);
     });
 
-    if(!rows.length){
-      body.innerHTML='<div class="bank-empty">Все банки пусты</div>';
-      return;
-    }
+    $('tf-party-load').style.display = 'none';
+    $('tf-form').style.display = '';
 
-    // Sort by bank name then char name
-    rows.sort((a,b)=>a.bankName.localeCompare(b.bankName)||a.charName.localeCompare(b.charName));
-
-    // Render table
-    let html='<div class="bank-table-wrap"><table class="bank-table">'
-      +'<thead><tr><th>БАНК</th><th>ПЕРСОНАЖ</th><th>РЕАГЕНТЫ</th><th>ПРЕДМЕТЫ</th></tr></thead><tbody>';
-
-    let prevBank='';
-    rows.forEach(r=>{
-      const bankCell = r.bankName!==prevBank
-        ? `<td class="btd-bank" rowspan="1">🏛 ${esc(r.bankName)}</td>` // rowspan simplified
-        : `<td class="btd-bank">🏛 ${esc(r.bankName)}</td>`;
-      prevBank=r.bankName;
-
-      const reagHtml=Object.entries(r.reagents)
-        .filter(([,v])=>v>0)
-        .map(([c,v])=>`<span class="btd-reag">${REAG_ICON_ADM[c]||c} ×${v}</span>`)
-        .join('');
-
-      const itemsHtml=r.items
-        .map(i=>`<div class="btd-item">${esc(i.name)}${i.desc?` <span style="color:var(--text-dim);font-size:10px;font-style:italic;">— ${esc(i.desc)}</span>`:''}`)
-        .join('');
-
-      html+=`<tr>
-        <td class="btd-bank">🏛 ${esc(r.bankName)}</td>
-        <td class="btd-char">${esc(r.charName)}</td>
-        <td>${reagHtml?`<div class="btd-reags">${reagHtml}</div>`:'<span style="color:var(--text-dim);font-size:10px;">—</span>'}</td>
-        <td>${itemsHtml?`<div class="btd-items">${itemsHtml}</div>`:'<span style="color:var(--text-dim);font-size:10px;">—</span>'}</td>
-      </tr>`;
-    });
-
-    html+='</tbody></table></div>';
-    body.innerHTML=html;
-  }catch(e){
-    body.innerHTML=`<div class="bank-empty">Ошибка загрузки банков: ${esc(e.message)}</div>`;
-    addLog('Ошибка загрузки банков: '+e.message,'err');
+    addLog(`Пати загружена: ${members.length} игрок(ов)`, 'ok');
+  } catch(e) {
+    $('tf-party-load').textContent = 'Ошибка загрузки пати: ' + e.message;
+    addLog('Ошибка загрузки пати: ' + e.message, 'err');
   }
 }
 
+// Update rarity badge preview as user types/changes rarity
+function onRarityChange() {
+  const rarity  = $('tf-rarity').value;
+  const name    = $('tf-name').value.trim();
+  const badge   = $('tf-rarity-badge');
+
+  badge.textContent = RARITY_LABELS[rarity] || rarity;
+  badge.className   = 'rarity-preview ' + rarity;
+
+  // Tint name input border
+  const colors = { rare:'#5b8dee', unique:'#9b7fe8', legendary:RARITY_COLORS.legendary };
+  $('tf-name').style.borderColor = rarity !== 'common' ? (colors[rarity] || '') : '';
+
+  // Clear sheets status when form changes
+  const ss = $('tf-sheets-status');
+  if (ss) { ss.textContent = ''; ss.className = 'tf-sheets-status'; }
+}
+
+// Main: send item to player
+async function sendItem() {
+  const uuid   = $('tf-target').value;
+  const name   = $('tf-name').value.trim();
+  const desc   = $('tf-desc').value.trim();
+  const rarity = $('tf-rarity').value;
+
+  if (!uuid) { toast('Выберите получателя'); return; }
+  if (!name) { toast('Введите название предмета'); return; }
+
+  const btn = $('tf-send-btn');
+  btn.disabled = true;
+  btn.textContent = '⟳ Отправляю…';
+
+  const sheetsStatus = $('tf-sheets-status');
+  sheetsStatus.textContent = '';
+
+  try {
+    // 1. Write to Firebase /logs — confirmed:true so character.html picks it up immediately
+    const pushKey = 'dm_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+    const payload = desc ? `${name}|${desc}` : name;
+
+    const logEntry = {
+      uuid,
+      type:      'item',
+      payload,
+      confirmed: true,
+      sentAt:    Date.now(),
+    };
+
+    const r = await fetch(`${FB}/logs/${pushKey}.json`, {
+      method:  'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify(logEntry),
+    });
+    if (!r.ok) throw new Error('Firebase: ' + r.status);
+
+    // Get char name for log
+    let charName = uuid;
+    try { const c = await fbFetch(`/chars/${uuid}`); charName = c?.charName || uuid; } catch {}
+
+    addLog(`Передан «${name}» [${RARITY_LABELS[rarity]}] → ${charName}`, 'ok');
+    toast(`✓ Передано: ${name} → ${charName}`);
+
+    // 2. If rarity != common → add to equipment sheet (if not already there)
+    if (rarity !== 'common') {
+      await addToEquipmentSheet(name, rarity, desc);
+    }
+
+    // Reset form
+    $('tf-name').value = '';
+    $('tf-desc').value = '';
+    $('tf-rarity').value = 'common';
+    onRarityChange();
+
+  } catch(e) {
+    addLog('Ошибка передачи: ' + e.message, 'err');
+    toast('Ошибка: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '✦ ПЕРЕДАТЬ ПРЕДМЕТ';
+  }
+}
+
+// Add item to Google Sheets "equipment" if it doesn't exist yet
+async function addToEquipmentSheet(name, rarity, desc) {
+  const sheetsStatus = $('tf-sheets-status');
+  sheetsStatus.textContent = '⟳ Проверяю таблицу снаряжения…';
+  sheetsStatus.className = 'tf-sheets-status';
+
+  const cfg = typeof SHEETS_CONFIG !== 'undefined' ? SHEETS_CONFIG : null;
+  if (!cfg || !cfg.apiKey || cfg.apiKey === 'ВАШ_API_КЛЮЧ_ЗДЕСЬ' || !cfg.spreadsheetId) {
+    sheetsStatus.textContent = '⚠ Google Sheets не настроен — предмет не добавлен в таблицу.';
+    sheetsStatus.className = 'tf-sheets-status';
+    addLog('Sheets не настроен — «' + name + '» не добавлен в equipment', 'warn');
+    return;
+  }
+
+  const BASE   = `https://sheets.googleapis.com/v4/spreadsheets/${cfg.spreadsheetId}`;
+  const KEY    = `?key=${cfg.apiKey}`;
+  const SHEET  = 'equipment';
+
+  try {
+    // Read existing rows to check for duplicate
+    const readRes  = await fetch(`${BASE}/values/${encodeURIComponent(SHEET)}!A:A${KEY}`);
+    if (!readRes.ok) throw new Error('Чтение: ' + readRes.status);
+    const readData = await readRes.json();
+    const rows     = readData.values || [];
+
+    const nameLower = name.toLowerCase().trim();
+    const exists    = rows.some((r, i) => i > 0 && (r[0] || '').toLowerCase().trim() === nameLower);
+
+    if (exists) {
+      sheetsStatus.textContent = `✓ «${name}» уже есть в таблице снаряжения.`;
+      sheetsStatus.className = 'tf-sheets-status ok';
+      addLog(`«${name}» уже есть в equipment — пропущено`, 'ok');
+      return;
+    }
+
+    // Append new row: name | rarity | description
+    const appendRes = await fetch(
+      `${BASE}/values/${encodeURIComponent(SHEET)}!A:C:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS${KEY.slice(1) ? '&' + KEY.slice(1) : ''}`.replace('?key=', '?valueInputOption=RAW&insertDataOption=INSERT_ROWS&key='),
+      {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ values: [[name, rarity, desc || '']] }),
+      }
+    );
+
+    // Note: appending requires OAuth, not just API key.
+    // Since we only have a read-only API key here, we detect the 401/403 and guide the DM.
+    if (appendRes.status === 401 || appendRes.status === 403) {
+      sheetsStatus.innerHTML = `⚠ Нет прав на запись в таблицу. Добавьте вручную:<br>
+        <code style="font-size:10px;color:var(--gold);margin-top:4px;display:block;">
+          ${name} | ${rarity} | ${desc || ''}
+        </code>`;
+      sheetsStatus.className = 'tf-sheets-status';
+      addLog(`Нет OAuth для записи в Sheets — добавьте «${name}|${rarity}|${desc||''}» вручную`, 'warn');
+      return;
+    }
+
+    if (!appendRes.ok) throw new Error('Запись: ' + appendRes.status);
+
+    sheetsStatus.textContent = `✓ «${name}» [${RARITY_LABELS[rarity]}] добавлен в таблицу снаряжения.`;
+    sheetsStatus.className = 'tf-sheets-status ok';
+    addLog(`«${name}» добавлен в equipment [${rarity}]`, 'ok');
+
+  } catch(e) {
+    sheetsStatus.textContent = '✗ Ошибка Sheets: ' + e.message;
+    sheetsStatus.className = 'tf-sheets-status err';
+    addLog('Ошибка Sheets: ' + e.message, 'err');
+  }
+}
+
+// Load party on page init
 (function(){
   if(!FB){
     $('arena-container').innerHTML='<div class="empty-state"><div class="empty-icon">⚠</div><div class="empty-text">Firebase не настроен — проверьте config.js</div></div>';
@@ -423,7 +582,7 @@ async function loadBanks(){
   }
   addLog('Подключение к Firebase…','ok');
   startSync();
-  loadBanks();
+  loadParty();
 })();
 </script>
 </body>
