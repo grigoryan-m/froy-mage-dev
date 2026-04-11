@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Древо судеб</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;1,300;1,400&display=swap');
+
+  :root {
+    --bg: #0d0b08;
+    --bg2: #141008;
+    --parchment: #c8a96e;
+    --parchment-dim: #7a6340;
+    --gold: #d4a533;
+    --gold-bright: #f0c050;
+    --ink: #e8dcc8;
+    --ink-dim: #9a8a6a;
+    --border: #3a2e1a;
+    --border-glow: #6a4e1a;
+    --card-bg: #1a1308;
+    --card-bg2: #221a0a;
+    --accent: #8b4513;
+    --race-human: #c8855a;
+    --race-elf: #7acc88;
+    --race-dwarf: #cc9944;
+    --race-orc: #88bb55;
+    --race-halfling: #cc8866;
+    --race-tiefling: #bb66bb;
+    --race-dragonborn: #cc4444;
+    --race-gnome: #66aacc;
+    --race-half-elf: #99bb77;
+    --race-half-orc: #99aa55;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Crimson Pro', Georgia, serif;
+    font-size: 16px;
+    line-height: 1.6;
+    min-height: 100vh;
+    background-image:
+      radial-gradient(ellipse at 20% 20%, rgba(100, 60, 10, 0.15) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 80%, rgba(80, 40, 5, 0.12) 0%, transparent 50%);
+  }
+
+  .page-wrapper {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+  }
+
+  header {
+    text-align: center;
+    padding: 3rem 0 2.5rem;
+    position: relative;
+  }
+
+  header::after {
+    content: '';
+    display: block;
+    width: 60%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--parchment-dim), transparent);
+    margin: 1.5rem auto 0;
+  }
+
+  h1 {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    font-weight: 700;
+    color: var(--parchment);
+    letter-spacing: 0.08em;
+    text-shadow: 0 0 40px rgba(200, 169, 110, 0.3);
+  }
+
+  .subtitle {
+    font-size: 1rem;
+    color: var(--ink-dim);
+    font-style: italic;
+    margin-top: 0.5rem;
+    letter-spacing: 0.05em;
+  }
+
+  .form-section {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 2rem 2.5rem;
+    margin-bottom: 2rem;
+    position: relative;
+  }
+
+  .form-section::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 4px;
+    box-shadow: inset 0 0 60px rgba(0,0,0,0.4);
+    pointer-events: none;
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr auto;
+    gap: 1rem;
+    align-items: end;
+  }
+
+  @media (max-width: 680px) {
+    .form-row { grid-template-columns: 1fr 1fr; }
+    .form-row .btn-generate { grid-column: 1 / -1; }
+  }
+
+  .field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    color: var(--parchment-dim);
+    text-transform: uppercase;
+  }
+
+  input[type="text"], select {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    color: var(--ink);
+    font-family: 'Crimson Pro', serif;
+    font-size: 1rem;
+    padding: 0.55rem 0.8rem;
+    outline: none;
+    width: 100%;
+    transition: border-color 0.2s;
+    -webkit-appearance: none;
+  }
+
+  input[type="text"]:focus, select:focus {
+    border-color: var(--parchment-dim);
+  }
+
+  select option { background: #1a1308; }
+
+  .btn-generate {
+    background: transparent;
+    border: 1px solid var(--parchment-dim);
+    color: var(--parchment);
+    font-family: 'Cinzel', serif;
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+    padding: 0.58rem 1.4rem;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: all 0.25s;
+    white-space: nowrap;
+  }
+
+  .btn-generate:hover {
+    background: rgba(200,169,110,0.1);
+    border-color: var(--gold);
+    color: var(--gold-bright);
+  }
+
+  .btn-generate:active { transform: scale(0.98); }
+
+  .btn-generate:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .status-msg {
+    text-align: center;
+    font-style: italic;
+    color: var(--ink-dim);
+    font-size: 0.95rem;
+    min-height: 1.5rem;
+    margin-top: 1rem;
+  }
+
+  .tree-container { display: none; }
+  .tree-container.visible { display: block; }
+
+  .generation-block {
+    margin-bottom: 1.5rem;
+  }
+
+  .gen-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    color: var(--parchment-dim);
+    text-transform: uppercase;
+    text-align: center;
+    margin-bottom: 0.8rem;
+    position: relative;
+  }
+
+  .gen-label::before, .gen-label::after {
+    content: '';
+    display: inline-block;
+    width: 60px;
+    height: 1px;
+    background: var(--border);
+    vertical-align: middle;
+    margin: 0 0.8rem;
+  }
+
+  .cards-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+    justify-content: center;
+  }
+
+  .person-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 1rem 1.2rem;
+    width: 220px;
+    flex-shrink: 0;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    position: relative;
+  }
+
+  .person-card:hover {
+    border-color: var(--border-glow);
+    background: var(--card-bg2);
+  }
+
+  .person-card.subject {
+    border-color: var(--parchment-dim);
+    width: 260px;
+  }
+
+  .person-card.subject:hover {
+    border-color: var(--gold);
+  }
+
+  .person-card.active {
+    border-color: var(--gold);
+    background: var(--card-bg2);
+  }
+
+  .card-name {
+    font-family: 'Cinzel', serif;
+    font-size: 0.9rem;
+    color: var(--parchment);
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    line-height: 1.3;
+  }
+
+  .subject .card-name {
+    font-size: 1rem;
+    color: var(--gold-bright);
+  }
+
+  .race-badge {
+    display: inline-block;
+    font-size: 0.68rem;
+    font-family: 'Cinzel', serif;
+    letter-spacing: 0.08em;
+    padding: 0.15rem 0.45rem;
+    border-radius: 2px;
+    margin-bottom: 0.5rem;
+    border: 1px solid;
+  }
+
+  .card-relation {
+    font-size: 0.78rem;
+    color: var(--ink-dim);
+    font-style: italic;
+    margin-bottom: 0.4rem;
+  }
+
+  .card-snippet {
+    font-size: 0.82rem;
+    color: var(--ink-dim);
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .divider-line {
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border), transparent);
+    margin: 1rem 0;
+  }
+
+  .connector-area {
+    display: flex;
+    justify-content: center;
+    gap: 2px;
+    margin: 0.3rem 0;
+  }
+
+  .connector-dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--border);
+  }
+
+  .bio-panel {
+    display: none;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 1.5rem 2rem;
+    margin-top: 2rem;
+  }
+
+  .bio-panel.visible { display: block; }
+
+  .bio-title {
+    font-family: 'Cinzel', serif;
+    font-size: 1.1rem;
+    color: var(--parchment);
+    margin-bottom: 0.3rem;
+  }
+
+  .bio-meta {
+    font-size: 0.85rem;
+    color: var(--ink-dim);
+    font-style: italic;
+    margin-bottom: 1rem;
+    padding-bottom: 0.8rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .bio-text {
+    font-size: 0.95rem;
+    color: var(--ink);
+    line-height: 1.75;
+  }
+
+  .bio-text p { margin-bottom: 0.6rem; }
+
+  .loading-dots span {
+    display: inline-block;
+    animation: blink 1.2s infinite;
+    font-size: 1.4rem;
+    color: var(--parchment-dim);
+  }
+  .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes blink {
+    0%, 80%, 100% { opacity: 0.2; }
+    40% { opacity: 1; }
+  }
+
+  .card-loading {
+    font-size: 0.8rem;
+    color: var(--ink-dim);
+    font-style: italic;
+  }
+
+  .race-color-human    { color: var(--race-human);     border-color: var(--race-human); }
+  .race-color-elf      { color: var(--race-elf);       border-color: var(--race-elf); }
+  .race-color-dwarf    { color: var(--race-dwarf);     border-color: var(--race-dwarf); }
+  .race-color-orc      { color: var(--race-orc);       border-color: var(--race-orc); }
+  .race-color-halfling { color: var(--race-halfling);  border-color: var(--race-halfling); }
+  .race-color-tiefling { color: var(--race-tiefling);  border-color: var(--race-tiefling); }
+  .race-color-dragonborn { color: var(--race-dragonborn); border-color: var(--race-dragonborn); }
+  .race-color-gnome    { color: var(--race-gnome);     border-color: var(--race-gnome); }
+  .race-color-half-elf { color: var(--race-half-elf);  border-color: var(--race-half-elf); }
+  .race-color-half-orc { color: var(--race-half-orc);  border-color: var(--race-half-orc); }
+</style>
+</head>
+<body>
+<div class="page-wrapper">
+  <header>
+    <h1>Древо судеб</h1>
+    <p class="subtitle">Хроники рода — шесть поколений истории</p>
+  </header>
+
+  <div class="form-section">
+    <div class="form-row">
+      <div class="field-group">
+        <label>Имя</label>
+        <input type="text" id="firstName" placeholder="Торин" />
+      </div>
+      <div class="field-group">
+        <label>Фамилия</label>
+        <input type="text" id="lastName" placeholder="Железнорук" />
+      </div>
+      <div class="field-group">
+        <label>Раса</label>
+        <select id="raceSelect">
+          <option value="human">Человек</option>
+          <option value="elf">Эльф</option>
+          <option value="dwarf">Дварф</option>
+          <option value="orc">Орк</option>
+          <option value="halfling">Полурослик</option>
+          <option value="tiefling">Тифлинг</option>
+          <option value="dragonborn">Драконорождённый</option>
+          <option value="gnome">Гном</option>
+          <option value="half-elf">Полуэльф</option>
+          <option value="half-orc">Полуорк</option>
+        </select>
+      </div>
+      <button class="btn-generate" id="generateBtn" onclick="startGeneration()">
+        Сгенерировать
+      </button>
+    </div>
+    <div class="status-msg" id="statusMsg"></div>
+  </div>
+
+  <div class="tree-container" id="treeContainer">
+    <div id="gen3ancestors" class="generation-block"></div>
+    <div class="connector-area"><div class="connector-dot"></div><div class="connector-dot"></div><div class="connector-dot"></div></div>
+    <div id="gen2ancestors" class="generation-block"></div>
+    <div class="connector-area"><div class="connector-dot"></div><div class="connector-dot"></div><div class="connector-dot"></div></div>
+    <div id="gen1ancestors" class="generation-block"></div>
+    <div class="connector-area"><div class="connector-dot"></div><div class="connector-dot"></div><div class="connector-dot"></div></div>
+    <div id="genSubject" class="generation-block"></div>
+    <div class="connector-area"><div class="connector-dot"></div><div class="connector-dot"></div><div class="connector-dot"></div></div>
+    <div id="gen1descendants" class="generation-block"></div>
+    <div class="connector-area"><div class="connector-dot"></div><div class="connector-dot"></div><div class="connector-dot"></div></div>
+    <div id="gen2descendants" class="generation-block"></div>
+    <div class="connector-area"><div class="connector-dot"></div><div class="connector-dot"></div><div class="connector-dot"></div></div>
+    <div id="gen3descendants" class="generation-block"></div>
+
+    <div class="bio-panel" id="bioPanel">
+      <div class="bio-title" id="bioPanelTitle"></div>
+      <div class="bio-meta" id="bioPanelMeta"></div>
+      <div class="bio-text" id="bioPanelText"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const RACES = {
+  human: { label: 'Человек', cls: 'race-color-human' },
+  elf: { label: 'Эльф', cls: 'race-color-elf' },
+  dwarf: { label: 'Дварф', cls: 'race-color-dwarf' },
+  orc: { label: 'Орк', cls: 'race-color-orc' },
+  halfling: { label: 'Полурослик', cls: 'race-color-halfling' },
+  tiefling: { label: 'Тифлинг', cls: 'race-color-tiefling' },
+  dragonborn: { label: 'Драконорождённый', cls: 'race-color-dragonborn' },
+  gnome: { label: 'Гном', cls: 'race-color-gnome' },
+  'half-elf': { label: 'Полуэльф', cls: 'race-color-half-elf' },
+  'half-orc': { label: 'Полуорк', cls: 'race-color-half-orc' },
+};
+
+const MIXABLE = ['human','elf','dwarf','orc','halfling','tiefling','dragonborn','gnome'];
+
+function deriveMixedRace(r1, r2) {
+  if (r1 === r2) return r1;
+  const pair = [r1, r2].sort().join('+');
+  const map = {
+    'elf+human': 'half-elf',
+    'human+orc': 'half-orc',
+    'elf+orc': 'half-orc',
+    'dwarf+gnome': 'gnome',
+    'dwarf+human': 'human',
+    'elf+halfling': 'half-elf',
+    'human+halfling': 'halfling',
+  };
+  return map[pair] || (Math.random() < 0.5 ? r1 : r2);
+}
+
+function ancestorRaces(childRace) {
+  const pool = [...MIXABLE];
+  let r1, r2;
+  if (childRace.startsWith('half-') || childRace === 'human' || childRace === 'halfling') {
+    const mixChance = 0.55;
+    if (Math.random() < mixChance) {
+      r1 = childRace === 'half-elf' ? 'human' : (childRace === 'half-orc' ? 'orc' : 'human');
+      r2 = childRace === 'half-elf' ? 'elf' : (childRace === 'half-orc' ? 'human' : randomFrom(pool));
+    } else {
+      r1 = childRace; r2 = childRace;
+    }
+  } else {
+    const same = Math.random() < 0.7;
+    r1 = same ? childRace : randomFrom(pool);
+    r2 = same ? childRace : randomFrom(pool);
+  }
+  return [r1 || childRace, r2 || childRace];
+}
+
+function randomFrom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+const MALE_NAMES_BY_RACE = {
+  human: ['Aldric','Brennan','Corwin','Dorian','Edmund','Farren','Gareth','Harlan','Idris','Joryn','Kael','Lucan','Maren','Norin','Oswin','Pellen','Rowan','Saren','Torin','Ulric','Varen','Wynn'],
+  elf: ['Aerindel','Caladwen','Eiravel','Faenor','Galadhor','Ithraniel','Laerion','Mirusel','Naeris','Olorin','Pellinor','Rhovaer','Sylvar','Taelan','Varandil','Zerathiel'],
+  dwarf: ['Balin','Brundar','Dordak','Fargrim','Gimrak','Harbek','Karag','Marduk','Orsik','Rurik','Stonn','Torgar','Uldar','Vondal','Wrakar'],
+  orc: ['Gorgak','Krak','Morgh','Narg','Orgul','Rog','Sharg','Thrak','Urgh','Vorg','Zarg'],
+  halfling: ['Alton','Beau','Cordo','Eldon','Finnan','Garret','Jasper','Lyle','Merric','Osborn','Perrin','Quin','Rosco','Tavish','Welby'],
+  tiefling: ['Akmenos','Damakos','Ekemon','Iados','Kairon','Leucis','Melech','Mordai','Morthos','Pelaios','Skamos','Therai'],
+  dragonborn: ['Arjhan','Balasar','Bharat','Donaar','Ghesh','Heskan','Kriv','Medrash','Mehen','Nadarr','Pandjed','Patrin','Rhogar','Shamash','Shedinn','Torinn'],
+  gnome: ['Alston','Alvyn','Boddynock','Brocc','Burgell','Dimble','Eldon','Erky','Fonkin','Frug','Gerbo','Gimble','Glim','Jebeddo','Kellen','Namfoodle'],
+  'half-elf': ['Arien','Cale','Davin','Erion','Faelar','Gilran','Haldor','Isil','Joran','Kiran','Lavel','Miran','Noral','Orien','Silvyr','Thalon'],
+  'half-orc': ['Brugdar','Dench','Feng','Gell','Harg','Ikras','Kargh','Mront','Narg','Ront','Shump','Thokk','Urzul','Vrog'],
+};
+
+const FEMALE_NAMES_BY_RACE = {
+  human: ['Aelith','Brenna','Caera','Delia','Elara','Fiala','Gwen','Hanna','Isara','Jora','Kira','Lyra','Mira','Nara','Orla','Petra','Renna','Sela','Thia','Ulara','Vesna','Willa'],
+  elf: ['Aelindra','Caladwen','Eiravel','Faelwen','Galadreth','Ithriel','Laerindel','Miriel','Naerie','Oloriel','Rhovaen','Sylwen','Taelis','Varaniel','Zerathiel'],
+  dwarf: ['Ari','Bardryn','Diesa','Eldeth','Falkrunn','Gunnloda','Kathra','Mardred','Riswynn','Sannl','Torbera','Vondra','Zrutha'],
+  orc: ['Arha','Baggi','Engong','Kansif','Myev','Neega','Ovak','Ownka','Shautha','Vola','Volen','Yevelda'],
+  halfling: ['Andry','Bree','Callie','Cora','Euphemia','Jillian','Kithri','Lavinia','Lidda','Merla','Nedda','Paela','Portia','Seraphina','Vani','Willa'],
+  tiefling: ['Akta','Anakis','Bryseis','Criella','Damaia','Ea','Kallista','Lerissa','Makaria','Nemeia','Orianna','Phelaia','Rieta','Sebia'],
+  dragonborn: ['Akra','Biri','Daar','Farideh','Harann','Havilar','Jheri','Kava','Korinn','Mishann','Nala','Perra','Raiann','Sora','Surina','Thava','Uadjit'],
+  gnome: ['Bimpnottin','Breena','Caramip','Carlin','Donella','Duvamil','Ella','Ellyjobell','Ellywick','Lilli','Loopmottin','Lorilla','Mardnab','Nissa','Nyx','Oda','Orla','Roywyn','Shamil','Tana','Waywocket','Zanna'],
+  'half-elf': ['Ariel','Caela','Davia','Eriel','Faela','Gilria','Haldris','Isila','Joral','Kiral','Lavel','Mirani','Noral','Orial','Silvyn','Thala'],
+  'half-orc': ['Arha','Baggi','Engong','Kansif','Myev','Neega','Ovak','Ownka','Shautha','Vola'],
+};
+
+const LAST_NAMES = ['Ashford','Blackwood','Brightsteel','Coldwater','Dawnbringer','Emberveil','Flintbrook','Greymantle','Hollowstone','Ironbrook','Jadewing','Kestrelwind','Leafwhisper','Moonshadow','Nightsong','Oakenshield','Pyreborn','Quickthorn','Ravencrest','Silverstream','Thornfield','Underholt','Veilweaver','Wychwood','Xandrel','Yewbarrow','Zephyrholm','Ironsong','Dustmantle','Coldforge','Firemark','Ashwhisper','Stonepeak','Emberdawn','Driftwood','Grimhollow','Saltmoor','Tideborn','Windfall','Rockmantle'];
+
+function randomName(race, gender) {
+  const pool = gender === 'male' ? MALE_NAMES_BY_RACE : FEMALE_NAMES_BY_RACE;
+  const names = pool[race] || pool['human'];
+  return randomFrom(names);
+}
+
+function randomLast() { return randomFrom(LAST_NAMES); }
+
+function buildPerson(role, firstName, lastName, race, gender, relationLabel) {
+  return { role, firstName, lastName, race, gender, relationLabel, bio: null };
+}
+
+function genderLabel(g) { return g === 'male' ? 'муж.' : 'жен.'; }
+
+let state = { persons: [], activeId: null };
+
+async function startGeneration() {
+  const fn = document.getElementById('firstName').value.trim();
+  const ln = document.getElementById('lastName').value.trim();
+  const race = document.getElementById('raceSelect').value;
+  if (!fn || !ln) { setStatus('Введите имя и фамилию персонажа.'); return; }
+
+  document.getElementById('generateBtn').disabled = true;
+  setStatus('Листаем свитки судьбы...');
+
+  const container = document.getElementById('treeContainer');
+  container.classList.remove('visible');
+  document.getElementById('bioPanel').classList.remove('visible');
+  state.persons = [];
+  state.activeId = null;
+
+  const subject = buildPerson('subject', fn, ln, race, Math.random() < 0.5 ? 'male' : 'female', 'Главный герой');
+  subject.id = 'subject';
+  state.persons.push(subject);
+
+  const [p1Race, p2Race] = ancestorRaces(race);
+  const p1g = 'male', p2g = 'female';
+  const parent1 = buildPerson('parent', randomName(p1Race, p1g), ln, p1Race, p1g, 'Отец');
+  parent1.id = 'parent1';
+  const parent2 = buildPerson('parent', randomName(p2Race, p2g), randomLast(), p2Race, p2g, 'Мать');
+  parent2.id = 'parent2';
+  state.persons.push(parent1, parent2);
+
+  const [gp1r1, gp1r2] = ancestorRaces(p1Race);
+  const gp1 = buildPerson('grandparent', randomName(gp1r1, 'male'), ln, gp1r1, 'male', 'Дед (по отцу)');
+  gp1.id = 'gp1';
+  const gp2 = buildPerson('grandparent', randomName(gp1r2, 'female'), randomLast(), gp1r2, 'female', 'Бабушка (по отцу)');
+  gp2.id = 'gp2';
+  const [gp3r1, gp3r2] = ancestorRaces(p2Race);
+  const gp3 = buildPerson('grandparent', randomName(gp3r1, 'male'), randomLast(), gp3r1, 'male', 'Дед (по матери)');
+  gp3.id = 'gp3';
+  const gp4 = buildPerson('grandparent', randomName(gp3r2, 'female'), randomLast(), gp3r2, 'female', 'Бабушка (по матери)');
+  gp4.id = 'gp4';
+  state.persons.push(gp1, gp2, gp3, gp4);
+
+  const gg = [];
+  [[gp1.race,'gg1','Прадед'],['gg2','Прабабушка'],[gp2.race,'gg3','Прадед'],[gp2.race,'gg4','Прабабушка'],
+   [gp3.race,'gg5','Прадед (матер.)'],[gp3.race,'gg6','Прабабушка (матер.)'],[gp4.race,'gg7','Прадед (матер.)'],[gp4.race,'gg8','Прабабушка (матер.)']].forEach((x,i) => {
+    const gr = ancestorRaces(gg[i-1]?.race || x[0] || race)[Math.random()<0.5?0:1];
+    const g = i%2===0?'male':'female';
+    const p = buildPerson('great-grandparent', randomName(gr, g), randomLast(), gr, g, x[2]||x[1]);
+    p.id = x[1];
+    gg.push(p);
+  });
+
+  const ggFixed = [];
+  const ggRels = ['Прадед (отц.)','Прабабушка (отц.)','Прадед (отц.)','Прабабушка (отц.)','Прадед (матер.)','Прабабушка (матер.)','Прадед (матер.)','Прабабушка (матер.)'];
+  const ggIds = ['gg1','gg2','gg3','gg4','gg5','gg6','gg7','gg8'];
+  const gpRaces = [gp1.race, gp1.race, gp2.race, gp2.race, gp3.race, gp3.race, gp4.race, gp4.race];
+  for (let i=0; i<8; i++) {
+    const [ra,rb] = ancestorRaces(gpRaces[i]);
+    const gr = i%2===0?ra:rb;
+    const g = i%2===0?'male':'female';
+    const pp = buildPerson('great-grandparent', randomName(gr, g), randomLast(), gr, g, ggRels[i]);
+    pp.id = ggIds[i];
+    ggFixed.push(pp);
+  }
+  state.persons.push(...ggFixed);
+
+  const spouseRaces = [...MIXABLE];
+  const spouseRace = Math.random()<0.7 ? race : randomFrom(spouseRaces);
+  const spouseGender = subject.gender === 'male' ? 'female' : 'male';
+  const spouse = buildPerson('spouse', randomName(spouseRace, spouseGender), randomLast(), spouseRace, spouseGender, 'Супруг(а)');
+  spouse.id = 'spouse';
+  state.persons.push(spouse);
+
+  const childCount = Math.floor(Math.random()*3)+1;
+  const children = [];
+  for (let i=0; i<childCount; i++) {
+    const [cr1, cr2] = [race, spouseRace];
+    const cr = deriveMixedRace(cr1, cr2);
+    const cg = Math.random()<0.5?'male':'female';
+    const c = buildPerson('child', randomName(cr, cg), ln, cr, cg, i===0?'Первый(ая) ребёнок':'Ребёнок');
+    c.id = 'child'+i;
+    c.relationLabel = i===0?'Старший ребёнок':'Младший ребёнок';
+    children.push(c);
+  }
+  state.persons.push(...children);
+
+  const grandchildren = [];
+  children.slice(0,2).forEach((child, ci) => {
+    const gcCount = Math.floor(Math.random()*2)+1;
+    for (let j=0; j<gcCount; j++) {
+      const otherRace = randomFrom(MIXABLE);
+      const gcr = deriveMixedRace(child.race, otherRace);
+      const gcg = Math.random()<0.5?'male':'female';
+      const gc = buildPerson('grandchild', randomName(gcr, gcg), child.lastName, gcr, gcg, 'Внук/Внучка');
+      gc.id = 'gc'+ci+'_'+j;
+      grandchildren.push(gc);
+    }
+  });
+  state.persons.push(...grandchildren);
+
+  const greatgrandchildren = [];
+  grandchildren.slice(0,Math.min(3,grandchildren.length)).forEach((gc, gi) => {
+    if (Math.random()<0.6) {
+      const otherRace = randomFrom(MIXABLE);
+      const ggcr = deriveMixedRace(gc.race, otherRace);
+      const ggcg = Math.random()<0.5?'male':'female';
+      const ggc = buildPerson('great-grandchild', randomName(ggcr, ggcg), gc.lastName, ggcr, ggcg, 'Правнук/Правнучка');
+      ggc.id = 'ggc'+gi;
+      greatgrandchildren.push(ggc);
+    }
+  });
+  state.persons.push(...greatgrandchildren);
+
+  renderTree(subject, parent1, parent2, gp1, gp2, gp3, gp4, ggFixed, spouse, children, grandchildren, greatgrandchildren);
+
+  container.classList.add('visible');
+  setStatus('Нажмите на персонажа, чтобы узнать его биографию');
+  document.getElementById('generateBtn').disabled = false;
+}
+
+function renderTree(subject, p1, p2, gp1, gp2, gp3, gp4, gg, spouse, children, grandchildren, greatgrandchildren) {
+  renderGen('gen3ancestors', 'Прапрадеды и прапрабабушки', gg, false);
+  renderGen('gen2ancestors', 'Деды и бабушки', [gp1, gp2, gp3, gp4], false);
+  renderGen('gen1ancestors', 'Родители', [p1, p2], false);
+  renderGen('genSubject', null, [subject, spouse], true);
+  renderGen('gen1descendants', 'Дети', children, false);
+  renderGen('gen2descendants', 'Внуки', grandchildren, false);
+  renderGen('gen3descendants', 'Правнуки', greatgrandchildren, false);
+}
+
+function renderGen(containerId, label, persons, isSubjectRow) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = '';
+  if (!persons.length) return;
+
+  if (label) {
+    const lbl = document.createElement('div');
+    lbl.className = 'gen-label';
+    lbl.textContent = label;
+    el.appendChild(lbl);
+  }
+
+  const row = document.createElement('div');
+  row.className = 'cards-row';
+  persons.forEach(p => {
+    row.appendChild(makeCard(p, isSubjectRow && p.role === 'subject'));
+  });
+  el.appendChild(row);
+}
+
+function makeCard(person, isSubject) {
+  const card = document.createElement('div');
+  card.className = 'person-card' + (isSubject ? ' subject' : '');
+  card.id = 'card_' + person.id;
+  card.onclick = () => showBio(person.id);
+
+  const raceInfo = RACES[person.race] || RACES['human'];
+  const badge = `<span class="race-badge ${raceInfo.cls}">${raceInfo.label}</span>`;
+
+  card.innerHTML = `
+    <div class="card-name">${person.firstName} ${person.lastName}</div>
+    ${badge}
+    <div class="card-relation">${person.relationLabel}</div>
+    <div class="card-snippet" id="snippet_${person.id}">
+      <span class="card-loading">нажмите, чтобы узнать биографию</span>
+    </div>
+  `;
+  return card;
+}
+
+async function showBio(personId) {
+  if (state.activeId) {
+    const prevCard = document.getElementById('card_' + state.activeId);
+    if (prevCard) prevCard.classList.remove('active');
+  }
+  state.activeId = personId;
+  const card = document.getElementById('card_' + personId);
+  if (card) card.classList.add('active');
+
+  const person = state.persons.find(p => p.id === personId);
+  if (!person) return;
+
+  const panel = document.getElementById('bioPanel');
+  const panelTitle = document.getElementById('bioPanelTitle');
+  const panelMeta = document.getElementById('bioPanelMeta');
+  const panelText = document.getElementById('bioPanelText');
+
+  const raceInfo = RACES[person.race] || RACES['human'];
+  panelTitle.textContent = `${person.firstName} ${person.lastName}`;
+  panelMeta.textContent = `${raceInfo.label} · ${person.gender === 'male' ? 'мужчина' : 'женщина'} · ${person.relationLabel}`;
+  panel.classList.add('visible');
+
+  if (person.bio) {
+    panelText.innerHTML = person.bio;
+    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    return;
+  }
+
+  panelText.innerHTML = '<span class="loading-dots"><span>.</span><span>.</span><span>.</span></span>';
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+  const prompt = buildBioPrompt(person);
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = await resp.json();
+    const text = data.content?.map(c => c.text || '').join('') || 'Биография недоступна.';
+    const htmlBio = text.trim().split('\n').filter(l=>l.trim()).map(l=>`<p>${l}</p>`).join('');
+    person.bio = htmlBio;
+    panelText.innerHTML = htmlBio;
+
+    const snippet = document.getElementById('snippet_' + personId);
+    if (snippet) {
+      const plain = text.replace(/<[^>]+>/g,'').substring(0, 120);
+      snippet.innerHTML = plain + '...';
+    }
+  } catch(e) {
+    panelText.innerHTML = '<p>Не удалось загрузить биографию. Попробуйте ещё раз.</p>';
+  }
+}
+
+function buildBioPrompt(person) {
+  const raceInfo = RACES[person.race] || { label: 'Существо' };
+  const subject = state.persons.find(p => p.id === 'subject');
+  const subjectName = subject ? `${subject.firstName} ${subject.lastName}` : 'главный персонаж';
+
+  return `Ты — хронист фэнтезийного мира. Напиши краткую биографию персонажа.
+
+Персонаж: ${person.firstName} ${person.lastName}
+Раса: ${raceInfo.label}
+Пол: ${person.gender === 'male' ? 'мужчина' : 'женщина'}
+Роль: ${person.relationLabel} по отношению к ${subjectName}
+
+Правила:
+- Биография должна быть 3-5 коротких абзацев
+- НЕ упоминай конкретные места, города, страны, годы или даты
+- Пиши только краткие жизненные факты: чем занимался, что умел, какой был характер, как сложилась жизнь
+- НЕ каждый персонаж должен быть героем или великим человеком — большинство обычные люди/существа
+- Учитывай расовые особенности (например, дварфы — мастера ремёсел, эльфы — долгожители, орки — сильны физически)
+- Пиши по-русски, живым языком, как будто читаешь старинный свиток
+- Учитывай, что это фэнтезийный мир — магия, чудовища и необычные профессии уместны, но не обязательны
+- Если персонаж — смешанной расы, отрази это в характере или внешности
+- Не нужно заканчивать словами "такова судьба" или похожими клише
+
+Напиши только биографию, без заголовков и пояснений.`;
+}
+
+function setStatus(msg) {
+  document.getElementById('statusMsg').textContent = msg;
+}
+</script>
+</body>
+</html>

@@ -44,13 +44,13 @@ body{background:var(--bg);color:var(--text);font-family:'Crimson Pro',Georgia,se
 .mode-btn.clear{border-color:var(--line);color:var(--text-dim);}
 .mode-btn.clear:hover{border-color:var(--life);color:var(--life);}
 
-.portal-point{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;background:var(--panel2);border:1px solid var(--line);margin-bottom:6px;font-size:12px;color:var(--text-dim);}
+.portal-point{display:flex;align-items:flex-start;gap:8px;padding:6px 8px;border-radius:6px;background:var(--panel2);border:1px solid var(--line);margin-bottom:6px;font-size:12px;color:var(--text-dim);}
 .portal-point.set{border-color:var(--line);}
-.portal-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.portal-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:2px;}
 .portal-dot.blue{background:var(--blue-portal);box-shadow:0 0 6px var(--blue-portal)88;}
 .portal-dot.red{background:var(--red-portal);box-shadow:0 0 6px var(--red-portal)88;}
 .portal-dot.empty{background:var(--panel);border:1px solid var(--text-dim);}
-.portal-coords{font-family:monospace;font-size:10px;color:var(--text-dim);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.portal-coords{font-family:monospace;font-size:10px;color:var(--text-dim);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:normal;word-break:break-all;line-height:1.4;}
 
 /* ── RESULT CARD ── */
 .result-card{background:rgba(14,14,31,0.97);border:1px solid var(--accent);border-radius:10px;padding:16px;backdrop-filter:blur(8px);}
@@ -144,19 +144,18 @@ body{background:var(--bg);color:var(--text);font-family:'Crimson Pro',Georgia,se
 }
 
 /* ── STATE LABELS ON MAP ── */
-.state-label-wrap{position: relative; background:none!important;border:none!important;box-shadow:none!important;pointer-events:auto!important;}
+.state-label-wrap{position: relative; background:none!important;border:none!important;box-shadow:none!important;pointer-events:auto!important;overflow:visible!important;}
 .state-label-inner{
-  transform: translate(-50%, -50%);
   position: absolute;
-  left: 0;
-  top: 0;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
   white-space: nowrap;
   pointer-events: none;
   font-family:'Cinzel',serif;
   font-weight:700;
   letter-spacing:2px;
   text-transform:uppercase;
-  white-space:nowrap;
   cursor:pointer;
   user-select:none;
   padding:3px 0;
@@ -218,14 +217,19 @@ body{background:var(--bg);color:var(--text);font-family:'Crimson Pro',Georgia,se
     <a href="index.html" style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;color:var(--text-dim);text-decoration:none;border:1px solid var(--line);padding:5px 12px;border-radius:5px;transition:all .2s;white-space:nowrap;" onmouseover="this.style.color='var(--gold)';this.style.borderColor='var(--gold-d)'" onmouseout="this.style.color='var(--text-dim)';this.style.borderColor='var(--line)'">← Меню</a>
     <div class="topbar-title">КАРТА МИРА</div>
     <div class="topbar-sep"></div>
-    <button class="topbtn" id="btn-reload-cities" onclick="loadCities()">⟳ Обновить города</button>
-    <button class="topbtn active" id="btn-toggle-sidebar" onclick="toggleSidebar()">Панель ▸</button>
-    <br/>
     <div class="topbar-checkbox-div">
       <input type="checkbox" id="chk-toggle-markers" name="toggle-markers" onclick="toggleMarkers()">
       <label for="chk-toggle-markers" class="topbar-label">Отключить маркеры</label>
     </div>
-    <div style="margin-left:auto;font-size:10px;color:var(--text-dim);font-style:italic;" id="status-text"></div>
+    <!-- Layer selector -->
+    <div class="topbar-sep"></div>
+    <select class="topbtn" id="layer-select" onchange="switchLayer(this.value)" style="font-family:'Cinzel',serif;font-size:8px;letter-spacing:1px;cursor:pointer;appearance:none;padding-right:20px;background-image:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%228%22 height=%225%22><path d=%22M0 0l4 5 4-5%22 fill=%22%237a6f90%22/></svg>');background-repeat:no-repeat;background-position:right 7px center;">
+      <option value="1">Новый Элдрос</option>
+      <option value="2">Слой 2</option>
+      <option value="3">Слой 3</option>
+    </select>
+    <div style="flex:1;font-size:10px;color:var(--text-dim);font-style:italic;text-align:center;" id="status-text"></div>
+    <button class="topbtn active" id="btn-toggle-sidebar" onclick="toggleSidebar()">Панель ▾</button>
   </div>
 
   <!-- MAP -->
@@ -270,14 +274,6 @@ body{background:var(--bg);color:var(--text);font-family:'Crimson Pro',Georgia,se
 
         <div class="reagents-title">РЕАГЕНТЫ</div>
         <div class="reagents-list" id="reagents-list"></div>
-      </div>
-
-      <!-- CITIES LIST -->
-      <div class="card" id="cities-card">
-        <div class="card-title">ГОРОДА</div>
-        <div class="cities-list" id="cities-list">
-          <div style="font-size:11px;color:var(--text-dim);font-style:italic;">Загрузка...</div>
-        </div>
       </div>
 
     </div><!-- /sidebar -->
@@ -876,10 +872,14 @@ function closeStatePanel() {
 function initStates() {
   STATES.forEach(state => {
     const size = state.fontSize || 14;
+    // Estimate label width for anchor (approximate: 7px per char at this font size * scale)
+    const approxW = state.name.length * size * 0.65;
+    const approxH = size * 1.6;
     const icon = L.divIcon({
       className: 'state-label-wrap',
       html: `<div class="state-label-inner" style="font-size:${size}px;color:${state.color || '#e8c96e'};text-shadow: 6px 5px 16px #000000;">${state.name}</div>`,
-      iconAnchor: [0, 0], // will be centred via CSS transform below
+      iconSize: [approxW, approxH],
+      iconAnchor: [approxW / 2, approxH / 2],
     });
 
     const marker = L.marker([state.lat, state.lng], {
@@ -908,8 +908,48 @@ function toggleSidebar() {
   sidebarVisible = !sidebarVisible;
   const sb = document.getElementById('sidebar');
   sb.style.display = sidebarVisible ? 'flex' : 'none';
-  document.getElementById('btn-toggle-sidebar').textContent = sidebarVisible ? 'Панель ▸' : 'Панель ◂';
+  document.getElementById('btn-toggle-sidebar').textContent = sidebarVisible ? 'Панель ▾' : 'Панель ▴';
   document.getElementById('btn-toggle-sidebar').classList.toggle('active', sidebarVisible);
+}
+
+// ── LAYER SWITCHING ──────────────────────────────────────────────────────────
+let currentImageOverlay = image;
+
+function switchLayer(layerNum) {
+  const num = parseInt(layerNum);
+  const filename = num === 1 ? 'worldmap.jpg' : `worldmap${num}.jpg`;
+
+  // Remove locked overlay if any
+  const locked = document.getElementById('layer-locked-overlay');
+  if (locked) locked.remove();
+
+  // Test image existence
+  const testImg = new Image();
+  testImg.onload = function() {
+    if (currentImageOverlay) map.removeLayer(currentImageOverlay);
+    currentImageOverlay = L.imageOverlay(filename, bounds).addTo(map);
+    currentImageOverlay.bringToBack();
+  };
+  testImg.onerror = function() {
+    // Show locked message on map
+    const overlay = document.createElement('div');
+    overlay.id = 'layer-locked-overlay';
+    overlay.style.cssText = `
+      position:absolute;inset:0;z-index:850;
+      display:flex;align-items:center;justify-content:center;
+      pointer-events:none;
+    `;
+    overlay.innerHTML = `<div style="
+      font-family:'Cinzel',serif;font-size:18px;letter-spacing:3px;
+      color:var(--gold-l);text-align:center;line-height:1.6;
+      background:rgba(8,8,18,0.85);border:1px solid var(--gold-d);
+      border-radius:12px;padding:24px 40px;
+      text-shadow:0 2px 12px rgba(0,0,0,0.8);
+      backdrop-filter:blur(6px);
+    ">⛔ Путешествие в выбранный слой<br>ещё не разблокировано</div>`;
+    document.querySelector('.map-wrap').appendChild(overlay);
+  };
+  testImg.src = filename;
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────
