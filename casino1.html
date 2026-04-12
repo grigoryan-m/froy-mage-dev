@@ -154,57 +154,6 @@ body.cursed{
 .hist-lose{color:var(--life);}
 .history-wrap{max-height:140px;overflow-y:auto;}
 
-
-/* EPOCHAL rarity in casino */
-.stake-item.r-epochal{
-  border-color:#cc220066!important;
-  background:linear-gradient(135deg,rgba(200,30,0,.08),rgba(140,10,0,.05))!important;
-  animation:epoch-stake-glow 1.6s ease-in-out infinite;
-  position:relative;overflow:hidden;
-}
-.stake-item.r-epochal::before{
-  content:'';position:absolute;inset:0;pointer-events:none;border-radius:7px;
-  background:
-    radial-gradient(1px 2px at 12% 85%,rgba(255,90,0,.8) 0%,transparent 100%),
-    radial-gradient(1px 2px at 28% 90%,rgba(255,50,0,.6) 0%,transparent 100%),
-    radial-gradient(1px 2px at 48% 82%,rgba(255,110,0,.7) 0%,transparent 100%),
-    radial-gradient(1px 2px at 68% 88%,rgba(255,70,0,.5) 0%,transparent 100%),
-    radial-gradient(1px 2px at 84% 84%,rgba(255,100,0,.8) 0%,transparent 100%);
-  animation:epoch-fire-stake 1.8s ease-in-out infinite alternate;
-}
-@keyframes epoch-stake-glow{
-  0%,100%{box-shadow:0 0 8px rgba(200,30,0,.4),0 0 20px rgba(200,30,0,.15);}
-  50%{box-shadow:0 0 20px rgba(255,70,0,.65),0 0 40px rgba(200,30,0,.28);}
-}
-@keyframes epoch-fire-stake{
-  0%{opacity:.5;transform:translateY(0);}100%{opacity:1;transform:translateY(-3px);}
-}
-.stake-item.r-epochal .stake-item-name{
-  animation:epoch-text-shimmer 2.5s linear infinite;font-weight:700;
-}
-@keyframes epoch-text-shimmer{
-  0%{color:#ff4422;}20%{color:#ff6600;}40%{color:#ff2200;}60%{color:#ff7700;}80%{color:#cc1100;}100%{color:#ff4422;}
-}
-/* Epochal jackpot prize row */
-.prize-row.p-epochal{
-  border-left:2px solid #cc2200;
-  animation:epoch-prize-glow 2s ease-in-out infinite;
-}
-@keyframes epoch-prize-glow{
-  0%,100%{box-shadow:0 0 6px rgba(200,30,0,.2);}
-  50%{box-shadow:0 0 16px rgba(255,60,0,.45);}
-}
-/* Slot epochal win */
-.slot.epoch-win{
-  border-color:#cc2200!important;
-  box-shadow:0 0 30px rgba(255,60,0,.6),0 0 60px rgba(200,30,0,.3)!important;
-  animation:epoch-slot-pulse .6s ease-in-out infinite!important;
-}
-@keyframes epoch-slot-pulse{
-  0%,100%{box-shadow:0 0 20px rgba(255,60,0,.5);}
-  50%{box-shadow:0 0 45px rgba(255,80,0,.8),0 0 80px rgba(200,30,0,.4);}
-}
-
 @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
 .shake{animation:shake .4s ease;}
 </style>
@@ -291,10 +240,10 @@ body.cursed{
 // ═══════════════════════════════════════════════════════════════════════════
 
 // ── RARITY ────────────────────────────────────────────────────────────────
-const RARITY_ORDER  = { common:0, rare:1, unique:2, legendary:3, epochal:4 };
-const RARITY_LABELS = { common:'Обычный', rare:'Редкий', unique:'Уникальный', legendary:'Легендарный', epochal:'Эпохальный' };
-const RARITY_COLORS = { common:'var(--text-dim)', rare:'#5b8dee', unique:'#9b7fe8', legendary:'var(--gold-l)', epochal:'#ff4422' };
-const RARITY_CLASS  = { common:'', rare:'r-rare', unique:'r-unique', legendary:'r-legendary', epochal:'r-epochal' };
+const RARITY_ORDER  = { common:0, rare:1, unique:2, legendary:3 };
+const RARITY_LABELS = { common:'Обычный', rare:'Редкий', unique:'Уникальный', legendary:'Легендарный' };
+const RARITY_COLORS = { common:'var(--text-dim)', rare:'#5b8dee', unique:'#9b7fe8', legendary:'var(--gold-l)' };
+const RARITY_CLASS  = { common:'', rare:'r-rare', unique:'r-unique', legendary:'r-legendary' };
 
 let rarityData = {}; // { "name lowercase": "rarity" }
 
@@ -316,7 +265,6 @@ async function loadRarityData() {
 function rarityAllowed(itemRarity, maxStakeRarity) {
   // unique and legendary are always blocked unless max is explicitly legendary
   if (itemRarity === 'unique')    return false; // never stakeable
-  if (itemRarity === 'epochal')   return true;  // always allowed — special case
   const maxR = (maxStakeRarity || 'any').toLowerCase();
   if (maxR === 'any') return true; // any rarity
   return RARITY_ORDER[itemRarity] <= RARITY_ORDER[maxR];
@@ -440,14 +388,6 @@ function initUI() {
     r.className = 'prize-row';
     r.style.borderLeft = '2px solid var(--gold)';
     r.innerHTML = `<span style="font-size:14px;">⭐</span><span class="prize-name" style="color:var(--gold-l);">${cd.prize_jackpot}</span><span class="prize-chance" style="color:var(--gold);">джекпот</span>`;
-    pl.appendChild(r);
-  }
-  // Epochal jackpot row — shown when there's a jackpot prize
-  if (cd.prize_jackpot || cd.prize_rare) {
-    const r = document.createElement('div');
-    r.className = 'prize-row p-epochal';
-    r.style.background = 'rgba(200,30,0,.06)';
-    r.innerHTML = `<span style="font-size:14px;">🔥</span><span class="prize-name" style="animation:epoch-text-shimmer 2s linear infinite;font-weight:700;">${cd.prize_jackpot||cd.prize_rare} + бонус</span><span class="prize-chance" style="color:#ff4422;font-size:8px;">эпохальный</span>`;
     pl.appendChild(r);
   }
 
@@ -575,7 +515,7 @@ function renderCharEquipment(charIdx) {
     // Max stake info line
     const maxNote = document.createElement('div');
     maxNote.className = 'max-stake-note';
-    const maxLabels = { common:'Обычный', rare:'Редкий', unique:'Уникальный', legendary:'Легендарный', epochal:'Эпохальный' };
+    const maxLabels = { common:'Обычный', rare:'Редкий', unique:'Уникальный', legendary:'Легендарный' };
     maxNote.textContent = `Макс. ставка: ${maxLabels[maxRarity] || maxRarity}`;
     list.appendChild(maxNote);
 
@@ -624,7 +564,6 @@ function selectStake(idx, eq, el, charIdx, itemRarity) {
     common:    '',
     rare:      '🔵 Редкий — при паре +35% шанс редкого приза',
     legendary: '⭐ Легендарный — при паре гарантирован редкий приз',
-    epochal:   '🔥 ЭПОХАЛЬНЫЙ — джекпот гарантирован + бонусный приз',
   };
   const hint = (rarityHints[itemRarity] || rarityHints.common).replace('%s', eq.name);
   document.getElementById('stake-hint').textContent = hint.includes('%s')
@@ -705,7 +644,6 @@ async function spin() {
     const msgEl = document.getElementById('result-msg');
     msgEl.textContent = '';
     msgEl.className = 'result-msg';
-    msgEl.style.cssText = '';
 
     // Ball spin animation
     const ballEl = document.getElementById('roulette-ball');
@@ -725,11 +663,8 @@ async function spin() {
 
     if (playerWon) {
       // Determine prize based on rarity
-      let prize, bonusPrize2 = null;
-      if (stakeRarity === 'epochal') {
-        prize = casinoData.prize_jackpot || casinoData.prize_rare || casinoData.prizes[0];
-        bonusPrize2 = casinoData.prize_rare || casinoData.prizes[Math.floor(Math.random()*casinoData.prizes.length)];
-      } else if (stakeRarity === 'legendary' && casinoData.prize_rare) {
+      let prize;
+      if (stakeRarity === 'legendary' && casinoData.prize_rare) {
         prize = casinoData.prize_rare;
       } else if (stakeRarity === 'rare' && casinoData.prize_rare && Math.random() < 0.3) {
         prize = casinoData.prize_rare;
@@ -737,19 +672,13 @@ async function spin() {
         prize = casinoData.prizes[Math.floor(Math.random() * casinoData.prizes.length)];
       }
       const colorLabel = landedRed ? '🔴 Красное' : '⚫ Чёрное';
-      if (stakeRarity === 'epochal') {
-        msgEl.textContent = `🔥 ${colorLabel}! ЭПОХАЛЬНЫЙ ВЫИГРЫШ: ${prize} + бонус: ${bonusPrize2}!`;
-        msgEl.style.cssText = 'animation:epoch-text-shimmer 1.5s linear infinite;';
-        showWinBurst('🔥'); launchFireConfetti();
-      } else {
-        msgEl.textContent = `✦ ${colorLabel}! Вы выиграли: ${prize}`;
-        showWinBurst('✦'); launchConfetti();
-      }
+      msgEl.textContent = `✦ ${colorLabel}! Вы выиграли: ${prize}`;
       msgEl.classList.add('win');
       document.getElementById('win-line').classList.add('visible');
-      addHistory('win', `Рулетка → ${prize}${bonusPrize2?' + '+bonusPrize2:''} (поставил: ${selectedStake.name})`);
+      showWinBurst('✦');
+      launchConfetti();
+      addHistory('win', `Рулетка → ${prize} (поставил: ${selectedStake.name})`);
       addWonItem(selectedStake.charIdx, prize);
-      if (bonusPrize2) addWonItem(selectedStake.charIdx, bonusPrize2);
     } else {
       const colorLabel = landedRed ? '🔴 Красное' : '⚫ Чёрное';
       msgEl.textContent = `✕ ${colorLabel}. «${selectedStake.name}» утеряно.`;
@@ -777,17 +706,16 @@ async function spin() {
   // Reset visuals
   ['slot-0','slot-1','slot-2'].forEach(id => {
     const el = document.getElementById(id);
-    el.classList.remove('win','lose','spin','epoch-win');
+    el.classList.remove('win','lose','spin');
     el.classList.add('spin');
   });
   document.getElementById('win-line').classList.remove('visible');
   document.getElementById('result-msg').textContent = '';
   document.getElementById('result-msg').className = 'result-msg';
-  document.getElementById('result-msg').style.cssText = '';
 
-  // Determine outcome — epochal guarantees jackpot; legendary +30% win chance
+  // Determine outcome — rare stakes get +15% win chance, legendary +30%
   const stakeRarity = selectedStake?.rarity || 'common';
-  const rarityBonus = { common:0, rare:0, legendary:30, epochal:999 }[stakeRarity] ?? 0;
+  const rarityBonus = { common:0, rare:0, legendary:0 }[stakeRarity] || 0;
   const roll     = Math.random() * 100;
   const isWin    = roll < (casinoData.win_chance + rarityBonus);
   const isPair   = !isWin && (roll < (casinoData.win_chance + rarityBonus + casinoData.two_match_chance));
@@ -822,7 +750,7 @@ async function spin() {
   // Reveal outcome
   ['slot-0','slot-1','slot-2'].forEach((id,i) => {
     const el = document.getElementById(id);
-    el.classList.remove('spin','epoch-win');
+    el.classList.remove('spin');
     el.classList.add(isWin ? 'win' : isPair ? 'win' : 'lose');
   });
 
@@ -833,57 +761,32 @@ async function spin() {
     const prize = casinoData.prize_jackpot
       || casinoData.prize_rare
       || casinoData.prizes[Math.floor(Math.random()*casinoData.prizes.length)];
-    // EPOCHAL: second bonus prize on top of jackpot
-    const bonusPrize = stakeRarity === 'epochal'
-      ? (casinoData.prize_rare || casinoData.prizes[Math.floor(Math.random()*casinoData.prizes.length)])
-      : null;
-    let prefix;
-    if (stakeRarity === 'epochal')   prefix = '🔥🔥 ЭПОХАЛЬНЫЙ ДЖЕКПОТ!!';
-    else if (stakeRarity === 'legendary') prefix = '⭐ ЛЕГЕНДАРНЫЙ ДЖЕКПОТ!';
-    else prefix = '✦ ДЖЕКПОТ!';
-    msgEl.textContent = bonusPrize
-      ? `${prefix} ${prize} + бонус: ${bonusPrize}!`
-      : `${prefix} Вы выиграли: ${prize} ✦`;
+    const prefix = stakeRarity === 'legendary' ? '⭐ ЛЕГЕНДАРНЫЙ ДЖЕКПОТ!' : '✦ ДЖЕКПОТ!';
+    msgEl.textContent = `${prefix} Вы выиграли: ${prize} ✦`;
     msgEl.classList.add('win');
-    // Make result text red for epochal
-    if (stakeRarity === 'epochal') msgEl.style.cssText = 'animation:epoch-text-shimmer 1.5s linear infinite;font-size:15px;';
     document.getElementById('win-line').classList.add('visible');
-    if (stakeRarity === 'epochal') {
-      ['slot-0','slot-1','slot-2'].forEach(id => {
-        const sl = document.getElementById(id);
-        sl.classList.remove('win');
-        sl.classList.add('epoch-win');
-      });
-      showWinBurst('🔥');
-      launchFireConfetti();
-    } else {
-      showWinBurst(stakeRarity === 'legendary' ? '🌟' : '⭐');
-      launchConfetti();
-    }
-    addHistory('win', `Джекпот: ${prize}${bonusPrize?' + '+bonusPrize:''} (поставил: ${selectedStake.name})`);
+    showWinBurst(stakeRarity === 'legendary' ? '🌟' : '⭐');
+    launchConfetti();
+    addHistory('win', `Джекпот: ${prize} (поставил: ${selectedStake.name})`);
     addWonItem(selectedStake.charIdx, prize);
-    if (bonusPrize) addWonItem(selectedStake.charIdx, bonusPrize);
   } else if (isPair) {
     // ПАРА: обычный приз + маленький шанс на редкий (НЕ джекпот)
     // Шанс редкого: обычный ~10%, редкий ~35%, легендарный 100%
     let prize;
-    const rareChance = { common: 0.10, rare: 0.35, legendary: 1.0, epochal: 1.0 }[stakeRarity] ?? 0.10;
+    const rareChance = { common: 0.10, rare: 0.35, legendary: 1.0 }[stakeRarity] ?? 0.10;
     if (casinoData.prize_rare && Math.random() < rareChance) {
       prize = casinoData.prize_rare;
     } else {
       prize = casinoData.prizes[Math.floor(Math.random()*casinoData.prizes.length)];
     }
     const isRarePrize = prize === casinoData.prize_rare;
-    const pairMsg = stakeRarity === 'epochal'
-      ? `🔥 Эпохальная пара! Вы получаете: ${prize}`
-      : isRarePrize ? `🔵 Пара! Редкая удача: ${prize}` : `⟡ Пара! Вы получаете: ${prize}`;
-    msgEl.textContent = pairMsg;
-    if (stakeRarity === 'epochal') msgEl.style.cssText = 'animation:epoch-text-shimmer 1.5s linear infinite;';
+    msgEl.textContent = isRarePrize
+      ? `🔵 Пара! Редкая удача: ${prize}`
+      : `⟡ Пара! Вы получаете: ${prize}`;
     msgEl.classList.add('win');
     document.getElementById('win-line').classList.add('visible');
-    showWinBurst(stakeRarity === 'epochal' ? '🔥' : isRarePrize ? '🔵' : '✦');
-    if (stakeRarity === 'epochal') launchFireConfetti();
-    else if (isRarePrize) launchConfetti();
+    showWinBurst(isRarePrize ? '🔵' : '✦');
+    if (isRarePrize) launchConfetti();
     addHistory('pair', `Пара → ${prize} (поставил: ${selectedStake.name})`);
     addWonItem(selectedStake.charIdx, prize);
   } else {
@@ -989,57 +892,6 @@ function launchConfetti() {
       ctx.fillStyle = p.color;
       ctx.globalAlpha = 0.85;
       ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);
-      ctx.restore();
-    });
-    if (alive) frame = requestAnimationFrame(draw);
-    else ctx.clearRect(0,0,canvas.width,canvas.height);
-  }
-  cancelAnimationFrame(frame);
-  draw();
-}
-
-
-// ── Fire Confetti (epochal) ────────────────────────────────────────────────
-function launchFireConfetti() {
-  const canvas = document.getElementById('confetti-canvas');
-  const ctx    = canvas.getContext('2d');
-  canvas.width  = window.innerWidth;
-  canvas.height = window.innerHeight;
-
-  const fireColors = ['#ff4400','#ff6600','#ff2200','#ff8800','#cc1100','#ff5500','#ffaa00','#dd2200'];
-  const particles = Array.from({length:120}, () => ({
-    x: Math.random() * canvas.width,
-    y: canvas.height + 10,
-    w: 4 + Math.random() * 8,
-    h: 8 + Math.random() * 14,
-    color: fireColors[Math.floor(Math.random()*fireColors.length)],
-    vy: -(4 + Math.random() * 7),
-    vx: (Math.random()-0.5)*4,
-    rot: Math.random()*360,
-    drot: (Math.random()-0.5)*12,
-    life: 1.0,
-    decay: 0.008 + Math.random()*0.012,
-  }));
-
-  let frame;
-  function draw() {
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    let alive = false;
-    particles.forEach(p => {
-      if (p.life <= 0) return;
-      alive = true;
-      p.y  += p.vy; p.x += p.vx; p.rot += p.drot;
-      p.life -= p.decay;
-      p.vy += 0.08; // gravity slows rise
-      ctx.save();
-      ctx.translate(p.x, p.y);
-      ctx.rotate(p.rot * Math.PI/180);
-      ctx.fillStyle = p.color;
-      ctx.globalAlpha = Math.max(0, p.life * 0.9);
-      // Draw flame-like teardrop
-      ctx.beginPath();
-      ctx.ellipse(0, 0, p.w/2, p.h/2, 0, 0, Math.PI*2);
-      ctx.fill();
       ctx.restore();
     });
     if (alive) frame = requestAnimationFrame(draw);
