@@ -1868,8 +1868,12 @@ function updateInventoryWeight() {
 
   // Carry capacity = highest base spark stat * 20
   const BASE_STATS = ['fly','atk','ill','def','ctrl'];
-  const maxSpark = Math.max(...BASE_STATS.map(id => sparks[id] || 0));
-  const carryCapacity = maxSpark * 20;
+  let maxSpark = 0;
+  for(let i = 0; i < BASE_STATS.length; i++){
+    maxSpark += sparks[BASE_STATS[i]] || 0;
+  }
+  //const maxSpark = Math.max(...BASE_STATS.map(id => sparks[id] || 0));
+  const carryCapacity = (maxSpark * 5) + 20;
 
   const weightEl = document.getElementById('inv-weight-val');
   const carryEl  = document.getElementById('inv-carry-val');
