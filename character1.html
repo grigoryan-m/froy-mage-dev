@@ -289,6 +289,42 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;bac
 @keyframes leg-sparkle{0%,100%{opacity:0;}25%{opacity:1;}50%{opacity:0;}75%{opacity:.8;}}
 /* unique lock icon — right side, replaces send button */
 .unique-lock{font-size:11px;color:#9b7fe8;opacity:.7;flex-shrink:0;align-self:center;cursor:default;}
+/* epochal: crimson fire animation — cannot be transferred or deleted */
+.rarity-epochal{border-color:#cc2200!important;animation:epoch-glow 1.8s ease-in-out infinite!important;position:relative;overflow:hidden;}
+.rarity-epochal .equip-cell{background:none;font-weight:700;animation:epoch-shimmer 3s linear infinite;}
+@keyframes epoch-glow{
+  0%,100%{box-shadow:0 0 8px rgba(200,30,0,.5),0 0 20px rgba(200,30,0,.2),inset 0 0 8px rgba(200,30,0,.06);}
+  50%{box-shadow:0 0 20px rgba(255,80,0,.75),0 0 40px rgba(200,30,0,.35),inset 0 0 16px rgba(200,30,0,.12);}
+}
+@keyframes epoch-shimmer{
+  0%{color:#ff4422;}10%{color:#ff6600;}20%{color:#ff2200;}30%{color:#ff8833;}40%{color:#cc1100;}50%{color:#ff5500;}60%{color:#ff3300;}70%{color:#ff7700;}80%{color:#dd2200;}90%{color:#ff4400;}100%{color:#ff4422;}
+}
+/* fire particles overlay */
+.rarity-epochal::before{
+  content:'🔥';position:absolute;inset:0;border-radius:5px;pointer-events:none;
+  display:flex;align-items:center;justify-content:center;
+  background:
+    radial-gradient(1px 2px at 8%  80%,rgba(255,100,0,.9) 0%,transparent 100%),
+    radial-gradient(1px 2px at 20% 90%,rgba(255,60,0,.7)  0%,transparent 100%),
+    radial-gradient(1px 2px at 35% 75%,rgba(255,120,0,.8) 0%,transparent 100%),
+    radial-gradient(1px 2px at 55% 85%,rgba(255,80,0,.6)  0%,transparent 100%),
+    radial-gradient(1px 2px at 70% 78%,rgba(255,140,0,.9) 0%,transparent 100%),
+    radial-gradient(1px 2px at 85% 88%,rgba(255,60,0,.7)  0%,transparent 100%),
+    radial-gradient(1px 2px at 92% 72%,rgba(255,100,0,.8) 0%,transparent 100%),
+    radial-gradient(2px 3px at 15% 60%,rgba(255,40,0,.5)  0%,transparent 100%),
+    radial-gradient(2px 3px at 60% 65%,rgba(255,90,0,.6)  0%,transparent 100%);
+  content:'';
+  animation:epoch-fire 2s ease-in-out infinite alternate;
+}
+@keyframes epoch-fire{
+  0%{opacity:.4;transform:translateY(0);}
+  50%{opacity:.9;transform:translateY(-2px);}
+  100%{opacity:.5;transform:translateY(1px);}
+}
+.rarity-epochal::after{
+  content:'';position:absolute;inset:0;border-radius:5px;pointer-events:none;
+  background:linear-gradient(135deg,rgba(255,60,0,.08),rgba(180,20,0,.05),rgba(255,80,0,.07));
+}
 /* SEND MODAL */
 .modal-overlay{position:fixed;inset:0;background:rgba(8,8,18,.85);z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(3px);}
 .modal-overlay.hidden{display:none;}
@@ -596,6 +632,13 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;bac
 
 <div class="equip-panel">
   <div class="section-title">СНАРЯЖЕНИЕ</div>
+  <div id="weight-display" style="display:flex;align-items:center;gap:16px;margin-bottom:10px;padding:7px 10px;background:var(--panel2);border-radius:6px;border:1px solid var(--line);flex-wrap:wrap;">
+    <span style="font-family:'Cinzel',serif;font-size:8px;letter-spacing:2px;color:var(--text-dim);">ВЕС ИНВЕНТАРЯ</span>
+    <span id="inv-weight-val" style="font-family:'Cinzel',serif;font-size:14px;color:var(--text);font-weight:600;transition:color .3s;">0</span>
+    <span style="font-family:'Cinzel',serif;font-size:8px;letter-spacing:2px;color:var(--text-dim);">/</span>
+    <span style="font-family:'Cinzel',serif;font-size:8px;letter-spacing:2px;color:var(--text-dim);">ГРУЗОПОДЪЁМНОСТЬ</span>
+    <span id="inv-carry-val" style="font-family:'Cinzel',serif;font-size:14px;color:var(--text-dim);transition:color .3s;">—</span>
+  </div>
   <div class="equip-header-row" style="grid-template-columns:18px 1fr 2fr 22px 22px 22px;">
     <span></span><span>Предмет</span><span>Описание / Эффект</span><span></span><span></span><span></span>
   </div>
@@ -831,7 +874,7 @@ function buildSparks(){
             onMaxChange('barrier-boxes',newMax,20);
           }
         }
-        checkAdj();refreshSkillsPanel();scheduleSave();
+        checkAdj();refreshSkillsPanel();updateInventoryWeight();scheduleSave();
       });
       wrap.appendChild(sq);
     }
@@ -1231,7 +1274,8 @@ async function loadClassSkills() {
         const n = (r.name || r['название'] || '').trim().toLowerCase();
         const v = (r.rarity || r['редкость'] || 'common').trim().toLowerCase();
         const d = (r.description || r['описание'] || r.desc || '').trim();
-        if (n) rarityData[n] = { rarity: v, desc: d };
+        const w = (r.weight || r['вес'] || '').toString().trim();
+        if (n) rarityData[n] = { rarity: v, desc: d, weight: w };
       });
       // Re-apply rarities to already-rendered equip rows
       document.querySelectorAll('.equip-row').forEach(row => {
@@ -1674,10 +1718,14 @@ function refreshSkillsPanel() {
 // ── RARITY DATA (loaded from sheets) ─────────────────────────────────────────
 let rarityData = {}; // { "name lowercase": { rarity, desc } }
 
-const RARITY_ORDER  = { common:0, rare:1, unique:2, legendary:3, mythic: 3 };
+const RARITY_ORDER  = { common:0, rare:1, unique:2, legendary:3, mythic: 3, epochal: 4 };
+const RARITY_WEIGHT = { common:1, rare:5, unique:20, legendary:10, mythic:10, epochal:50 };
 const isDigit = (char) => /^\d$/.test(char);
 
 function getItemRarity(name) {
+  // Созвездие-17 is explicitly epochal
+  if ((name||'').toLowerCase().trim() === 'созвездие-17') return 'epochal';
+
   let regex = /-(\d+)/;
   let match = name.match(regex);
 
@@ -1685,8 +1733,8 @@ function getItemRarity(name) {
     let num = parseInt(match[1]);
 
     if (num > 17) return 'common';
+    if (num === 17) return 'epochal';
 
-    let replace;
     if (num >= 10){
       return 'legendary';
     }
@@ -1695,11 +1743,20 @@ function getItemRarity(name) {
     } else {
       return 'common';
     }
-
-    name = name.replace(regex, replace);
   }
 
   return rarityData[(name || '').toLowerCase().trim()]?.rarity || 'common';
+}
+function getItemWeight(name) {
+  // Check sheet data for explicit weight column
+  const sheetEntry = rarityData[(name||'').toLowerCase().trim()];
+  if (sheetEntry && sheetEntry.weight !== undefined && sheetEntry.weight !== '') {
+    const w = parseFloat(sheetEntry.weight);
+    if (!isNaN(w)) return w;
+  }
+  // Fall back to rarity default
+  const rarity = getItemRarity(name);
+  return RARITY_WEIGHT[rarity] ?? 1;
 }
 function getItemDesc(name) {
   return rarityData[(name||'').toLowerCase().trim()]?.desc || '';
@@ -1719,21 +1776,23 @@ function addEquip(data){
   const esc=s=>(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   const name    = data?.name || '';
   const rarity  = data?.rarity || getItemRarity(name);
-  const isUnique = rarity === 'unique';
-  // For unique items: desc from sheet takes priority
-  const desc = isUnique ? (getItemDesc(name) || data?.desc || '') : (data?.desc || '');
+  const isUnique  = rarity === 'unique';
+  const isEpochal = rarity === 'epochal';
+  const isLocked  = isUnique;
+  // For unique/epochal items: desc from sheet takes priority
+  const desc = isLocked ? (getItemDesc(name) || data?.desc || '') : (data?.desc || '');
 
   row.classList.add('rarity-' + rarity);
 
-  // grid: drag | name | desc | lock-or-send | del
-  // unique: lock icon instead of send, no del
+  // grid: drag | name | desc | lock-or-send | warp | del
+  // unique/epochal: lock icon instead of send, no del
   // legendary: fully editable, send+del visible
   row.innerHTML=`
     <div class="equip-drag" title="Перетащить">⠿</div>
     <div class="equip-cell" contenteditable="true" data-placeholder="Название...">${esc(name)}</div>
-    <div class="equip-cell" contenteditable="${isUnique?'false':'true'}" data-placeholder="Описание или эффект...">${esc(desc)}</div>
-    ${isUnique
-      ? `<span class="unique-lock" title="Уникальный предмет — нельзя передать или удалить">🔒</span><span></span><span></span>`
+    <div class="equip-cell" contenteditable="${isLocked?'false':'true'}" data-placeholder="Описание или эффект...">${esc(desc)}</div>
+    ${isLocked
+      ? `<span class="unique-lock" title="${'Уникальный предмет — нельзя передать или удалить'}">${'🔒'}</span><span></span><span></span>`
       : `<button class="send-equip" title="Передать игроку" onclick="openSendModal(${id})">→</button>
          <button class="warp-equip-btn" title="Положить в Сумку Варпа" onclick="putInWarpBag(${id})">🌀</button>`}
          <button class="del-equip" title="Удалить" onclick="removeEquip(${id})">×</button>`;
@@ -1759,7 +1818,7 @@ function addEquip(data){
 
   // Live rarity re-check on name edit (fix 5: exact match only)
   const nameCell = row.querySelector('.equip-cell');
-  if(nameCell && !isUnique) {
+  if(nameCell && !isLocked) {
     nameCell.addEventListener('input', ()=>{
       const n = nameCell.innerText?.trim() || '';
       refreshRowRarity(row, n);
@@ -1770,26 +1829,73 @@ function addEquip(data){
     if(c !== nameCell) c.addEventListener('input', scheduleSave);
   });
 
-  list.appendChild(row);return row;
+  list.appendChild(row);
+  updateInventoryWeight();
+  return row;
 }
 
 // refreshRowRarity: re-applies rarity class and updates lock/buttons in place
 // Fix 5: uses exact lowercase match — partial names don't trigger rarity
 function refreshRowRarity(row, name) {
   const newRarity = getItemRarity(name); // exact match or 'common'
-  const classes = ['rarity-common','rarity-rare','rarity-unique','rarity-legendary'];
+  const classes = ['rarity-common','rarity-rare','rarity-unique','rarity-legendary','rarity-epochal'];
   classes.forEach(c => row.classList.remove(c));
   row.classList.add('rarity-' + newRarity);
+  updateInventoryWeight();
 }
 
 // Legacy alias
 function applyEquipRarity(row, rarity) {
-  const classes = ['rarity-common','rarity-rare','rarity-unique','rarity-legendary'];
+  const classes = ['rarity-common','rarity-rare','rarity-unique','rarity-legendary','rarity-epochal'];
   classes.forEach(c => row.classList.remove(c));
   row.classList.add('rarity-' + rarity);
+  updateInventoryWeight();
 }
 
-function removeEquip(id){const e=document.getElementById('equip-'+id);if(e){e.remove();scheduleSave();}}
+function updateInventoryWeight() {
+  // Collect all items from main inventory
+  const invRows = [...document.querySelectorAll('.equip-row')];
+  let totalWeight = 0;
+  invRows.forEach(row => {
+    const nameCell = row.querySelectorAll('.equip-cell')[0];
+    const name = nameCell?.innerText?.trim() || '';
+    if (name) totalWeight += getItemWeight(name);
+  });
+  // Also count warp bag items
+  Object.values(_warpItems || {}).forEach(item => {
+    if (item.name) totalWeight += getItemWeight(item.name);
+  });
+
+  // Carry capacity = highest base spark stat * 20
+  const BASE_STATS = ['fly','atk','ill','def','ctrl'];
+  let maxSpark = 0;
+  for(let i = 0; i < BASE_STATS.length; i++){
+    maxSpark += sparks[BASE_STATS[i]] || 0;
+  }
+  //const maxSpark = Math.max(...BASE_STATS.map(id => sparks[id] || 0));
+  const carryCapacity = (maxSpark * 5) + 20;
+
+  const weightEl = document.getElementById('inv-weight-val');
+  const carryEl  = document.getElementById('inv-carry-val');
+  if (!weightEl || !carryEl) return;
+
+  weightEl.textContent = totalWeight;
+  carryEl.textContent  = carryCapacity > 0 ? carryCapacity : '—';
+
+  // Color coding
+  weightEl.style.color = 'var(--text)';
+  if (carryCapacity > 0) {
+    if (totalWeight >= carryCapacity) {
+      weightEl.style.color = '#e05c5c'; // red — overloaded
+    } else if (totalWeight >= carryCapacity * 0.8) {
+      weightEl.style.color = '#e8c96e'; // yellow — close
+    } else {
+      weightEl.style.color = 'var(--text)';
+    }
+  }
+}
+
+function removeEquip(id){const e=document.getElementById('equip-'+id);if(e){e.remove();updateInventoryWeight();scheduleSave();}}
 // ── SEND MODAL ────────────────────────────────────────────────────────────────
 let _sendTargetUuid  = null;
 let _sendTargetName  = '';
@@ -2159,6 +2265,7 @@ function applyState(s){
   if(s.constellationPath && typeof window._constellationSetPath==='function') window._constellationSetPath(s.constellationPath);
   // Check warp bag after state restore
   setTimeout(checkWarpBagPresence, 0);
+  setTimeout(updateInventoryWeight, 0);
 }
 function loadAll(){try{const r=localStorage.getItem(SAVE_KEY);if(!r)return false;applyState(JSON.parse(r));return true;}catch(e){return false;}}
 function exportJSON(){const s=collectState();const b=new Blob([JSON.stringify(s,null,2)],{type:'application/json'});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download=`${s.charName||'персонаж'}_froyskyy.json`;a.click();URL.revokeObjectURL(u);}
@@ -2480,6 +2587,8 @@ function renderWarpBag() {
       <button class="warp-take-btn" title="Забрать в инвентарь" onclick="takeFromWarpBag('${key}')">⬇</button>`;
     list.appendChild(row);
   });
+  updateInventoryWeight();
+  updateInventoryWeight();
 }
 
 // Put item from inventory into warp bag
@@ -2546,6 +2655,7 @@ const _origScheduleSave = typeof scheduleSave !== 'undefined' ? scheduleSave : n
 buildCircle();buildSparks();buildHpBoxes('barrier-boxes',0);buildHpBoxes('life-boxes',0);buildObelisks();
 if(!loadAll()){for(let i=0;i<5;i++)addSpell();for(let i=0;i<3;i++)addEquip();}
 checkWarpBagPresence();
+updateInventoryWeight();
 checkPendingSpell();
 loadClassSkills();
 // Firebase realtime — пати, логи, уведомления

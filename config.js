@@ -15,7 +15,7 @@ const SHEETS_CONFIG = {
   apiKey:        'AIzaSyBjoyPsv-IoJDGAR_QhC6Z146Tk12dZ_Hw',
   spreadsheetId: '1QeDZwKCw38xS-lD-vFASkQbeUYL3ZDTq6ykxALfLDLI',
 };
-
+const GUIDE_SHEETS_ID = '1QeDZwKCw38xS-lD-vFASkQbeUYL3ZDTq6ykxALfLDLI';
 // ═══════════════════════════════════════════════════════════════════════
 // FROYSKYY — Конфигурация Firebase Realtime Database
 // ═══════════════════════════════════════════════════════════════════════

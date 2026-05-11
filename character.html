@@ -1392,6 +1392,10 @@ function renderBuildPanel() {
   panel.classList.add('build-active');
   if(placeholder) placeholder.style.display = 'none';
 
+  // Colors for this build (used in ult card and guide button)
+  const c1 = ADJ_COLORS[b1] || '#c9a84c';
+  const c2 = ADJ_COLORS[b2] || '#c9a84c';
+
   // Icon
   iconEl.classList.add('active');
   if(build.icon) {
@@ -1416,9 +1420,7 @@ function renderBuildPanel() {
   // Ult card
   if(build.ult_name) {
     const isAct = build.ult_type === 'актив';
-    // Determine gradient color (mix of both branches)
-    const c1 = ADJ_COLORS[b1] || '#c9a84c';
-    const c2 = ADJ_COLORS[b2] || '#c9a84c';
+    // Gradient color (uses c1/c2 from above)
 
     const ult = document.createElement('div');
     ult.className = 'build-ult active';
@@ -1468,6 +1470,20 @@ function renderBuildPanel() {
 
     ultWrap.appendChild(ult);
   }
+
+  // Guide button — shown when build is active
+  const oldGuideBtn = document.getElementById('build-guide-btn');
+  if (oldGuideBtn) oldGuideBtn.remove();
+  const guideBtn = document.createElement('a');
+  guideBtn.id = 'build-guide-btn';
+  const buildSlug = build ? (build.name || (b1 + '_' + b2)).toLowerCase().replace(/\s+/g,'_').replace(/[^a-zа-яё0-9_]/gi,'') : (b1 + '_' + b2);
+  guideBtn.href = `guide.html?build=${encodeURIComponent(buildSlug)}`;
+  guideBtn.target = '_blank';
+  guideBtn.style.cssText = `display:inline-flex;align-items:center;gap:6px;margin-top:10px;font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;color:${c1};text-decoration:none;border:1px solid ${c1}55;padding:6px 14px;border-radius:5px;transition:all .2s;background:${c1}0a;`;
+  guideBtn.innerHTML = `<span style="font-size:12px;">📖</span> ГАЙД`;
+  guideBtn.onmouseover = function(){ this.style.background = c1 + '22'; this.style.borderColor = c1; };
+  guideBtn.onmouseout  = function(){ this.style.background = c1 + '0a'; this.style.borderColor = c1 + '55'; };
+  ultWrap.appendChild(guideBtn);
 }
 
 // Fallback icon — combine first chars of both branch names visually

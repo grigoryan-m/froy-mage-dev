@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Гайд — Фройский Маг</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#080812;--panel:#0e0e1f;--panel2:#131328;--panel3:#1a1a35;
+  --accent:#7b5ea7;--accent2:#a67fd1;--gold:#c9a84c;--gold-l:#e8c96e;--gold-d:#8a6a20;
+  --text:#e8e0f0;--text-dim:#7a6f90;--text-mid:#b0a0c8;
+  --line:#2a1f45;--barrier:#5b8dee;--life:#e05c5c;
+  --stat-fly:#6ab0f5;--stat-atk:#e05c5c;--stat-ill:#b07fd1;--stat-def:#5b8dee;--stat-ctrl:#4cbb8a;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  background:var(--bg);color:var(--text);font-family:'Crimson Pro',Georgia,serif;
+  min-height:100vh;padding:24px 16px 60px;
+  background-image:
+    radial-gradient(ellipse 80% 60% at 50% 0%,rgba(123,94,167,.1) 0%,transparent 70%),
+    radial-gradient(ellipse 40% 40% at 80% 80%,rgba(201,168,76,.04) 0%,transparent 60%);
+}
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:
+    radial-gradient(1px 1px at 10% 15%,rgba(255,255,255,.18) 0%,transparent 100%),
+    radial-gradient(1px 1px at 25% 40%,rgba(255,255,255,.12) 0%,transparent 100%),
+    radial-gradient(1px 1px at 40% 8%,rgba(255,255,255,.15) 0%,transparent 100%),
+    radial-gradient(1px 1px at 60% 25%,rgba(255,255,255,.10) 0%,transparent 100%),
+    radial-gradient(1px 1px at 75% 55%,rgba(255,255,255,.14) 0%,transparent 100%),
+    radial-gradient(1px 1px at 88% 12%,rgba(255,255,255,.16) 0%,transparent 100%),
+    radial-gradient(1px 1px at 33% 85%,rgba(255,255,255,.11) 0%,transparent 100%),
+    radial-gradient(1px 1px at 92% 45%,rgba(255,255,255,.13) 0%,transparent 100%);
+}
+.sheet{position:relative;max-width:860px;margin:0 auto;z-index:1;}
+
+/* HEADER */
+.guide-header{
+  text-align:center;padding:32px 20px 24px;
+  border:1px solid var(--accent);border-radius:10px;
+  background:var(--panel);margin-bottom:20px;position:relative;overflow:hidden;
+}
+.guide-header::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 60% 80% at 50% 50%,rgba(123,94,167,.12) 0%,transparent 70%);
+}
+.header-deco{
+  position:absolute;top:14px;left:50%;transform:translateX(-50%);
+  width:240px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);
+}
+.guide-eyebrow{font-family:'Cinzel',serif;font-size:8px;letter-spacing:4px;color:var(--text-dim);margin-bottom:8px;position:relative;}
+.guide-title{
+  font-family:'Cinzel',serif;font-size:24px;font-weight:700;
+  letter-spacing:4px;color:var(--gold-l);
+  text-shadow:0 0 30px rgba(201,168,76,.4);position:relative;
+  min-height:36px;
+}
+.guide-branches{
+  display:flex;gap:8px;justify-content:center;flex-wrap:wrap;
+  margin-top:10px;position:relative;
+}
+.guide-branch-tag{
+  display: none;
+  font-family:'Cinzel',serif;font-size:8px;letter-spacing:2px;
+  padding:3px 12px;border-radius:20px;border:1px solid var(--gold-d);
+  color:var(--gold);background:rgba(201,168,76,.08);
+}
+.back-link{
+  position:absolute;left:16px;top:50%;transform:translateY(-50%);
+  font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;color:var(--text-dim);
+  text-decoration:none;border:1px solid var(--line);padding:6px 12px;border-radius:5px;
+  transition:all .2s;z-index:1;
+}
+.back-link:hover{color:var(--gold);border-color:var(--gold-d);}
+
+/* SECTION */
+.guide-section{
+  background:var(--panel);border:1px solid var(--accent);border-radius:10px;
+  padding:20px;margin-bottom:16px;transition:border-color .3s;
+}
+.guide-section:hover{border-color:var(--accent2);}
+.section-title{
+  font-family:'Cinzel',serif;font-size:10px;letter-spacing:3px;color:var(--gold-l);
+  margin-bottom:14px;display:flex;align-items:center;gap:8px;
+}
+.section-title::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--gold-d),transparent);}
+.section-title .s-icon{font-size:14px;flex-shrink:0;}
+.section-body{
+  font-size:14px;line-height:1.9;color:var(--text-mid);
+  white-space:pre-wrap;min-height:20px;
+}
+.section-body.empty{color:var(--text-dim);font-style:italic;font-size:12px;}
+
+/* COMBO */
+.combo-steps{display:flex;flex-direction:column;gap:8px;margin-top:4px;}
+.combo-step{
+  display:flex;align-items:flex-start;gap:12px;
+  padding:10px 14px;border-radius:6px;
+  background:var(--panel2);border:1px solid var(--line);
+}
+.combo-num{
+  font-family:'Cinzel',serif;font-size:11px;font-weight:700;
+  color:var(--gold);min-width:22px;line-height:1.5;flex-shrink:0;
+}
+.combo-text{font-size:13px;color:var(--text-mid);line-height:1.6;}
+
+/* STATS DISTRIBUTION */
+.stats-grid{display:flex;flex-direction:column;gap:6px;}
+.stat-row-guide{
+  display:flex;align-items:center;gap:12px;
+  padding:10px 14px;border-radius:7px;
+  background:var(--panel2);border:1px solid var(--line);
+  transition:border-color .2s;
+}
+.stat-row-guide:hover{border-color:rgba(255,255,255,.1);}
+.stat-icon-wrap{width:32px;height:32px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.stat-icon-wrap svg{width:18px;height:18px;}
+.stat-info{flex:1;min-width:0;}
+.stat-label{font-family:'Cinzel',serif;font-size:8px;letter-spacing:2px;margin-bottom:3px;}
+.stat-pips{display:flex;gap:3px;flex-wrap:wrap;}
+.stat-pip{width:14px;height:14px;border-radius:2px;background:#1e1830;border:1px solid transparent;flex-shrink:0;}
+.stat-pip.filled{box-shadow:0 0 5px currentColor;}
+.stat-modifier{
+  font-family:'Cinzel',serif;font-size:9px;letter-spacing:1px;
+  padding:3px 10px;border-radius:8px;flex-shrink:0;
+}
+.stat-modifier.is-max{background:rgba(201,168,76,.12);border:1px solid var(--gold-d);color:var(--gold);}
+.stat-modifier.is-min{background:rgba(91,141,238,.08);border:1px solid #3a5a9a;color:var(--barrier);}
+
+/* ULT SECTION */
+.ult-card{
+  border-radius:7px;padding:14px 16px;
+  border:1px solid var(--gold-d);
+  background:linear-gradient(135deg,rgba(201,168,76,.06),rgba(0,0,0,.2));
+}
+.ult-header{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;}
+.ult-badge{
+  font-family:'Cinzel',serif;font-size:8px;letter-spacing:1px;
+  padding:2px 10px;border-radius:10px;
+  border:1px solid var(--gold-d);color:var(--gold);background:rgba(201,168,76,.08);
+}
+.ult-mana{
+  font-family:'Cinzel',serif;font-size:9px;padding:2px 10px;border-radius:10px;
+  border:1px solid var(--gold-d);color:var(--gold);background:rgba(201,168,76,.06);
+}
+.ult-name{font-family:'Cinzel',serif;font-size:12px;font-weight:600;color:var(--gold-l);margin-bottom:6px;}
+.ult-desc{font-size:13px;color:var(--text-mid);line-height:1.65;}
+
+/* SPELLS TABLE */
+.spells-table{width:100%;border-collapse:collapse;}
+.spells-table th{
+  font-family:'Cinzel',serif;font-size:7px;letter-spacing:2px;color:var(--accent2);
+  text-align:left;padding:0 10px 8px;text-transform:uppercase;
+}
+.spells-table td{
+  padding:8px 10px;font-size:13px;color:var(--text-mid);
+  border-bottom:1px solid rgba(255,255,255,.04);
+  vertical-align:top;
+}
+.spells-table tr:last-child td{border-bottom:none;}
+.spells-table tr:hover td{background:rgba(123,94,167,.05);}
+.spell-element-badge{
+  font-family:'Cinzel',serif;font-size:8px;letter-spacing:1px;
+  padding:1px 8px;border-radius:10px;border:1px solid transparent;
+  white-space:nowrap;
+}
+.spell-mana-badge{
+  font-family:'Cinzel',serif;font-size:8px;
+  padding:1px 8px;border-radius:10px;
+  border:1px solid var(--gold-d);color:var(--gold);
+  background:rgba(201,168,76,.07);white-space:nowrap;
+}
+
+/* LOADING / ERROR */
+.loading-state{
+  text-align:center;padding:60px 20px;
+  font-family:'Crimson Pro',serif;font-size:14px;color:var(--text-dim);font-style:italic;
+}
+.loading-spinner{
+  display:inline-block;width:24px;height:24px;border-radius:50%;
+  border:2px solid var(--line);border-top-color:var(--gold);
+  animation:spin .8s linear infinite;margin-bottom:12px;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+.error-state{
+  text-align:center;padding:40px 20px;
+  font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;color:var(--life);
+}
+.config-note{
+  background:rgba(91,141,238,.08);border:1px solid rgba(91,141,238,.25);
+  border-radius:8px;padding:14px 18px;margin-bottom:20px;
+  font-size:12px;color:var(--text-mid);line-height:1.7;
+}
+.config-note strong{font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;color:var(--barrier);}
+.config-note code{
+  background:rgba(0,0,0,.35);border-radius:3px;padding:1px 6px;
+  font-size:11px;color:var(--accent2);letter-spacing:.3px;
+}
+.edit-link{
+  display:inline-flex;align-items:center;gap:6px;
+  font-family:'Cinzel',serif;font-size:8px;letter-spacing:2px;
+  color:var(--text-dim);text-decoration:none;
+  border:1px solid var(--line);padding:5px 12px;border-radius:5px;
+  transition:all .2s;
+}
+.edit-link:hover{color:var(--gold);border-color:var(--gold-d);}
+.section-footer{display:flex;justify-content:flex-end;margin-top:8px;}
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <!-- HEADER -->
+  <div class="guide-header">
+    <a href="javascript:history.back()" class="back-link">← Назад</a>
+    <div class="header-deco"></div>
+    <div class="guide-eyebrow">ГАЙД ПО БИЛДУ</div>
+    <div class="guide-title" id="guide-build-title">⟳ Загрузка...</div>
+    <div class="guide-branches" id="guide-branches"></div>
+  </div>
+
+  <!-- CONFIG NOTE -->
+  <div class="config-note" id="config-note" style="display:none;">
+    <strong>Как подключить Google Таблицу</strong><br>
+    Создай публичную Google Таблицу с листом <code>guides</code>. Первая строка — заголовки:
+    <code>build</code>, <code>description</code>, <code>ult_name</code>, <code>ult_type</code>, <code>ult_mana</code>, <code>ult_desc</code>,
+    <code>stats_fly</code>, <code>stats_atk</code>, <code>stats_ill</code>, <code>stats_def</code>, <code>stats_ctrl</code>,
+    <code>stats_fly_mod</code>, <code>stats_atk_mod</code>, <code>stats_ill_mod</code>, <code>stats_def_mod</code>, <code>stats_ctrl_mod</code>,
+    <code>spells</code> (JSON-массив), <code>combo</code> (шаги через <code>||</code>).<br><br>
+    В колонке <code>build</code> — slug билда (совпадает с URL параметром).<br>
+    В колонках <code>stats_*_mod</code> — слово <code>max</code> или <code>min</code> (или оставь пустым).<br>
+    В колонках <code>stats_*</code> — число от 0 до 5.<br><br>
+    Открой <code>guide.html</code> в редакторе и замени <code>SHEETS_ID</code> на ID твоей таблицы.
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div id="guide-content">
+    <div class="loading-state">
+      <div class="loading-spinner"></div>
+      <div>Загружаем гайд из таблицы...</div>
+    </div>
+  </div>
+
+</div><!-- .sheet -->
+
+<script src="config.js" onerror="console.log('config.js not found')"></script>
+<script>
+// ═══════════════════════════════════════════════════════
+// КОНФИГУРАЦИЯ — замени SHEETS_ID на ID своей таблицы
+// ═══════════════════════════════════════════════════════
+const SHEETS_ID = (typeof GUIDE_SHEETS_ID !== 'undefined' && GUIDE_SHEETS_ID)
+  ? GUIDE_SHEETS_ID
+  : 'YOUR_GOOGLE_SHEETS_ID';
+
+// Имя листа с гайдами
+const SHEET_NAME = 'guides';
+
+// ═══════════════════════════════════════════════════════
+// ДАННЫЕ О ВЕТКАХ (для отображения тегов)
+// ═══════════════════════════════════════════════════════
+const ADJ_NAMES = {
+  natisk:'НАТИСК', obman:'ОБМАН', pokoj:'ПОКОЙ',
+  istsel:'ИСЦЕЛЕНИЕ', gospod:'ГОСПОДСТВО', stoikost:'СТОЙКОСТЬ'
+};
+const ADJ_COLORS = {
+  natisk:'#c9a84c', obman:'#c9a84c', pokoj:'#c9a84c',
+  istsel:'#7ecba1', gospod:'#c9a84c', stoikost:'#c9a84c'
+};
+const BUILD_TO_BRANCHES = {
+  natisk_obman:['natisk','obman'], obman_natisk:['natisk','obman'],
+  obman_pokoj:['obman','pokoj'],   pokoj_obman:['obman','pokoj'],
+  pokoj_istsel:['pokoj','istsel'], istsel_pokoj:['pokoj','istsel'],
+  istsel_gospod:['istsel','gospod'],gospod_istsel:['istsel','gospod'],
+  gospod_natisk:['gospod','natisk'],natisk_gospod:['gospod','natisk'],
+  gospod_stoikost:['gospod','stoikost'],stoikost_gospod:['gospod','stoikost'],
+  natisk_stoikost:['natisk','stoikost'],stoikost_natisk:['natisk','stoikost'],
+};
+
+const STAT_DEFS = [
+  { id:'fly',  label:'ПОЛЁТ',    color:'var(--stat-fly)',  bg:'rgba(106,176,245,.12)', icon:'✈' },
+  { id:'atk',  label:'АТАКА',    color:'var(--stat-atk)',  bg:'rgba(224,92,92,.12)',   icon:'⚔' },
+  { id:'ill',  label:'ИЛЛЮЗИЯ',  color:'var(--stat-ill)',  bg:'rgba(176,127,209,.12)', icon:'👁' },
+  { id:'def',  label:'ЗАЩИТА',   color:'var(--stat-def)',  bg:'rgba(91,141,238,.12)',  icon:'🛡' },
+  { id:'ctrl', label:'КОНТРОЛЬ', color:'var(--stat-ctrl)', bg:'rgba(76,187,138,.12)',  icon:'🌀' },
+];
+
+// ═══════════════════════════════════════════════════════
+// MAIN
+// ═══════════════════════════════════════════════════════
+const params = new URLSearchParams(location.search);
+const BUILD_SLUG = (params.get('build') || '').toLowerCase().trim();
+
+document.addEventListener('DOMContentLoaded', () => {
+  if(!BUILD_SLUG) { showError('Не указан параметр ?build='); return; }
+  loadGuide();
+});
+
+async function fetchSheet(sheetName) {
+  const url = `https://docs.google.com/spreadsheets/d/${SHEETS_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
+  const resp = await fetch(url);
+  if(!resp.ok) throw new Error(`Лист «${sheetName}»: HTTP ${resp.status}`);
+  const text = await resp.text();
+  const json = JSON.parse(text.replace(/^[^(]+\(/, '').replace(/\);?\s*$/, ''));
+  // Google gviz sometimes returns label as "colname firstvalue" — take only the first word
+  const cols = json.table.cols.map(c => (c.label || '').trim().split(' ')[0]);
+  return (json.table.rows || []).map(row => {
+    const obj = {};
+    row.c.forEach((cell, i) => {
+      if(cols[i]) obj[cols[i]] = cell ? (cell.v !== null ? String(cell.v) : cell.f || '') : '';
+    });
+    return obj;
+  });
+}
+
+async function loadGuide() {
+  // If SHEETS_ID not configured — show setup instructions and stop
+  if(!SHEETS_ID || SHEETS_ID === 'YOUR_GOOGLE_SHEETS_ID') {
+    document.getElementById('config-note').style.display = '';
+    document.getElementById('guide-build-title').textContent = BUILD_SLUG.replace(/_/g,' ').toUpperCase();
+    renderGuide(getFallbackData(), [], []);
+    return;
+  }
+  try {
+    // Load all three sheets in parallel
+    const [guidesRaw, spellsRaw, buildsRaw] = await Promise.all([
+      fetchSheet(SHEET_NAME),
+      fetchSheet('spells'),
+      fetchSheet('builds'),
+    ]);
+
+    const guide = guidesRaw.find(r => (r.build||'').toLowerCase().trim() === BUILD_SLUG) || getFallbackData();
+
+    // ── Ульта: берём из листа builds по полю name === BUILD_SLUG ────────────
+    console.log('builds names:', buildsRaw.map(b => b.name));
+    const buildRow = buildsRaw.find(b => (b.name||'').toLowerCase().trim() === BUILD_SLUG);
+    if(buildRow) {
+      guide.ult_name        = toTitleCase(buildRow.ult_name || '');
+      guide.ult_type        = buildRow.ult_type || 'актив';
+      guide.ult_mana        = buildRow.ult_mana == '0' ? '' : buildRow.ult_mana;
+      guide.ult_desc        = buildRow.ult_desc || '';
+      guide.ult_requirement = buildRow.ult_requirement || '';
+    }
+
+    // ── Resolve spells by comma-separated names ────────────────────────────
+    const spellNames = String(guide.spells || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+    const resolvedSpells = spellNames.length
+      ? spellNames.map(n => spellsRaw.find(s => (s.name||'').toLowerCase().trim() === n)).filter(Boolean)
+      : [];
+
+    document.getElementById('guide-build-title').textContent =
+      (guide.title || BUILD_SLUG.replace(/_/g,' ')).toUpperCase();
+    renderBranches(BUILD_SLUG, guide);
+    renderGuide(guide, resolvedSpells, spellsRaw);
+  } catch(e) {
+    console.error('Guide load error:', e);
+    document.getElementById('guide-build-title').textContent = BUILD_SLUG.replace(/_/g,' ').toUpperCase();
+    document.getElementById('guide-content').innerHTML =
+      `<div class="error-state">&#9888; Не удалось загрузить данные из таблицы.<br><span style="font-size:10px;color:var(--text-dim);font-family:'Crimson Pro',serif;font-style:italic;">${e.message}</span></div>`;
+  }
+}
+
+// Convert ALL CAPS or all-lowercase to Title Case
+function toTitleCase(str) {
+  return String(str).toLowerCase().replace(/(?:^|\s)\S/g, c => c.toUpperCase());
+}
+
+function getFallbackData() {
+  // Fallback empty structure shown when sheet not configured
+  return {
+    title: BUILD_SLUG.replace(/_/g,' '),
+    description: '',
+    ult_name: '', ult_type: 'актив', ult_mana: '', ult_desc: '',
+    stats_fly:0, stats_atk:0, stats_ill:0, stats_def:0, stats_ctrl:0,
+    stats_fly_mod:'', stats_atk_mod:'', stats_ill_mod:'', stats_def_mod:'', stats_ctrl_mod:'',
+    spells: '',
+    combo: '',
+  };
+}
+
+function renderBranches(slug, guide) {
+  const el = document.getElementById('guide-branches');
+  el.innerHTML = '';
+  const branches = BUILD_TO_BRANCHES[slug] || slug.split('_');
+  branches.forEach(b => {
+    const tag = document.createElement('span');
+    tag.className = 'guide-branch-tag';
+    const c = ADJ_COLORS[b] || '#c9a84c';
+    tag.style.cssText = `color:${c};border-color:${c}55;background:${c}11;`;
+    tag.textContent = ADJ_NAMES[b] || b.toUpperCase();
+    el.appendChild(tag);
+  });
+}
+
+function sheetsEditUrl() {
+  if(!SHEETS_ID || SHEETS_ID === 'YOUR_GOOGLE_SHEETS_ID') return null;
+  return `https://docs.google.com/spreadsheets/d/${SHEETS_ID}/edit`;
+}
+
+function renderGuide(g, resolvedSpells, allSpells) {
+  const spells = resolvedSpells && resolvedSpells.length ? resolvedSpells : parseSpells(g.spells);
+  const comboSteps = parseCombo(g.combo);
+  const editUrl = sheetsEditUrl();
+
+  const html = `
+    <!-- DESCRIPTION -->
+    <div class="guide-section">
+      <div class="section-title"><span class="s-icon">📜</span> ОПИСАНИЕ БИЛДА</div>
+      <div class="section-body ${g.description?'':'empty'}">${esc(g.description || 'Описание ещё не добавлено. Заполни Google Таблицу.')}</div>
+      ${editUrl ? `<div class="section-footer"><a class="edit-link" href="${editUrl}" target="_blank">✎ Редактировать в Таблицах</a></div>` : ''}
+    </div>
+
+    <!-- ULT -->
+    <div class="guide-section">
+      <div class="section-title"><span class="s-icon">⚡</span> УЛЬТА</div>
+      ${g.ult_name ? renderUlt(g) : `<div class="section-body empty">Информация об ульте ещё не добавлена.</div>`}
+    </div>
+
+    <!-- STATS -->
+    <div class="guide-section">
+      <div class="section-title"><span class="s-icon">✦</span> РАСПРЕДЕЛЕНИЕ ХАРАКТЕРИСТИК</div>
+      ${renderStats(g)}
+    </div>
+
+    <!-- SPELLS -->
+    <div class="guide-section">
+      <div class="section-title"><span class="s-icon">🔮</span> СПЕЛЛЫ</div>
+      ${spells.length ? renderSpells(spells) : `<div class="section-body empty">Список спеллов ещё не добавлен.</div>`}
+    </div>
+
+    <!-- COMBO -->
+    <div class="guide-section">
+      <div class="section-title"><span class="s-icon">⚔</span> КОМБО</div>
+      ${comboSteps.length ? renderCombo(comboSteps) : `<div class="section-body empty">Комбо ещё не описано.</div>`}
+    </div>
+  `;
+  document.getElementById('guide-content').innerHTML = html;
+
+  // Set branch tags if not done yet
+  if(!document.getElementById('guide-branches').children.length) {
+    renderBranches(BUILD_SLUG, g);
+  }
+}
+
+function renderUlt(g) {
+  const isAct = (g.ult_type||'').toLowerCase().includes('актив');
+  return `
+    <div class="ult-card">
+      <div class="ult-header">
+        <span class="ult-badge">${isAct ? 'УЛЬТА' : 'ПАССИВ БИЛДА'}</span>
+        ${g.ult_mana ? `<span class="ult-mana">⟡ ${esc(String(g.ult_mana))}</span>` : ''}
+      </div>
+      <div class="ult-name">${esc(g.ult_name)}</div>
+      <div class="ult-desc">${esc(g.ult_desc||'')}</div>
+    </div>
+  `;
+}
+
+function renderStats(g) {
+  const rows = STAT_DEFS.map(s => {
+    const val   = Math.min(5, Math.max(0, parseInt(g['stats_' + s.id]) || 0));
+    const mod   = (g['stats_' + s.id + '_mod'] || '').toString().toLowerCase().trim();
+    const hasMax = mod === 'max';
+    const hasMin = mod === 'min';
+
+    const pips = Array.from({length:5}, (_,i) => {
+      const on = i < val;
+      return `<div class="stat-pip${on?' filled':''}" style="${on ? `background:${s.color};border-color:${s.color};` : `border-color:${s.color}33;`}"></div>`;
+    }).join('');
+
+    const modBadge = (hasMax || hasMin)
+      ? `<div class="stat-modifier ${hasMax?'is-max':'is-min'}">${hasMax ? 'MAX' : 'MIN'}</div>`
+      : '';
+
+    return `
+      <div class="stat-row-guide" style="border-color:${s.color}22;">
+        <div class="stat-icon-wrap" style="background:${s.bg};">
+          <span style="font-size:16px;">${s.icon}</span>
+        </div>
+        <div class="stat-info">
+          <div class="stat-label" style="color:${s.color};">${s.label}</div>
+          <div class="stat-pips">${pips}</div>
+        </div>
+        ${modBadge}
+      </div>
+    `;
+  }).join('');
+
+  return `<div class="stats-grid">${rows}</div>`;
+}
+
+function renderSpells(spells) {
+  const EL_COLORS = {
+    полёт:'#6ab0f5', атака:'#e05c5c', иллюзия:'#b07fd1',
+    защита:'#5b8dee', контроль:'#4cbb8a', нейтральный:'#a67fd1',
+  };
+  const rows = spells.map(sp => {
+    // Support both spells-sheet columns (trauma = element) and legacy format
+    const name    = sp.name    || '';
+    const element = sp.trauma  || sp.element || '';
+    const mana    = sp.mana    || '';
+    const desc    = sp.desc    || '';
+    const req     = sp.requirement || '';
+
+    const el  = element.toLowerCase();
+    const col = EL_COLORS[el] || '#a67fd1';
+    return `
+      <tr>
+        <td style="color:var(--text);">${esc(name)}</td>
+        <td><span class="spell-element-badge" style="color:${col};border-color:${col}44;background:${col}0d;">${esc(element||'—')}</span></td>
+        <td>${mana ? `<span class="spell-mana-badge">⟡ ${esc(String(mana))}</span>` : '—'}</td>
+        <td style="color:var(--text-dim);">${esc(desc)}${req ? `<br><span style="font-size:11px;color:var(--text-dim);font-style:italic;">Требование: ${esc(req)}</span>` : ''}</td>
+      </tr>
+    `;
+  }).join('');
+
+  return `
+    <table class="spells-table">
+      <thead><tr>
+        <th>Название</th><th>Элемент</th><th>Мана</th><th>Описание / Эффект</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+}
+
+function renderCombo(steps) {
+  const items = steps.map((s, i) => `
+    <div class="combo-step">
+      <div class="combo-num">${i+1}.</div>
+      <div class="combo-text">${esc(s)}</div>
+    </div>
+  `).join('');
+  return `<div class="combo-steps">${items}</div>`;
+}
+
+// ── PARSERS ──────────────────────────────────────────────────────────────────
+function parseSpells(raw) {
+  if(!raw) return [];
+  const s = String(raw).trim();
+  if(s.startsWith('[')) {
+    try { return JSON.parse(s); } catch{}
+  }
+  // Fallback: lines "Название | Элемент | Мана | Описание"
+  return s.split('\n').filter(Boolean).map(line => {
+    const [name='', element='', mana='', desc=''] = line.split('|').map(x=>x.trim());
+    return { name, element, mana, desc };
+  });
+}
+
+function parseCombo(raw) {
+  if(!raw) return [];
+  return String(raw).split('||').map(s=>s.trim()).filter(Boolean);
+}
+
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+}
+
+function showError(msg) {
+  document.getElementById('guide-content').innerHTML = `<div class="error-state">⚠ ${msg}</div>`;
+}
+</script>
+</body>
+</html>
