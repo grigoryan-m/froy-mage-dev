@@ -131,6 +131,8 @@ body{background:var(--bg);color:var(--text);font-family:'Crimson Pro',Georgia,se
   color:#c9b8f0;text-shadow:0 1px 4px rgba(0,0,0,.8);
   white-space:nowrap;text-align:center;
   background:rgba(10,6,24,.8);padding:1px 5px;border-radius:3px;
+  transform:scale(var(--zoom-scale, 1));
+  transition:transform .25s cubic-bezier(.2,.7,.3,1);
 }
 
 /* Loading */
@@ -149,7 +151,8 @@ body{background:var(--bg);color:var(--text);font-family:'Crimson Pro',Georgia,se
   position: absolute;
   left: 50%;
   top: 50%;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%) scale(var(--zoom-scale, 1));
+  transform-origin: center center;
   white-space: nowrap;
   pointer-events: none;
   font-family:'Cinzel',serif;
@@ -160,7 +163,7 @@ body{background:var(--bg);color:var(--text);font-family:'Crimson Pro',Georgia,se
   user-select:none;
   padding:3px 0;
   text-shadow:0 1px 6px rgba(0,0,0,.9),0 0 20px rgba(0,0,0,.7);
-  transition:opacity .2s;
+  transition:opacity .2s, transform .25s cubic-bezier(.2,.7,.3,1);
   opacity:.85;
 }
 .state-label-inner:hover{opacity:1;}
@@ -255,6 +258,12 @@ body{background:var(--bg);color:var(--text);font-family:'Crimson Pro',Georgia,se
           <div class="portal-dot empty" id="dot-red"></div>
           <span class="portal-coords" id="coords-red">Кликни на карту</span>
         </div>
+      </div>
+
+      <!-- CITIES -->
+      <div class="card">
+        <div class="card-title">ГОРОДА</div>
+        <div class="cities-list" id="cities-list"></div>
       </div>
 
       <!-- RESULT (shown when both portals set) -->
@@ -414,7 +423,7 @@ const STATES = [
     lat: 1743.156,  lng: 2271.839,
     name: 'Сильвиа Ноктум',
     marks: '🛒⛏',
-    description: 'Когда братья были заточены, часть их шепота просочилась в этот лес. Вельмир — не просто место, а почти разумная сущность.',
+    description: 'Земля Перстов — первого творения Ковена, живущего в изоляции среди временных поселений без армии, городов и привычной власти. Беззащитные, но удивительно доброжелательные, они избегают конфликтов, не ведут счёт времени и во всём полагаются на назначенного Ковеном Кальдримца.',
     population: '~0',
     security: 1.5,
     color: '#e8c96e',
@@ -437,6 +446,36 @@ const STATES = [
     description: 'Не суйся, если не готов на вечные страдания и летальный исход.',
     population: '~1',
     security: -3,
+    color: '#D70040',
+    fontSize: 8,
+  },
+  {
+    lat: 3178.618, lng: 4391.132,
+    name: 'Пустыня Хтасумия',
+    marks: '',
+    description: 'Хтасумия — государство вахаров, где бесконечные споры советов старейшин давно заменили полноценную власть, а порядок поддерживают лишь Кальдримцы.',
+    population: '~800 тыс',
+    security: +4,
+    color: '#D70040',
+    fontSize: 8,
+  },
+  {
+    lat: 685.680, lng: 7461.743,
+    name: 'Первая Магическая Республика',
+    marks: '',
+    description: 'Богатейшее государство Нового Элдроса, где магия и передовые технологии соседствуют с безжалостным правосудием и мрачными слухами о проданных душах.',
+    population: '~800 тыс',
+    security: -3,
+    color: '#fff',
+    fontSize: 8,
+  },
+  {
+    lat: 3309.227, lng: 2950.679,
+    name: 'Кальдрим',
+    marks: '',
+    description: 'Земли Кальдримцев — одно из самых безопасных государств материка, где порядок поддерживают дисциплинированная армия и неустанные патрули Глаза Ковена. Под горными вершинами скрываются огромные подземные города, а судьбу народа определяют Совет и мудрейший из гигантов',
+    population: '~2.3 млн',
+    security: +4.5,
     color: '#D70040',
     fontSize: 8,
   }
@@ -798,6 +837,7 @@ async function loadEvents() {
       marker.bindPopup(popupFn(ev));
       eventMarkers.push(marker);
     });
+    updateLabelScales();
   } catch(e) {
     // Events sheet optional — fail silently
     console.warn('map_events not loaded:', e.message);
@@ -893,7 +933,42 @@ function initStates() {
       openStatePanel(state);
     });
   });
+  updateLabelScales();
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ZOOM-ADAPTIVE LABELS
+// Подписи государств и меток (казино/арены/банки/лавки) плавно растут при
+// приближении и уменьшаются при отдалении, чтобы всегда хорошо читаться и
+// не превращаться в мелкий "мусор" на общем виде карты.
+// ═══════════════════════════════════════════════════════════════════════════
+
+const LABEL_MIN_SCALE = 1;     // масштаб на минимальном зуме (общий вид)
+const LABEL_MAX_SCALE = 2.6;   // масштаб на максимальном зуме (приближено)
+const MARKER_LABEL_MAX_SCALE = 1.7; // метки казино/арен растут чуть скромнее
+
+function currentZoomFraction() {
+  const minZ = map.getMinZoom();
+  const maxZ = map.getMaxZoom();
+  if (maxZ === minZ) return 0;
+  return (map.getZoom() - minZ) / (maxZ - minZ);
+}
+
+function updateLabelScales() {
+  const t = currentZoomFraction();
+  const stateScale  = LABEL_MIN_SCALE + t * (LABEL_MAX_SCALE - LABEL_MIN_SCALE);
+  const markerScale = 1 + t * (MARKER_LABEL_MAX_SCALE - 1);
+
+  document.querySelectorAll('.state-label-wrap').forEach(el => {
+    el.style.setProperty('--zoom-scale', stateScale.toFixed(3));
+  });
+  document.querySelectorAll('.marker').forEach(el => {
+    el.style.setProperty('--zoom-scale', markerScale.toFixed(3));
+  });
+}
+
+map.on('zoom', updateLabelScales);
+map.on('zoomend', updateLabelScales);
 
 // ═══════════════════════════════════════════════════════════════════════════
 // UI HELPERS
