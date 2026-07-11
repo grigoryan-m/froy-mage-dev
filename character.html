@@ -2721,6 +2721,56 @@ document.getElementById('notes-area').addEventListener('input',scheduleSave);
 document.getElementById('mana-cur').addEventListener('input',scheduleSave);
 document.getElementById('mana-max-inp').addEventListener('input',scheduleSave);
 
+// ── SYNC EQUIPMENT FROM STORAGE ─────────────────────────────────────────────
+// Другие страницы (казино, вики) могут дописать предмет прямо в localStorage,
+// пока эта вкладка уже открыта. Раньше это игнорировалось, а следующее
+// автосохранение (scheduleSave→saveAll) перезаписывало localStorage тем, что
+// было в DOM, и выигранный предмет пропадал. Здесь при возврате на вкладку
+// подмешиваем в DOM всё новое, что появилось в сохранении, но не трогаем
+// то, что уже отображено (чтобы не потерять несохранённые правки).
+function syncEquipmentFromStorage(){
+  try{
+    const raw = localStorage.getItem(SAVE_KEY);
+    if(!raw) return;
+    const s = JSON.parse(raw);
+    if(!Array.isArray(s.equipment) || !s.equipment.length) return;
+
+    const remaining = {};
+    document.querySelectorAll('.equip-row').forEach(row=>{
+      const name=(row.querySelectorAll('.equip-cell')[0]?.innerText||'').trim().toLowerCase();
+      if(!name) return;
+      remaining[name]=(remaining[name]||0)+1;
+    });
+
+    let addedAny = false;
+    const addedNames = [];
+    s.equipment.forEach(eq=>{
+      const key=(eq.name||'').trim().toLowerCase();
+      if(!key) return;
+      if(remaining[key]>0){
+        remaining[key]--; // уже есть в DOM — это тот же предмет
+      } else {
+        addEquip(eq);
+        addedAny = true;
+        addedNames.push(eq.name);
+      }
+    });
+
+    if(addedAny){
+      updateInventoryWeight();
+      scheduleSave();
+      if(typeof showFbNotification==='function'){
+        showFbNotification(`Новые предметы в инвентаре:\n${addedNames.join(', ')}`, 'item');
+      }
+    }
+  }catch(e){}
+}
+
+// Перечитываем при возврате на вкладку/странице (в т.ч. восстановление из bfcache)
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) syncEquipmentFromStorage(); });
+window.addEventListener('focus', syncEquipmentFromStorage);
+window.addEventListener('pageshow', syncEquipmentFromStorage);
+
 // ── ARENA BANNER ─────────────────────────────────────────────────────────────
 // Polls all active arenas to find if this character is currently fighting.
 // Updates in realtime via SSE once found.

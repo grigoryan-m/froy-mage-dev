@@ -624,7 +624,7 @@ function selectStake(idx, eq, el, charIdx, itemRarity) {
     common:    '',
     rare:      '🔵 Редкий — при паре +35% шанс редкого приза',
     legendary: '⭐ Легендарный — при паре гарантирован редкий приз',
-    epochal:   '🔥 ЭПОХАЛЬНЫЙ — джекпот гарантирован + бонусный приз',
+    epochal:   '🔥 ЭПОХАЛЬНЫЙ — как у легендарного, но любой выигрыш даёт джекпот + бонусный приз',
   };
   const hint = (rarityHints[itemRarity] || rarityHints.common).replace('%s', eq.name);
   document.getElementById('stake-hint').textContent = hint.includes('%s')
@@ -787,7 +787,7 @@ async function spin() {
 
   // Determine outcome — epochal guarantees jackpot; legendary +30% win chance
   const stakeRarity = selectedStake?.rarity || 'common';
-  const rarityBonus = { common:0, rare:0, legendary:30, epochal:999 }[stakeRarity] ?? 0;
+  const rarityBonus = { common:0, rare:0, legendary:30, epochal:30 }[stakeRarity] ?? 0;
   const roll     = Math.random() * 100;
   const isWin    = roll < (casinoData.win_chance + rarityBonus);
   const isPair   = !isWin && (roll < (casinoData.win_chance + rarityBonus + casinoData.two_match_chance));
@@ -863,27 +863,44 @@ async function spin() {
     addHistory('win', `Джекпот: ${prize}${bonusPrize?' + '+bonusPrize:''} (поставил: ${selectedStake.name})`);
     addWonItem(selectedStake.charIdx, prize);
     if (bonusPrize) addWonItem(selectedStake.charIdx, bonusPrize);
+  } else if (isPair && stakeRarity === 'epochal') {
+    // ЭПОХАЛЬНАЯ СТАВКА: любой выигрыш (пара тоже) даёт джекпот + бонусный приз
+    const prize = casinoData.prize_jackpot
+      || casinoData.prize_rare
+      || casinoData.prizes[Math.floor(Math.random()*casinoData.prizes.length)];
+    const bonusPrize = casinoData.prize_rare
+      || casinoData.prizes[Math.floor(Math.random()*casinoData.prizes.length)];
+    msgEl.textContent = `🔥🔥 ЭПОХАЛЬНЫЙ ВЫИГРЫШ! ${prize} + бонус: ${bonusPrize}!`;
+    msgEl.style.cssText = 'animation:epoch-text-shimmer 1.5s linear infinite;font-size:15px;';
+    msgEl.classList.add('win');
+    document.getElementById('win-line').classList.add('visible');
+    ['slot-0','slot-1','slot-2'].forEach(id => {
+      const sl = document.getElementById(id);
+      sl.classList.remove('win','lose');
+      sl.classList.add('epoch-win');
+    });
+    showWinBurst('🔥');
+    launchFireConfetti();
+    addHistory('win', `Эпохальный джекпот: ${prize} + ${bonusPrize} (поставил: ${selectedStake.name})`);
+    addWonItem(selectedStake.charIdx, prize);
+    addWonItem(selectedStake.charIdx, bonusPrize);
   } else if (isPair) {
     // ПАРА: обычный приз + маленький шанс на редкий (НЕ джекпот)
     // Шанс редкого: обычный ~10%, редкий ~35%, легендарный 100%
     let prize;
-    const rareChance = { common: 0.10, rare: 0.35, legendary: 1.0, epochal: 1.0 }[stakeRarity] ?? 0.10;
+    const rareChance = { common: 0.10, rare: 0.35, legendary: 1.0 }[stakeRarity] ?? 0.10;
     if (casinoData.prize_rare && Math.random() < rareChance) {
       prize = casinoData.prize_rare;
     } else {
       prize = casinoData.prizes[Math.floor(Math.random()*casinoData.prizes.length)];
     }
     const isRarePrize = prize === casinoData.prize_rare;
-    const pairMsg = stakeRarity === 'epochal'
-      ? `🔥 Эпохальная пара! Вы получаете: ${prize}`
-      : isRarePrize ? `🔵 Пара! Редкая удача: ${prize}` : `⟡ Пара! Вы получаете: ${prize}`;
+    const pairMsg = isRarePrize ? `🔵 Пара! Редкая удача: ${prize}` : `⟡ Пара! Вы получаете: ${prize}`;
     msgEl.textContent = pairMsg;
-    if (stakeRarity === 'epochal') msgEl.style.cssText = 'animation:epoch-text-shimmer 1.5s linear infinite;';
     msgEl.classList.add('win');
     document.getElementById('win-line').classList.add('visible');
-    showWinBurst(stakeRarity === 'epochal' ? '🔥' : isRarePrize ? '🔵' : '✦');
-    if (stakeRarity === 'epochal') launchFireConfetti();
-    else if (isRarePrize) launchConfetti();
+    showWinBurst(isRarePrize ? '🔵' : '✦');
+    if (isRarePrize) launchConfetti();
     addHistory('pair', `Пара → ${prize} (поставил: ${selectedStake.name})`);
     addWonItem(selectedStake.charIdx, prize);
   } else {
