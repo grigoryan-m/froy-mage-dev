@@ -127,6 +127,30 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;bac
 .bank-reload-btn:hover{border-color:var(--gold-d);color:var(--gold);}
 .banks-header-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
 .banks-loading{font-size:11px;color:var(--text-dim);font-style:italic;padding:16px 0;text-align:center;}
+/* ── PARTY / GRANT ── */
+.admin-select,.admin-input,.admin-textarea{
+  background:var(--panel2);border:1px solid var(--line);border-radius:6px;color:var(--text);
+  font-family:'Crimson Pro',Georgia,serif;font-size:13px;padding:8px 10px;outline:none;transition:border-color .2s;
+}
+.admin-select:focus,.admin-input:focus,.admin-textarea:focus{border-color:var(--accent2);}
+.admin-select{flex:1;min-width:180px;}
+.admin-input{flex:1;min-width:120px;}
+.admin-input-num{flex:0 0 70px;min-width:60px;text-align:center;}
+.admin-textarea{width:100%;margin-top:8px;min-height:44px;resize:vertical;font-size:12px;}
+.party-admin-add-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
+.party-admin-chips{display:flex;flex-wrap:wrap;gap:8px;}
+.party-admin-chip{display:flex;align-items:center;gap:8px;background:var(--panel2);border:1px solid var(--accent);
+  border-radius:20px;padding:6px 8px 6px 14px;font-size:12px;color:var(--text);}
+.party-admin-chip button{background:none;border:1px solid rgba(224,92,92,.4);color:var(--life);border-radius:50%;
+  width:20px;height:20px;line-height:1;cursor:pointer;font-size:11px;transition:all .15s;flex-shrink:0;}
+.party-admin-chip button:hover{background:rgba(224,92,92,.2);}
+.grant-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:6px;}
+.grant-label{font-family:'Cinzel',serif;font-size:9px;letter-spacing:1.5px;color:var(--text-dim);flex-shrink:0;}
+.grant-block{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:14px;margin-top:14px;}
+.grant-block-title{font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;color:var(--gold-l);margin-bottom:10px;}
+.grant-reag-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+.grant-reag-lbl{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-mid);}
+@media(max-width:580px){.admin-select,.admin-input{min-width:100%;}.grant-reag-row{flex-direction:column;align-items:stretch;}}
 </style>
 </head>
 <body>
@@ -161,6 +185,48 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;bac
     <button class="bank-reload-btn" onclick="loadBanks()">⟳ Обновить</button>
   </div>
   <div id="banks-body"><div class="banks-loading">⟳ Загрузка…</div></div>
+</div>
+
+<!-- ── PARTY ── -->
+<div class="banks-panel">
+  <div class="banks-header-row">
+    <div class="section-title" style="margin-bottom:0;flex:1;">ПАТИ</div>
+    <button class="bank-reload-btn" onclick="loadPartyAdmin()">⟳ Обновить</button>
+  </div>
+  <div class="party-admin-add-row">
+    <select id="party-add-select" class="admin-select"><option value="">— загрузка персонажей —</option></select>
+    <button class="abtn abtn-declare" onclick="addToParty()">+ Добавить в пати</button>
+  </div>
+  <div id="party-admin-body"><div class="banks-loading">⟳ Загрузка…</div></div>
+</div>
+
+<!-- ── GRANT ITEMS / REAGENTS ── -->
+<div class="banks-panel">
+  <div class="section-title">ВЫДАЧА ПРЕДМЕТОВ И РЕАГЕНТОВ</div>
+  <div class="grant-row">
+    <span class="grant-label">ПЕРСОНАЖ</span>
+    <select id="grant-char-select" class="admin-select"><option value="">— загрузка персонажей —</option></select>
+  </div>
+
+  <div class="grant-block">
+    <div class="grant-block-title">🎁 ПРЕДМЕТ</div>
+    <div class="grant-row">
+      <input id="grant-item-name" class="admin-input" type="text" placeholder="Название предмета">
+      <input id="grant-item-qty" class="admin-input admin-input-num" type="number" min="1" value="1">
+      <button class="abtn abtn-declare" onclick="grantItemFromAdmin()">Выдать предмет</button>
+    </div>
+  </div>
+
+  <div class="grant-block">
+    <div class="grant-block-title">⚗ РЕАГЕНТЫ</div>
+    <div class="grant-reag-row">
+      <label class="grant-reag-lbl">🔴 <input id="grant-reag-red" class="admin-input admin-input-num" type="number" value="0"></label>
+      <label class="grant-reag-lbl">🔵 <input id="grant-reag-blue" class="admin-input admin-input-num" type="number" value="0"></label>
+      <label class="grant-reag-lbl">🟢 <input id="grant-reag-green" class="admin-input admin-input-num" type="number" value="0"></label>
+      <label class="grant-reag-lbl">🟡 <input id="grant-reag-yellow" class="admin-input admin-input-num" type="number" value="0"></label>
+      <button class="abtn abtn-declare" onclick="grantReagentsFromAdmin()">Выдать реагенты</button>
+    </div>
+  </div>
 </div>
 
 </div>
@@ -213,6 +279,7 @@ $('cyes').onclick=()=>{closeConfirm();if(confirmCb)confirmCb();};
 async function fbFetch(p){const r=await fetch(FB+p+'.json');if(!r.ok)throw new Error(r.status);return r.json();}
 async function fbPatch(p,d){const r=await fetch(FB+p+'.json',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)});if(!r.ok)throw new Error(r.status);return r.json();}
 async function fbDelete(p){const r=await fetch(FB+p+'.json',{method:'DELETE'});if(!r.ok)throw new Error(r.status);}
+async function fbSet(p,d){const r=await fetch(FB+p+'.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)});if(!r.ok)throw new Error(r.status);return r.json();}
 
 async function cancelFight(){
   const s=lastState;if(!s||s.status==='done')return;
@@ -416,6 +483,108 @@ async function loadBanks(){
   }
 }
 
+// ── CHARACTERS CACHE (used by party + grant selects) ───────────────────────
+let charsCache=null;
+async function loadCharsCache(force){
+  if(charsCache&&!force)return charsCache;
+  try{charsCache=await fbFetch('/chars')||{};}catch{charsCache={};}
+  return charsCache;
+}
+function charLabelAdm(uuid,c){
+  const nm=c?.charName||uuid;
+  const pl=c?.playerName?' — '+c.playerName:'';
+  return nm+pl;
+}
+async function populateCharSelects(){
+  const chars=await loadCharsCache(true);
+  const entries=Object.entries(chars).sort((a,b)=>charLabelAdm(a[0],a[1]).localeCompare(charLabelAdm(b[0],b[1])));
+  const opts='<option value="">— выберите персонажа —</option>'
+    +entries.map(([uuid,c])=>`<option value="${uuid}">${esc(charLabelAdm(uuid,c))}</option>`).join('');
+  ['party-add-select','grant-char-select'].forEach(id=>{
+    const el=$(id);if(!el)return;
+    const prev=el.value;
+    el.innerHTML=opts;
+    if([...el.options].some(o=>o.value===prev))el.value=prev;
+  });
+}
+
+// ── PARTY ADMIN ──────────────────────────────────────────────────────────
+async function loadPartyAdmin(){
+  const body=$('party-admin-body');
+  body.innerHTML='<div class="banks-loading">⟳ Загрузка…</div>';
+  try{
+    await populateCharSelects();
+    const partyData=await fbFetch('/party').catch(()=>null);
+    const chars=charsCache||{};
+    const uuids=(partyData&&typeof partyData==='object')?Object.keys(partyData).filter(k=>partyData[k]===true):[];
+    if(!uuids.length){body.innerHTML='<div class="bank-empty">В пати сейчас никого нет</div>';return;}
+    body.innerHTML='<div class="party-admin-chips">'+uuids.map(uuid=>{
+      const label=esc(charLabelAdm(uuid,chars[uuid]));
+      return `<div class="party-admin-chip"><span>${label}</span><button onclick="removeFromParty('${uuid}')" title="Убрать из пати">✕</button></div>`;
+    }).join('')+'</div>';
+  }catch(e){
+    body.innerHTML=`<div class="bank-empty">Ошибка загрузки пати: ${esc(e.message)}</div>`;
+    addLog('Ошибка загрузки пати: '+e.message,'err');
+  }
+}
+
+async function addToParty(){
+  const sel=$('party-add-select');const uuid=sel.value;
+  if(!uuid){toast('Выберите персонажа');return;}
+  try{
+    await fbPatch('/party',{[uuid]:true});
+    addLog('Добавлен в пати: '+charLabelAdm(uuid,(charsCache||{})[uuid]),'ok');
+    toast('Добавлен в пати');
+    loadPartyAdmin();
+  }catch(e){addLog('Ошибка добавления в пати: '+e.message,'err');toast('Ошибка: '+e.message);}
+}
+
+async function removeFromParty(uuid){
+  try{
+    await fbDelete('/party/'+uuid);
+    addLog('Убран из пати: '+charLabelAdm(uuid,(charsCache||{})[uuid]),'warn');
+    toast('Убран из пати');
+    loadPartyAdmin();
+  }catch(e){addLog('Ошибка удаления из пати: '+e.message,'err');toast('Ошибка: '+e.message);}
+}
+
+// ── GRANT ITEMS / REAGENTS ───────────────────────────────────────────────
+// Пишем в /logs — тот же формат, что уже слушает клиент (firebase.js: pollLogs/processLogEntry)
+function genLogKeyAdm(){return 'log_'+Date.now()+'_'+Math.random().toString(36).slice(2,8);}
+
+async function grantItemFromAdmin(){
+  const uuid=$('grant-char-select').value;
+  const name=$('grant-item-name').value.trim();
+  const qty=parseInt($('grant-item-qty').value)||1;
+  if(!uuid){toast('Выберите персонажа');return;}
+  if(!name){toast('Введите название предмета');return;}
+  try{
+    await fbSet('/logs/'+genLogKeyAdm(),{uuid,type:'item',payload:name+'|'+qty,confirmed:true,ts:Date.now(),source:'admin'});
+    addLog('Выдан предмет «'+name+(qty>1?' ×'+qty:'')+'» — '+charLabelAdm(uuid,(charsCache||{})[uuid]),'ok');
+    toast('Предмет выдан');
+    $('grant-item-name').value='';$('grant-item-qty').value='1';
+  }catch(e){addLog('Ошибка выдачи предмета: '+e.message,'err');toast('Ошибка: '+e.message);}
+}
+
+async function grantReagentsFromAdmin(){
+  const uuid=$('grant-char-select').value;
+  if(!uuid){toast('Выберите персонажа');return;}
+  const vals={
+    red:parseInt($('grant-reag-red').value)||0,
+    blue:parseInt($('grant-reag-blue').value)||0,
+    green:parseInt($('grant-reag-green').value)||0,
+    yellow:parseInt($('grant-reag-yellow').value)||0,
+  };
+  const payload=Object.entries(vals).filter(([,v])=>v!==0).map(([c,v])=>c+':'+v).join(',');
+  if(!payload){toast('Укажите хотя бы одно ненулевое значение');return;}
+  try{
+    await fbSet('/logs/'+genLogKeyAdm(),{uuid,type:'reagent',payload,confirmed:true,ts:Date.now(),source:'admin'});
+    addLog('Выданы реагенты ('+payload+') — '+charLabelAdm(uuid,(charsCache||{})[uuid]),'ok');
+    toast('Реагенты выданы');
+    ['red','blue','green','yellow'].forEach(k=>$('grant-reag-'+k).value='0');
+  }catch(e){addLog('Ошибка выдачи реагентов: '+e.message,'err');toast('Ошибка: '+e.message);}
+}
+
 (function(){
   if(!FB){
     $('arena-container').innerHTML='<div class="empty-state"><div class="empty-icon">⚠</div><div class="empty-text">Firebase не настроен — проверьте config.js</div></div>';
@@ -424,6 +593,7 @@ async function loadBanks(){
   addLog('Подключение к Firebase…','ok');
   startSync();
   loadBanks();
+  loadPartyAdmin();
 })();
 </script>
 </body>

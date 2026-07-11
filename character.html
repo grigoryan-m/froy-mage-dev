@@ -175,6 +175,11 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;bac
 .desc-cell[contenteditable="true"]{cursor:text;border-bottom-color:var(--accent);}
 .del-spell{width:20px;height:20px;border-radius:50%;background:none;border:1px solid var(--line);color:var(--text-dim);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;line-height:1;padding:0;}
 .del-spell:hover{background:rgba(224,92,92,.15);border-color:var(--life);color:var(--life);}
+.spell-row-wrap{border-bottom:1px solid transparent;}
+.spell-row.locked .spell-cell{cursor:default;}
+.spell-row.locked .spell-cell:not(.desc-cell){border-bottom-color:var(--line);}
+.spell-requirement{font-size:11px;color:var(--text-dim);font-style:italic;padding:2px 8px 8px;line-height:1.5;}
+.spell-requirement b{color:var(--text-dim);font-style:normal;font-family:'Cinzel',serif;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;}
 .add-spell-btn{margin-top:10px;background:none;border:1px dashed var(--accent);color:var(--accent2);font-family:'Crimson Pro',serif;font-size:13px;padding:6px 16px;border-radius:5px;cursor:pointer;letter-spacing:1px;transition:all .2s;}
 .add-spell-btn:hover{background:rgba(123,94,167,.1);border-color:var(--gold);color:var(--gold-l);}
 .notes-panel{background:var(--panel);border:1px solid var(--accent);border-radius:10px;padding:16px 14px;}
@@ -1202,42 +1207,69 @@ function renderInline(cell){
 function addSpell(data){
   spellCount++;const id=spellCount;
   const list=document.getElementById('spells-list');
-  const row=document.createElement('div');row.className='spell-row';row.id='spell-'+id;
+  const locked=!!(data&&data.locked);
   const esc=s=>(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  row.innerHTML=`<div class="spell-cell" contenteditable="true" data-placeholder="Название..." data-idx="0">${esc(data?.name)}</div><div class="spell-cell" contenteditable="true" data-placeholder="Элемент..." data-idx="1">${esc(data?.element)}</div><div class="spell-cell" contenteditable="true" data-placeholder="0" data-idx="2">${esc(data?.mana)}</div><div class="spell-cell desc-cell" contenteditable="false" data-placeholder="Описание эффекта..." data-idx="3">${esc(data?.desc)}</div><button class="del-spell" title="Удалить" onclick="removeSpell(${id})">×</button>`;
+
+  const wrap=document.createElement('div');wrap.className='spell-row-wrap';wrap.id='spell-wrap-'+id;
+
+  const row=document.createElement('div');row.className='spell-row'+(locked?' locked':'');row.id='spell-'+id;
+  row.dataset.locked=locked?'1':'';
+  row.dataset.req=data?.req||'';
+  const editable=locked?'false':'true';
+  row.innerHTML=`<div class="spell-cell" contenteditable="${editable}" data-placeholder="Название..." data-idx="0">${esc(data?.name)}</div><div class="spell-cell" contenteditable="${editable}" data-placeholder="Элемент..." data-idx="1">${esc(data?.element)}</div><div class="spell-cell" contenteditable="${editable}" data-placeholder="0" data-idx="2">${esc(data?.mana)}</div><div class="spell-cell desc-cell" contenteditable="false" data-placeholder="Описание эффекта..." data-idx="3">${esc(data?.desc)}</div><button class="del-spell" title="Удалить" onclick="removeSpell(${id})">×</button>`;
   const desc=row.querySelector('.desc-cell');
 
-  // Single click on desc: if clicking an inline-roll span, roll dice but don't enter edit mode
-  // Double-click anywhere in desc: enter edit mode
-  desc.addEventListener('click',e=>{
-    if(desc.contentEditable==='false'){
-      // Not in edit mode — check if clicked a formula
+  if(!locked){
+    // Single click on desc: if clicking an inline-roll span, roll dice but don't enter edit mode
+    // Double-click anywhere in desc: enter edit mode
+    desc.addEventListener('click',e=>{
+      if(desc.contentEditable==='false'){
+        // Not in edit mode — check if clicked a formula
+        const roll=e.target.closest('.inline-roll');
+        if(roll){e.preventDefault();parseAndRoll(roll.dataset.formula);}
+        // single click does NOT activate edit — user must double-click
+      } else {
+        // Already in edit mode — formula click should roll, not just select
+        const roll=e.target.closest('.inline-roll');
+        if(roll){e.preventDefault();e.stopPropagation();parseAndRoll(roll.dataset.formula);}
+      }
+    });
+    desc.addEventListener('dblclick',e=>{
+      const roll=e.target.closest('.inline-roll');
+      if(roll)return; // dblclick on formula = roll, don't enter edit
+      desc.contentEditable='true';desc.focus();
+    });
+    desc.addEventListener('blur',()=>{
+      desc.contentEditable='false';
+      renderInline(desc);scheduleSave();
+    });
+    desc.addEventListener('input',scheduleSave);
+    row.querySelectorAll('.spell-cell:not(.desc-cell)').forEach(c=>c.addEventListener('input',scheduleSave));
+  } else {
+    // Locked row: only allow rolling formulas inside description, never editing
+    desc.addEventListener('click',e=>{
       const roll=e.target.closest('.inline-roll');
       if(roll){e.preventDefault();parseAndRoll(roll.dataset.formula);}
-      // single click does NOT activate edit — user must double-click
-    } else {
-      // Already in edit mode — formula click should roll, not just select
-      const roll=e.target.closest('.inline-roll');
-      if(roll){e.preventDefault();e.stopPropagation();parseAndRoll(roll.dataset.formula);}
-    }
-  });
-  desc.addEventListener('dblclick',e=>{
-    const roll=e.target.closest('.inline-roll');
-    if(roll)return; // dblclick on formula = roll, don't enter edit
-    desc.contentEditable='true';desc.focus();
-  });
-  desc.addEventListener('blur',()=>{
-    desc.contentEditable='false';
-    renderInline(desc);scheduleSave();
-  });
-  desc.addEventListener('input',scheduleSave);
-  row.querySelectorAll('.spell-cell:not(.desc-cell)').forEach(c=>c.addEventListener('input',scheduleSave));
-  list.appendChild(row);
+    });
+  }
+
+  wrap.appendChild(row);
+  if(data?.req){
+    const reqEl=document.createElement('div');
+    reqEl.className='spell-requirement';
+    reqEl.innerHTML=`<b>Требование:</b> ${esc(data.req)}`;
+    wrap.appendChild(reqEl);
+  }
+  list.appendChild(wrap);
   // Render formula on load
   if(data?.desc)setTimeout(()=>renderInline(desc),0);
   return row;
 }
-function removeSpell(id){const e=document.getElementById('spell-'+id);if(e){e.remove();scheduleSave();}}
+function removeSpell(id){
+  const wrap=document.getElementById('spell-wrap-'+id);
+  if(wrap){wrap.remove();scheduleSave();return;}
+  const e=document.getElementById('spell-'+id);if(e){e.remove();scheduleSave();}
+}
 
 // ── CLASS SKILLS ─────────────────────────────────────────────────────────────
 // Data loaded from Google Sheets
@@ -1471,19 +1503,9 @@ function renderBuildPanel() {
     ultWrap.appendChild(ult);
   }
 
-  // Guide button — shown when build is active
+  // Guide button removed per request
   const oldGuideBtn = document.getElementById('build-guide-btn');
   if (oldGuideBtn) oldGuideBtn.remove();
-  const guideBtn = document.createElement('a');
-  guideBtn.id = 'build-guide-btn';
-  const buildSlug = build ? (build.name || (b1 + '_' + b2)).toLowerCase().replace(/\s+/g,'_').replace(/[^a-zа-яё0-9_]/gi,'') : (b1 + '_' + b2);
-  guideBtn.href = `guide.html?build=${encodeURIComponent(buildSlug)}`;
-  guideBtn.target = '_blank';
-  guideBtn.style.cssText = `display:inline-flex;align-items:center;gap:6px;margin-top:10px;font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;color:${c1};text-decoration:none;border:1px solid ${c1}55;padding:6px 14px;border-radius:5px;transition:all .2s;background:${c1}0a;`;
-  guideBtn.innerHTML = `<span style="font-size:12px;">📖</span> ГАЙД`;
-  guideBtn.onmouseover = function(){ this.style.background = c1 + '22'; this.style.borderColor = c1; };
-  guideBtn.onmouseout  = function(){ this.style.background = c1 + '0a'; this.style.borderColor = c1 + '55'; };
-  ultWrap.appendChild(guideBtn);
 }
 
 // Fallback icon — combine first chars of both branch names visually
@@ -2216,7 +2238,7 @@ function collectState(){
   const inf=document.querySelectorAll('.info-value[contenteditable]');
   const spells=[...document.querySelectorAll('.spell-row')].map(r=>{
     const c=r.querySelectorAll('.spell-cell');
-    return{name:c[0]?.innerText||'',element:c[1]?.innerText||'',mana:c[2]?.innerText||'',desc:c[3]?.innerText||''};
+    return{name:c[0]?.innerText||'',element:c[1]?.innerText||'',mana:c[2]?.innerText||'',desc:c[3]?.innerText||'',req:r.dataset.req||'',locked:r.dataset.locked==='1'};
   });
   const equipment=[...document.querySelectorAll('.equip-row')].map(r=>{
     const c=r.querySelectorAll('.equip-cell');
@@ -2297,7 +2319,7 @@ function pasteSpellFromWiki(){
     if(!raw){showPasteToast('Нет заклинаний из вики. Откройте вики и выберите заклинания.');return;}
     const data=JSON.parse(raw);
     const arr=Array.isArray(data)?data:[data]; // поддержка и одного и массива
-    arr.forEach(sp=>addSpell({name:sp.name||'',element:sp.trauma||'',mana:String(sp.mana||''),desc:sp.desc||''}));
+    arr.forEach(sp=>addSpell({name:sp.name||'',element:sp.trauma||'',mana:String(sp.mana||''),desc:sp.desc||'',req:sp.req||sp.requirement||'',locked:true}));
     localStorage.removeItem(SPELL_ADDED_KEY);
     scheduleSave();
     const btn=document.getElementById('btn-paste-spell');
@@ -2312,8 +2334,13 @@ document.addEventListener('paste',e=>{
   if(text&&text.startsWith('SPELL::')){
     e.preventDefault();
     const parts=text.split('::');
-    if(parts.length>=5){
-      addSpell({name:parts[1],element:parts[2],mana:parts[3],desc:parts.slice(4).join('::')});
+    if(parts.length>=6){
+      addSpell({name:parts[1],element:parts[2],mana:parts[3],req:parts[4],desc:parts.slice(5).join('::'),locked:true});
+      scheduleSave();
+      showPasteToast('Заклинание «'+parts[1]+'» вставлено!');
+    } else if(parts.length>=5){
+      // Backward compatibility with old format without requirement field
+      addSpell({name:parts[1],element:parts[2],mana:parts[3],desc:parts.slice(4).join('::'),locked:true});
       scheduleSave();
       showPasteToast('Заклинание «'+parts[1]+'» вставлено!');
     }

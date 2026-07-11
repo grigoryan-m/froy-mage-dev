@@ -133,7 +133,7 @@ function handleItemGrant(payload) {
   const qty   = parseInt(parts[1]) || 1;
   if (!name) return;
 
-  showFbNotification(`ДМ передаёт вам:\n${qty > 1 ? name + ' ×' + qty : name}`, 'item');
+  showFbNotification(`<span class="fb-rainbow-text">Админ</span> передаёт вам:\n${qty > 1 ? name + ' ×' + qty : name}`, 'item');
 
   if (typeof addEquip === 'function') {
     addEquip({ name, desc: qty > 1 ? '×' + qty : '' });
@@ -164,7 +164,7 @@ function handleReagentGrant(payload) {
   const lines = Object.entries(delta)
     .map(([c, v]) => `${REAGENT_NAMES[c] || c}: ${v > 0 ? '+' : ''}${v}`)
     .join('\n');
-  showFbNotification(`ДМ передаёт реагенты:\n${lines}`, 'reagent');
+  showFbNotification(`<span class="fb-rainbow-text">Админ</span> передаёт реагенты:\n${lines}`, 'reagent');
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -286,7 +286,27 @@ async function publishState(uuid, state) {
 const FB_ICONS  = { party:'🎲', item:'🎁', reagent:'⚗️', warn:'⚠️', info:'✦' };
 const FB_COLORS = { party:'#4cbb8a', item:'#c9a84c', reagent:'#a67fd1', warn:'#e05c5c', info:'#6ab0f5' };
 
+// Радужная переливающаяся анимация для слова "Админ" в уведомлениях о выдаче
+// предметов/реагентов через админку — подключается один раз лениво
+function ensureRainbowStyle() {
+  if (document.getElementById('fb-rainbow-style')) return;
+  const style = document.createElement('style');
+  style.id = 'fb-rainbow-style';
+  style.textContent = `
+@keyframes fbRainbowShift{0%{background-position:0% 50%;}100%{background-position:200% 50%;}}
+.fb-rainbow-text{
+  background-image:linear-gradient(90deg,#ff5b5b,#ff9d4c,#f4e04c,#4cd97b,#4cc9f0,#8a6bff,#ff5b5b);
+  background-size:300% 100%;
+  -webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;color:transparent;
+  font-weight:700;
+  animation:fbRainbowShift 2.5s linear infinite;
+}`;
+  document.head.appendChild(style);
+}
+
 function showFbNotification(message, type = 'info') {
+  ensureRainbowStyle();
   let container = document.getElementById('fb-notifications');
   if (!container) {
     container = document.createElement('div');
