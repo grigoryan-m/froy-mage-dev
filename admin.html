@@ -274,7 +274,10 @@ function addLog(msg,type='ok'){
 
 function openConfirm(title,body,onYes){$('ctitle').textContent=title;$('cbody').textContent=body;confirmCb=onYes;$('confirm-overlay').classList.add('show');}
 function closeConfirm(){$('confirm-overlay').classList.remove('show');confirmCb=null;}
-$('cyes').onclick=()=>{closeConfirm();if(confirmCb)confirmCb();};
+// Раньше closeConfirm() обнулял confirmCb ДО того, как он вызывался —
+// колбэк (сама запись в Firebase: победа/отмена боя/сброс арены) никогда
+// не выполнялся. Сначала сохраняем ссылку на колбэк, потом закрываем модалку.
+$('cyes').onclick=()=>{const cb=confirmCb;closeConfirm();if(cb)cb();};
 
 async function fbFetch(p){const r=await fetch(FB+p+'.json');if(!r.ok)throw new Error(r.status);return r.json();}
 async function fbPatch(p,d){const r=await fetch(FB+p+'.json',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)});if(!r.ok)throw new Error(r.status);return r.json();}

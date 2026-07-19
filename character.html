@@ -2782,6 +2782,8 @@ window.addEventListener('pageshow', syncEquipmentFromStorage);
 
   let bannerEs = null;
   let bannerArenaId = null;
+  let bannerMySide = null;   // 'a' | 'b' — на какой стороне мы сейчас в бою
+  let heartbeatTimer = null; // периодическая подстраховка ХП, см. pushMyHpToArena
 
   const banner   = document.getElementById('arena-banner');
   const linkEl   = document.getElementById('arena-banner-link');
@@ -2823,12 +2825,16 @@ window.addEventListener('pageshow', syncEquipmentFromStorage);
     if (fighters.a?.uuid === CHAR_UUID) { mySide = 'a'; oppSide = 'b'; }
     else if (fighters.b?.uuid === CHAR_UUID) { mySide = 'b'; oppSide = 'a'; }
     if (!mySide) { hideBanner(); return; }
+    bannerMySide = mySide;
     banner.style.display = '';
     renderOpponent(fighters[oppSide] || null);
+    startHeartbeat();
   }
 
   function hideBanner() {
     banner.style.display = 'none';
+    bannerMySide = null;
+    stopHeartbeat();
     if (bannerEs) { bannerEs.close(); bannerEs = null; bannerArenaId = null; }
   }
 
@@ -2846,29 +2852,84 @@ window.addEventListener('pageshow', syncEquipmentFromStorage);
 
   async function scanArenas() {
     try {
-      const r = await fetch(`${FB}/arena.json?shallow=true`);
+      const r = await fetch(`${FB}/arena.json?shallow=true`, {keepalive:true});
       if (!r.ok) return;
       const arenas = await r.json();
-      if (!arenas) return;
+      if (!arenas) { if (bannerArenaId) hideBanner(); return; }
+      let found = false;
       for (const arenaId of Object.keys(arenas)) {
-        const r2 = await fetch(`${FB}/arena/${encodeURIComponent(arenaId)}.json`);
+        const r2 = await fetch(`${FB}/arena/${encodeURIComponent(arenaId)}.json`, {keepalive:true});
         if (!r2.ok) continue;
         const data = await r2.json();
         if (!data || data.status === 'done') continue;
         const fighters = data.fighters || {};
         const isInArena = fighters.a?.uuid === CHAR_UUID || fighters.b?.uuid === CHAR_UUID;
         if (isInArena) {
+          found = true;
           subscribeToArena(arenaId);
           handleArenaUpdate(data);
-          return;
+          // Сразу подтверждаем серверу актуальный ХП — это чинит ситуацию,
+          // когда предыдущий PATCH из syncArenaHp был оборван уходом со страницы
+          // (см. pushMyHpToArena ниже) и барьер/жизнь застряли на старом значении.
+          pushMyHpToArena();
+          break;
         }
       }
+      // Если бой закончился/не найден, а баннер ещё висит — прячем его
+      if (!found && bannerArenaId) hideBanner();
     } catch{}
   }
 
-  // Initial scan + re-scan every 15s in case a new arena starts
+  // Initial scan + re-scan every 1.5s in case a new arena starts
   scanArenas();
   setInterval(scanArenas, 1500);
+
+  // ── HEARTBEAT + RECONCILIATION ───────────────────────────────────────────────
+  // Раньше единственным способом обновить ХП на арене был клик по клетке ХП,
+  // который отправлял один-единственный fetch(PATCH). Если игрок кликал и почти
+  // сразу уходил со страницы (например, обратно на арену), браузер обрывал этот
+  // fetch при выгрузке страницы — сервер так и не получал новое значение, и на
+  // странице арены барьер/жизнь "зависали". Плюс баннер "НА АРЕНЕ" на листе
+  // персонажа не показывался, если сканирование не успевало отработать.
+  //
+  // Чиним это тремя способами:
+  //  1) keepalive:true на всех запросах — запрос не обрывается при переходе/закрытии страницы;
+  //  2) периодический heartbeat (раз в 4с) пока мы в активном бою — досылает
+  //     актуальный ХП на сервер, даже если разовый клик когда-то не долетел;
+  //  3) мгновенная досинхронизация при возврате на вкладку/восстановлении
+  //     страницы из bfcache — баннер и ХП обновляются сразу, а не через 1.5с.
+  function startHeartbeat() {
+    if (heartbeatTimer) return;
+    heartbeatTimer = setInterval(pushMyHpToArena, 4000);
+  }
+  function stopHeartbeat() {
+    if (heartbeatTimer) { clearInterval(heartbeatTimer); heartbeatTimer = null; }
+  }
+
+  async function pushMyHpToArena() {
+    if (!bannerArenaId || !bannerMySide) return;
+    try {
+      const patch = {
+        barrierCur: hpFill['barrier-boxes'] || 0,
+        lifeCur:    hpFill['life-boxes']    || 0,
+      };
+      await fetch(`${FB}/arena/${encodeURIComponent(bannerArenaId)}/fighters/${bannerMySide}.json`, {
+        method: 'PATCH',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(patch),
+        keepalive: true,
+      });
+    } catch(e) { console.error('pushMyHpToArena error:', e); }
+  }
+
+  // Досылаем ХП перед уходом со страницы (keepalive не даст браузеру оборвать
+  // запрос при выгрузке) и пересканируем/подтверждаем при возврате на вкладку.
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) pushMyHpToArena();
+    else scanArenas();
+  });
+  window.addEventListener('pageshow', () => scanArenas());
+  window.addEventListener('pagehide', () => pushMyHpToArena());
 
   // Called by HP box click to push updated HP into the active arena
   window.syncArenaHp = async function(cid) {
@@ -2878,7 +2939,7 @@ window.addEventListener('pageshow', syncEquipmentFromStorage);
   // 🔥 если баннер ещё не нашёл арену — ищем прямо сейчас
   if (!arenaId) {
     try {
-      const r = await fetch(`${FB}/arena.json`);
+      const r = await fetch(`${FB}/arena.json`, {keepalive:true});
       if (!r.ok) return;
       const arenas = await r.json();
       if (!arenas) return;
@@ -2897,8 +2958,7 @@ window.addEventListener('pageshow', syncEquipmentFromStorage);
   if (!arenaId) return;
 
   try {
-    const r = await fetch(`${FB}/arena/${encodeURIComponent(arenaId)}.json`);
-    console.log("SYNC");
+    const r = await fetch(`${FB}/arena/${encodeURIComponent(arenaId)}.json`, {keepalive:true});
     if (!r.ok) return;
     const data = await r.json();
     if (!data || data.status === 'done') return;
@@ -2910,15 +2970,19 @@ window.addEventListener('pageshow', syncEquipmentFromStorage);
     else if (fighters.b?.uuid === CHAR_UUID) mySide = 'b';
 
     if (!mySide) return;
+    bannerMySide = mySide; // подпитываем heartbeat актуальной стороной
 
     const patch = {};
     if (cid === 'barrier-boxes') patch.barrierCur = hpFill['barrier-boxes'] || 0;
     else patch.lifeCur = hpFill['life-boxes'] || 0;
 
+    // keepalive:true — запрос переживёт переход на другую страницу/закрытие
+    // вкладки сразу после клика, вместо того чтобы быть оборванным браузером
     await fetch(`${FB}/arena/${encodeURIComponent(arenaId)}/fighters/${mySide}.json`, {
       method: 'PATCH',
       headers: {'Content-Type':'application/json'},
-      body: JSON.stringify(patch)
+      body: JSON.stringify(patch),
+      keepalive: true,
     });
 
   } catch (e) {
