@@ -284,7 +284,7 @@ body.cursed{
 //   win_chance    — шанс победы % (слоты)
 //   two_match_chance — % пары (слоты)
 //   red_chance    — % красного (рулетка, по умолч. 48)
-//   description, owner, prizes, prize_rare
+//   description, owner, prizes, prize_rare, prize_jackpot, prize_epochal
 //   max_stake     — максимальная редкость ставки: common | rare | unique | legendary
 //
 // Лист "equipment": name | rarity   (common/rare/unique/legendary)
@@ -339,6 +339,7 @@ const DEFAULT_CASINO = {
   prizes: ['Зелье удачи','Монеты×50','Загадочный свиток'],
   prize_rare: 'Артефакт Фройского Мага',
   prize_jackpot: 'Легендарный Артефакт',
+  prize_epochal: 'Реликвия Эпохи',
   max_stake: 'Любой предмет',
 };
 
@@ -374,6 +375,7 @@ async function loadCasino() {
       prizes:           (row.prizes     || '').split('|').map(s => s.trim()).filter(Boolean),
       prize_rare:       row.prize_rare    || DEFAULT_CASINO.prize_rare,
       prize_jackpot:    row.prize_jackpot || DEFAULT_CASINO.prize_jackpot,
+      prize_epochal:    row.prize_epochal || DEFAULT_CASINO.prize_epochal,
       max_stake:        row.max_stake   || DEFAULT_CASINO.max_stake,
     };
     if (!casinoData.prizes.length) casinoData.prizes = DEFAULT_CASINO.prizes;
@@ -443,11 +445,12 @@ function initUI() {
     pl.appendChild(r);
   }
   // Epochal jackpot row — shown when there's a jackpot prize
-  if (cd.prize_jackpot || cd.prize_rare) {
+  if (cd.prize_jackpot || cd.prize_rare || cd.prize_epochal) {
+    const epochalPrizeText = cd.prize_epochal || `${cd.prize_jackpot || cd.prize_rare} + бонус`;
     const r = document.createElement('div');
     r.className = 'prize-row p-epochal';
     r.style.background = 'rgba(200,30,0,.06)';
-    r.innerHTML = `<span style="font-size:14px;">🔥</span><span class="prize-name" style="animation:epoch-text-shimmer 2s linear infinite;font-weight:700;">${cd.prize_jackpot||cd.prize_rare} + бонус</span><span class="prize-chance" style="color:#ff4422;font-size:8px;">эпохальный</span>`;
+    r.innerHTML = `<span style="font-size:14px;">🔥</span><span class="prize-name" style="animation:epoch-text-shimmer 2s linear infinite;font-weight:700;">${epochalPrizeText}</span><span class="prize-chance" style="color:#ff4422;font-size:8px;">эпохальный</span>`;
     pl.appendChild(r);
   }
 
@@ -728,7 +731,7 @@ async function spin() {
       let prize, bonusPrize2 = null;
       if (stakeRarity === 'epochal') {
         prize = casinoData.prize_jackpot || casinoData.prize_rare || casinoData.prizes[0];
-        bonusPrize2 = casinoData.prize_rare || casinoData.prizes[Math.floor(Math.random()*casinoData.prizes.length)];
+        bonusPrize2 = casinoData.prize_epochal || casinoData.prize_rare || casinoData.prizes[Math.floor(Math.random()*casinoData.prizes.length)];
       } else if (stakeRarity === 'legendary' && casinoData.prize_rare) {
         prize = casinoData.prize_rare;
       } else if (stakeRarity === 'rare' && casinoData.prize_rare && Math.random() < 0.3) {
@@ -835,7 +838,7 @@ async function spin() {
       || casinoData.prizes[Math.floor(Math.random()*casinoData.prizes.length)];
     // EPOCHAL: second bonus prize on top of jackpot
     const bonusPrize = stakeRarity === 'epochal'
-      ? (casinoData.prize_rare || casinoData.prizes[Math.floor(Math.random()*casinoData.prizes.length)])
+      ? (casinoData.prize_epochal || casinoData.prize_rare || casinoData.prizes[Math.floor(Math.random()*casinoData.prizes.length)])
       : null;
     let prefix;
     if (stakeRarity === 'epochal')   prefix = '🔥🔥 ЭПОХАЛЬНЫЙ ДЖЕКПОТ!!';
@@ -868,7 +871,8 @@ async function spin() {
     const prize = casinoData.prize_jackpot
       || casinoData.prize_rare
       || casinoData.prizes[Math.floor(Math.random()*casinoData.prizes.length)];
-    const bonusPrize = casinoData.prize_rare
+    const bonusPrize = casinoData.prize_epochal
+      || casinoData.prize_rare
       || casinoData.prizes[Math.floor(Math.random()*casinoData.prizes.length)];
     msgEl.textContent = `🔥🔥 ЭПОХАЛЬНЫЙ ВЫИГРЫШ! ${prize} + бонус: ${bonusPrize}!`;
     msgEl.style.cssText = 'animation:epoch-text-shimmer 1.5s linear infinite;font-size:15px;';
@@ -929,37 +933,38 @@ async function spin() {
 // ── Rune animation ─────────────────────────────────────────────────────────
 function animateRunes(finalRunes) {
   return new Promise(resolve => {
-    const duration = 1800; // ms total
-    const intervals = [];
-    const startTimes = [0, 200, 400]; // stagger
+    const tick = 80;
+    // Раньше барабаны стартовали со сдвигом, но останавливались ВСЕ ОДНОВРЕМЕННО
+    // (stopAt = duration - i*200 компенсировал сдвиг старта) — эффекта "по очереди"
+    // не было видно. Теперь барабаны стартуют одновременно, а останавливаются
+    // один за другим — с нарастающей паузой перед каждым следующим, для интриги.
+    // Общее время кручения тоже увеличено.
+    const stopTimes = [2200, 3000, 4000]; // мс от начала кручения до остановки каждого барабана
 
     finalRunes.forEach((finalRune, i) => {
       const runeEl = document.getElementById('rune-' + i);
       const slotEl = document.getElementById('slot-' + i);
+      const stopAt = stopTimes[i] ?? (2200 + i * 800);
 
-      setTimeout(() => {
-        let elapsed = 0;
-        const tick = 80;
-        const id = setInterval(() => {
-          elapsed += tick;
-          runeEl.classList.add('blur');
-          runeEl.textContent = RUNES[Math.floor(Math.random() * RUNES.length)];
+      let elapsed = 0;
+      const id = setInterval(() => {
+        elapsed += tick;
+        runeEl.classList.add('blur');
+        runeEl.textContent = RUNES[Math.floor(Math.random() * RUNES.length)];
 
-          const stopAt = duration - (i * 200);
-          if (elapsed >= stopAt) {
-            clearInterval(id);
-            runeEl.classList.remove('blur');
-            runeEl.textContent = finalRune;
+        if (elapsed >= stopAt) {
+          clearInterval(id);
+          runeEl.classList.remove('blur');
+          runeEl.textContent = finalRune;
 
-            // Bounce effect
-            slotEl.style.transform = 'scale(1.08)';
-            setTimeout(() => slotEl.style.transform = '', 120);
+          // Bounce effect
+          slotEl.style.transform = 'scale(1.08)';
+          setTimeout(() => slotEl.style.transform = '', 120);
 
-            if (i === 2) setTimeout(resolve, 200);
-          }
-        }, tick);
-        intervals.push(id);
-      }, startTimes[i]);
+          // Резолвим после того как остановился последний (правый) барабан
+          if (i === finalRunes.length - 1) setTimeout(resolve, 300);
+        }
+      }, tick);
     });
   });
 }
